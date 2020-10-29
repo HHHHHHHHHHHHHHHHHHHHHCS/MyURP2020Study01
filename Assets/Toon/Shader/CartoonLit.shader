@@ -36,6 +36,9 @@ Shader "MyRP/Cartoon/CartoonLit"
 			// #pragma multi_compile _ _SHADOWS_SOFT
 			// #pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
 			
+			#include "Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			
 			#include "MainLight.hlsl"
 			
 			struct a2v
@@ -54,6 +57,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				float3 positionWS: TEXCOORD0;
 				float2 uv: TEXCOORD1;
 				float3 viewDirectionWS: TEXCOORD2;
+				float4 screenUV: TEXCOORD3;
 			};
 			
 			CBUFFER_START(UnityPerMaterial)
@@ -99,7 +103,6 @@ Shader "MyRP/Cartoon/CartoonLit"
 			
 			v2f vert(a2v v)
 			{
-				//ComputeScreenPos(TransformWorldToHClip(input.positionWS), _ProjectionParams.x);
 				v2f o;
 				o.positionWS = TransformObjectToWorld(v.vertex.xyz);
 				o.normalWS = TransformObjectToWorldNormal(v.normal.xyz);
@@ -107,6 +110,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				o.positionCS = TransformWorldToHClip(o.positionWS);
 				o.uv = v.uv;
 				o.viewDirectionWS = _WorldSpaceCameraPos.xyz - o.positionWS;
+				o.screenUV = ComputeScreenPos(o.positionCS, _ProjectionParams.x);
 				return o;
 			}
 			
