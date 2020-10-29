@@ -2,8 +2,9 @@
 	#define __MAINLIGHT_INCLUDE__
 	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+	//Lighting 要在Shadows上面 不然会出现丢失function
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 	
 	
 	void MainLight_half(float3 worldPos, out half3 direction, out half3 color, out half distanceAtten, out half shadowAtten)
@@ -13,6 +14,7 @@
 		distanceAtten = 1;
 		shadowAtten = 1;
 		
+		//URP正常是没有屏幕空间阴影的   #define SHADOWS_SCREEN 0
 		#if SHADOWS_SCREEN
 			//如果是屏幕空间阴影  则直接用屏幕空间xy当uv
 			half4 clipPos = TransformWorldToHClip(worldPos);
