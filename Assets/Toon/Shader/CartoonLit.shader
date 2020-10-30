@@ -26,20 +26,21 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#pragma fragment frag
 			
 			// Keywords
-			// #pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
+			#pragma multi_compile _ _SHADOWS_SOFT
+			#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
 			// #pragma multi_compile _ LIGHTMAP_ON
 			// #pragma multi_compile _ DIRLIGHTMAP_COMBINED
-			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
-			// #pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
 			// #pragma multi_compile _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS _ADDITIONAL_OFF
 			// #pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
-			// #pragma multi_compile _ _SHADOWS_SOFT
 			// #pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
 			
 			#include "Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			
 			#include "MainLight.hlsl"
+			#include "OutlineObject.hlsl"
 			
 			struct a2v
 			{
@@ -60,6 +61,9 @@ Shader "MyRP/Cartoon/CartoonLit"
 				float4 screenUV: TEXCOORD3;
 			};
 			
+			TEXTURE2D(_SSAO_FinalTexture);
+			SAMPLER(sampler_SSAO_FinalTexture);
+			
 			CBUFFER_START(UnityPerMaterial)
 			float4 _ToonShadedColor;
 			float4 _ToonLitColor;
@@ -72,8 +76,6 @@ Shader "MyRP/Cartoon/CartoonLit"
 			float _OutlineNormalSensitivity;
 			int _OutlineThickness;
 			CBUFFER_END
-			
-			
 			
 			float4 ToonLighting(v2f i)
 			{
@@ -101,6 +103,25 @@ Shader "MyRP/Cartoon/CartoonLit"
 				return finalColor;
 			}
 			
+			float4 Outlines(v2f i)
+			{
+				float4 screenPosition = float4(i.screenUV.xy / i.screenUV.w, 0, 0);
+				float outline;
+				float sceneDepth;
+				Outlineobject_float(screenPosition.xy, _OutlineThickness, _OutlineDepthSensitivity, _OutlineNormalSensitivity, outline, sceneDepth);
+				float4 outlineColor = float4(1, 1, 1, 1);
+				float4 normalColor = float4(0, 0, 0, 1);
+				float4 finalColor = lerp(outlineColor, normalColor, outline);
+				return finalColor;
+			}
+			
+			float AmbientOcclusion(v2f i)
+			{
+				float4 screenPosition = float4(i.screenUV.xy / i.screenUV.w, 0, 0);
+				float ao = 1 - SAMPLE_TEXTURE2D(_SSAO_FinalTexture, sampler_SSAO_FinalTexture, screenPosition.xy).r;
+				return ao;
+			}
+			
 			v2f vert(a2v v)
 			{
 				v2f o;
@@ -116,7 +137,13 @@ Shader "MyRP/Cartoon/CartoonLit"
 			
 			float4 frag(v2f i): SV_Target
 			{
-				return i.positionCS;
+				float4 lightingColor = ToonLighting(i);
+				float4 outlineColor = Outlines(i);
+				float ao = AmbientOcclusion(i);
+				
+				float4 col = lightingColor * outlineColor * ao;
+				
+				return col;
 			}
 			ENDHLSL
 			
