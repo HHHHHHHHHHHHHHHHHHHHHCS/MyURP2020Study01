@@ -27,19 +27,19 @@ Shader "MyRP/Cartoon/CartoonLit"
 			
 			// Keywords
 			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
 			
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
-			// #pragma multi_compile _ LIGHTMAP_ON
-			// #pragma multi_compile _ DIRLIGHTMAP_COMBINED
+			#pragma multi_compile _ LIGHTMAP_ON
+			#pragma multi_compile _ DIRLIGHTMAP_COMBINED
 			#pragma multi_compile _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS _ADDITIONAL_OFF
-			// #pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
-			// #pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
+			#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
+			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
 			
 			// #define _NORMALMAP 1
-			// #define _NORMAL_DROPOFF_TS 1
 			// #define ATTRIBUTES_NEED_NORMAL
 			// #define ATTRIBUTES_NEED_TANGENT
 			// #define ATTRIBUTES_NEED_TEXCOORD1
@@ -47,11 +47,12 @@ Shader "MyRP/Cartoon/CartoonLit"
 			// #define VARYINGS_NEED_NORMAL_WS
 			// #define VARYINGS_NEED_TANGENT_WS
 			// #define VARYINGS_NEED_VIEWDIRECTION_WS
-			#define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
 			// #define FEATURES_GRAPH_VERTEX
 			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+			
+			
 			#include "CommonFunction.hlsl"
 			#include "MainLight.hlsl"
 			#include "OutlineObject.hlsl"
@@ -62,6 +63,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				float4 normal: NORMAL;
 				float4 tangent: TANGENT;
 				float2 uv: TEXCOORD0;
+				float2 lightmapUV: TEXCOORD1;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
@@ -72,8 +74,12 @@ Shader "MyRP/Cartoon/CartoonLit"
 				float4 tangentWS: TANGENT;
 				float3 positionWS: TEXCOORD0;
 				float2 uv: TEXCOORD1;
-				float3 viewDirectionWS: TEXCOORD2;
-				float4 screenUV: TEXCOORD3;
+				float2 lightmapUV: TEXCOORD2;
+				float3 viewDirectionWS: TEXCOORD3;
+				float4 screenUV: TEXCOORD4;
+				float3 sh: TEXCOORD5;
+				half4 fogFactorAndVertexLight: TEXCOORD6;
+				float4 shadowCoord: TEXCOORD7;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
@@ -153,17 +159,17 @@ Shader "MyRP/Cartoon/CartoonLit"
 				o.viewDirectionWS = _WorldSpaceCameraPos.xyz - o.positionWS;
 				o.screenUV = ComputeScreenPos(o.positionCS, _ProjectionParams.x);
 				
+				//LightmapUV and SH
+				OUTPUT_LIGHTMAP_UV(v.lightUV, unity_LightmapST, o.lightmapUV);
+				OUTPUT_SH(o.normalWS, o.sh);
 				
-				#ifdef VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
-					half3 vertexLight = VertexLighting(positionWS, normalWS);
-					half fogFactor = ComputeFogFactor(output.positionCS.z);
-					output.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
-				#endif
+				//Fog and vertexLight
+				half3 vertexLight = VertexLighting(o.positionWS, o.normalWS);
+				half fogFactor = ComputeFogFactor(o.positionCS.z);
+				o.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
 				
-				#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
-					output.shadowCoord = GetShadowCoord(vertexInput);
-				#endif
-				
+				//shadowCoord
+				o.shadowCoord = TransformWorldToShadowCoord(o.positionWS);
 				
 				return o;
 			}
@@ -178,9 +184,9 @@ Shader "MyRP/Cartoon/CartoonLit"
 				
 				float4 emission = lightingColor * outlineColor * ao;
 				
-				float4 col = CalcPBRColor(i, )
+				//float4 col = CalcPBRColor(i, )
 				
-				return col;
+				return emission;
 			}
 			ENDHLSL
 			
