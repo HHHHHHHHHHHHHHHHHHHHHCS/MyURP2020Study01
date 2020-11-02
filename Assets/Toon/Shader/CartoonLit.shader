@@ -26,19 +26,33 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#pragma fragment frag
 			
 			// Keywords
+			#pragma multi_compile_instancing
+			
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
 			// #pragma multi_compile _ LIGHTMAP_ON
 			// #pragma multi_compile _ DIRLIGHTMAP_COMBINED
-			// #pragma multi_compile _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS _ADDITIONAL_OFF
+			#pragma multi_compile _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS _ADDITIONAL_OFF
 			// #pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
 			// #pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
 			
-			#include "Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			// #define _NORMALMAP 1
+			// #define _NORMAL_DROPOFF_TS 1
+			// #define ATTRIBUTES_NEED_NORMAL
+			// #define ATTRIBUTES_NEED_TANGENT
+			// #define ATTRIBUTES_NEED_TEXCOORD1
+			// #define VARYINGS_NEED_POSITION_WS
+			// #define VARYINGS_NEED_NORMAL_WS
+			// #define VARYINGS_NEED_TANGENT_WS
+			// #define VARYINGS_NEED_VIEWDIRECTION_WS
+			#define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
+			// #define FEATURES_GRAPH_VERTEX
 			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+			#include "CommonFunction.hlsl"
 			#include "MainLight.hlsl"
 			#include "OutlineObject.hlsl"
 			
@@ -48,6 +62,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				float4 normal: NORMAL;
 				float4 tangent: TANGENT;
 				float2 uv: TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
 			struct v2f
@@ -59,6 +74,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				float2 uv: TEXCOORD1;
 				float3 viewDirectionWS: TEXCOORD2;
 				float4 screenUV: TEXCOORD3;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
 			TEXTURE2D(_SSAO_FinalTexture);
@@ -125,6 +141,10 @@ Shader "MyRP/Cartoon/CartoonLit"
 			v2f vert(a2v v)
 			{
 				v2f o;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
 				o.positionWS = TransformObjectToWorld(v.vertex.xyz);
 				o.normalWS = TransformObjectToWorldNormal(v.normal.xyz);
 				o.tangentWS = float4(TransformObjectToWorldDir(v.tangent.xyz), v.tangent.w);
@@ -132,16 +152,33 @@ Shader "MyRP/Cartoon/CartoonLit"
 				o.uv = v.uv;
 				o.viewDirectionWS = _WorldSpaceCameraPos.xyz - o.positionWS;
 				o.screenUV = ComputeScreenPos(o.positionCS, _ProjectionParams.x);
+				
+				
+				#ifdef VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
+					half3 vertexLight = VertexLighting(positionWS, normalWS);
+					half fogFactor = ComputeFogFactor(output.positionCS.z);
+					output.fogFactorAndVertexLight = half4(fogFactor, vertexLight);
+				#endif
+				
+				#if defined(REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR)
+					output.shadowCoord = GetShadowCoord(vertexInput);
+				#endif
+				
+				
 				return o;
 			}
 			
 			float4 frag(v2f i): SV_Target
 			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
 				float4 lightingColor = ToonLighting(i);
 				float4 outlineColor = Outlines(i);
 				float ao = AmbientOcclusion(i);
 				
-				float4 col = lightingColor * outlineColor * ao;
+				float4 emission = lightingColor * outlineColor * ao;
+				
+				float4 col = CalcPBRColor(i, )
 				
 				return col;
 			}
