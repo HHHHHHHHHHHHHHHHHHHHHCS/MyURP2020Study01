@@ -29,14 +29,14 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#pragma multi_compile_instancing
 			#pragma multi_compile_fog
 			
-			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
-			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
-			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
 			#pragma multi_compile _ LIGHTMAP_ON
 			#pragma multi_compile _ DIRLIGHTMAP_COMBINED
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
 			#pragma multi_compile _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS _ADDITIONAL_OFF
 			#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
+			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
 			
 			// #define _NORMALMAP 1
@@ -56,6 +56,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#include "CommonFunction.hlsl"
 			#include "MainLight.hlsl"
 			#include "OutlineObject.hlsl"
+			#include "MyCarToonPBR.hlsl"
 			
 			struct a2v
 			{
@@ -177,16 +178,38 @@ Shader "MyRP/Cartoon/CartoonLit"
 			float4 frag(v2f i): SV_Target
 			{
 				UNITY_SETUP_INSTANCE_ID(i);
+
+				i.normalWS = normalize(i.normalWS);
+				
+				MyInputData inputData = (MyInputData)0;
+				inputData.positionWS = i.positionWS;
+				inputData.normalWS = i.normalWS;
+				inputData.viewDirectionWS = i.viewDirectionWS;
+				inputData.shadowCoord = i.shadowCoord;
+				inputData.fogCoord = i.fogFactorAndVertexLight.x;
+				inputData.vertexLighting = i.fogFactorAndVertexLight.yzw;
+				inputData.bakedGI = SAMPLE_GI(i.lightmapUV, i.sh, i.normalWS);
+				inputData.normalizedScreenSpaceUV = i.positionCS.xy;
 				
 				float4 lightingColor = ToonLighting(i);
-				float4 outlineColor = Outlines(i);
-				float ao = AmbientOcclusion(i);
+				float4 outlineColor = 1;//Outlines(i);
+				float ao = 1;//AmbientOcclusion(i);
 				
-				float4 emission = lightingColor * outlineColor * ao;
+				MySurfaceData surfaceData = (MySurfaceData)0;
+				surfaceData.albedo = half3(0, 0, 0);
+				surfaceData.specular = half3(0, 0, 0);
+				surfaceData.metallic = 0;
+				surfaceData.smoothness = 0;
+				surfaceData.normalTS = float3(0.0f, 0.0f, 1.0f);
+				surfaceData.emission = (lightingColor * outlineColor * ao).rgb;
+				surfaceData.occlusion = 0.52;
+				surfaceData.alpha = 1;
+				surfaceData.clearCoatMask = 0.0;
+				surfaceData.clearCoatSmoothness = 1.0;
 				
-				//float4 col = CalcPBRColor(i, )
+				float4 col = CalcPBRColor(inputData, surfaceData);
 				
-				return emission;
+				return col;
 			}
 			ENDHLSL
 			
