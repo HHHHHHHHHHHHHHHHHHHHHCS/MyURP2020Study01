@@ -90,11 +90,10 @@
 		return half4(color, surfaceData.alpha);
 	}
 	
-	float4 CalcPBRColor(in MyInputData inputData, in MySurfaceData surfaceData)
+	float4 CalcPBRColor(MyInputData inputData, MySurfaceData surfaceData)
 	{
 		float4 color = MyFragmentPBR(inputData, surfaceData);
-		//color.rgb = MixFog(color.rgb, d)
-		
+		color.rgb = MixFog(color.rgb, inputData.fogCoord);
 		
 		return color;
 	}

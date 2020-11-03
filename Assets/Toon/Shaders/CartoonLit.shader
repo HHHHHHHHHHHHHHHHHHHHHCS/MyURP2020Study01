@@ -39,7 +39,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
 			
-			// #define _NORMALMAP 1
+			#define _NORMALMAP 1
 			// #define ATTRIBUTES_NEED_NORMAL
 			// #define ATTRIBUTES_NEED_TANGENT
 			// #define ATTRIBUTES_NEED_TEXCOORD1
@@ -157,7 +157,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				o.tangentWS = float4(TransformObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 				o.positionCS = TransformWorldToHClip(o.positionWS);
 				o.uv = v.uv;
-				o.viewDirectionWS = _WorldSpaceCameraPos.xyz - o.positionWS;
+				o.viewDirectionWS = GetWorldSpaceViewDir(o.positionWS);
 				o.screenUV = ComputeScreenPos(o.positionCS, _ProjectionParams.x);
 				
 				//LightmapUV and SH
@@ -178,7 +178,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			float4 frag(v2f i): SV_Target
 			{
 				UNITY_SETUP_INSTANCE_ID(i);
-
+				
 				i.normalWS = normalize(i.normalWS);
 				
 				MyInputData inputData = (MyInputData)0;
