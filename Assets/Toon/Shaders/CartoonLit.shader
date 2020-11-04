@@ -15,19 +15,31 @@ Shader "MyRP/Cartoon/CartoonLit"
 	}
 	SubShader
 	{
-		Tags { "RenderType" = "Opaque" }
-		LOD 100
+		Tags { "RenderType" = "Opaque" "Queue" = "Geometry" }
+		
+		Cull Back
+		Blend One Zero
+		ZTest LEqual
+		ZWrite On
 		
 		Pass
 		{
+			Name "ForwardLit"
+			Tags { "LightMode" = "UniversalForward" }
+			
+			
 			HLSLPROGRAM
 			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
 			#pragma vertex vert
 			#pragma fragment frag
 			
 			// Keywords
 			#pragma multi_compile_instancing
 			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
 			
 			#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
 			#pragma multi_compile _ LIGHTMAP_ON
@@ -47,11 +59,9 @@ Shader "MyRP/Cartoon/CartoonLit"
 			// #define VARYINGS_NEED_NORMAL_WS
 			// #define VARYINGS_NEED_TANGENT_WS
 			// #define VARYINGS_NEED_VIEWDIRECTION_WS
-			// #define FEATURES_GRAPH_VERTEX
 			
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
-			
 			
 			#include "CommonFunction.hlsl"
 			#include "MainLight.hlsl"
@@ -86,6 +96,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			
 			TEXTURE2D(_SSAO_FinalTexture);
 			SAMPLER(sampler_SSAO_FinalTexture);
+			//                TEXTURE2D(_SSAO_OcclusionTexture3); SAMPLER(sampler_SSAO_OcclusionTexture3); float4 _SSAO_OcclusionTexture3_TexelSize;
 			
 			CBUFFER_START(UnityPerMaterial)
 			float4 _ToonShadedColor;
@@ -191,6 +202,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				inputData.bakedGI = SAMPLE_GI(i.lightmapUV, i.sh, i.normalWS);
 				inputData.normalizedScreenSpaceUV = i.positionCS.xy;
 				
+				//TODO:
 				float4 lightingColor = ToonLighting(i);
 				float4 outlineColor = 1;//Outlines(i);
 				float ao = 1;//AmbientOcclusion(i);
@@ -211,6 +223,82 @@ Shader "MyRP/Cartoon/CartoonLit"
 				
 				return col;
 			}
+			ENDHLSL
+			
+		}
+		
+		Pass
+		{
+			Name "ShadowCaster"
+			Tags { "LightMode" = "ShadowCaster" }
+			
+			HLSLPROGRAM
+			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			// Defines
+			#define _NORMALMAP 1
+			// #define _NORMAL_DROPOFF_TS 1
+			// #define ATTRIBUTES_NEED_NORMAL
+			// #define ATTRIBUTES_NEED_TANGENT
+			// #define FEATURES_GRAPH_VERTEX
+			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+			
+			struct a2v
+			{
+				float3 positionOS: POSITION;
+				float3 normalOS: NORMAL;
+				//float4 tangentOS: TANGENT;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			// x: global clip space bias, y: normal world space bias
+			float3 _LightDirection;
+			
+			v2f vert(a2v v)
+			{
+				v2f o = (v2f)0;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
+				float3 positionWS = TransformObjectToWorld(v.positionOS);
+				float3 normalWS = TransformObjectToWorldNormal(v.normalOS);
+				o.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+				//根据是否进行了Z反向（比如unity编辑器下是DX11，是有Z反向的)
+				#if UNITY_REVERSED_Z
+					o.positionCS.z = min(o.positionCS.z, o.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+				#else
+					o.positionCS.z = MAX(o.positionCS.z, o.positionCS.w * UNITY_NEAR_CLIP_VALUE);
+				#endif
+				
+				return o;
+			}
+			
+			float4 frag(v2f i): SV_TARGET
+			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
+				return 0;
+			}
+			
 			ENDHLSL
 			
 		}
