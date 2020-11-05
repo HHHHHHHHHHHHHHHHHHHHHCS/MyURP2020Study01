@@ -63,9 +63,6 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			
-			#include "CommonFunction.hlsl"
-			#include "MainLight.hlsl"
-			#include "OutlineObject.hlsl"
 			#include "MyCarToonPBR.hlsl"
 			
 			struct a2v
@@ -94,67 +91,19 @@ Shader "MyRP/Cartoon/CartoonLit"
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
-			TEXTURE2D(_SSAO_FinalTexture);
-			SAMPLER(sampler_SSAO_FinalTexture);
-			//                TEXTURE2D(_SSAO_OcclusionTexture3); SAMPLER(sampler_SSAO_OcclusionTexture3); float4 _SSAO_OcclusionTexture3_TexelSize;
-			
 			CBUFFER_START(UnityPerMaterial)
-			float4 _ToonShadedColor;
-			float4 _ToonLitColor;
+			float3 _ToonShadedColor;
+			float3 _ToonLitColor;
 			float _ToonColorSteps;
 			float _ToonColorOffset;
 			float _ToonColorSpread;
-			float4 _ToonSpecularColor;
+			float3 _ToonSpecularColor;
 			float _ToonHighlightIntensity;
 			float _OutlineDepthSensitivity;
 			float _OutlineNormalSensitivity;
 			int _OutlineThickness;
 			CBUFFER_END
 			
-			float4 ToonLighting(v2f i)
-			{
-				half3 lightDirection;
-				half3 lightColor;
-				half distanceAtten;
-				half shadowAtten;
-				MainLight_half(i.positionWS, lightDirection, lightColor, distanceAtten, shadowAtten);
-				
-				//------
-				float lerpVal = saturate(dot(i.normalWS, lightDirection)) * shadowAtten;
-				lerpVal = smoothstep(_ToonColorOffset -_ToonColorSpread, _ToonColorOffset +_ToonColorSpread, lerpVal);
-				float steps = _ToonColorSteps - 1;
-				lerpVal = floor(lerpVal / (1 / steps)) * (1 / steps);
-				
-				//------
-				float3 halfDir = normalize(lightDirection + i.viewDirectionWS);
-				float d = dot(halfDir, i.normalWS);
-				d = step(1 - _ToonHighlightIntensity, d);
-				
-				//------
-				float4 finalColor = lerp(_ToonShadedColor, _ToonLitColor, lerpVal);
-				finalColor = lerp(finalColor, _ToonSpecularColor, d);
-				
-				return finalColor;
-			}
-			
-			float4 Outlines(v2f i)
-			{
-				float4 screenPosition = float4(i.screenUV.xy / i.screenUV.w, 0, 0);
-				float outline;
-				float sceneDepth;
-				Outlineobject_float(screenPosition.xy, _OutlineThickness, _OutlineDepthSensitivity, _OutlineNormalSensitivity, outline, sceneDepth);
-				float4 outlineColor = float4(1, 1, 1, 1);
-				float4 normalColor = float4(0, 0, 0, 1);
-				float4 finalColor = lerp(outlineColor, normalColor, outline);
-				return finalColor;
-			}
-			
-			float AmbientOcclusion(v2f i)
-			{
-				float4 screenPosition = float4(i.screenUV.xy / i.screenUV.w, 0, 0);
-				float ao = 1 - SAMPLE_TEXTURE2D(_SSAO_FinalTexture, sampler_SSAO_FinalTexture, screenPosition.xy).r;
-				return ao;
-			}
 			
 			v2f vert(a2v v)
 			{
@@ -191,6 +140,8 @@ Shader "MyRP/Cartoon/CartoonLit"
 				UNITY_SETUP_INSTANCE_ID(i);
 				
 				i.normalWS = normalize(i.normalWS);
+				float2 screenPosition = i.screenUV.xy / i.screenUV.w;
+				
 				
 				MyInputData inputData = (MyInputData)0;
 				inputData.positionWS = i.positionWS;
@@ -202,10 +153,10 @@ Shader "MyRP/Cartoon/CartoonLit"
 				inputData.bakedGI = SAMPLE_GI(i.lightmapUV, i.sh, i.normalWS);
 				inputData.normalizedScreenSpaceUV = i.positionCS.xy;
 				
-				//TODO:
-				float4 lightingColor = ToonLighting(i);
-				float4 outlineColor = 1;//Outlines(i);
-				float ao = 1;//AmbientOcclusion(i);
+				
+				float3 lightingColor = ToonLighting(i.positionWS, i.normalWS, i.viewDirectionWS, _ToonColorOffset, _ToonColorSpread, _ToonHighlightIntensity, _ToonColorSteps, _ToonShadedColor, _ToonLitColor, _ToonSpecularColor);
+				float3 outlineColor = Outlines(screenPosition, _OutlineThickness, _OutlineDepthSensitivity, _OutlineNormalSensitivity);
+				float ao = AmbientOcclusion(screenPosition);
 				
 				MySurfaceData surfaceData = (MySurfaceData)0;
 				surfaceData.albedo = half3(0, 0, 0);
@@ -213,7 +164,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				surfaceData.metallic = 0;
 				surfaceData.smoothness = 0;
 				surfaceData.normalTS = float3(0.0f, 0.0f, 1.0f);
-				surfaceData.emission = (lightingColor * outlineColor * ao).rgb;
+				surfaceData.emission = lightingColor * outlineColor * ao;
 				surfaceData.occlusion = 0.52;
 				surfaceData.alpha = 1;
 				surfaceData.clearCoatMask = 0.0;
@@ -249,7 +200,6 @@ Shader "MyRP/Cartoon/CartoonLit"
 			// #define _NORMAL_DROPOFF_TS 1
 			// #define ATTRIBUTES_NEED_NORMAL
 			// #define ATTRIBUTES_NEED_TANGENT
-			// #define FEATURES_GRAPH_VERTEX
 			
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
@@ -297,6 +247,295 @@ Shader "MyRP/Cartoon/CartoonLit"
 				UNITY_SETUP_INSTANCE_ID(i);
 				
 				return 0;
+			}
+			
+			ENDHLSL
+			
+		}
+		
+		Pass
+		{
+			Name "DepthOnly"
+			Tags { "LightMode" = "DepthOnly" }
+			
+			ColorMask 0
+			
+			HLSLPROGRAM
+			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			// Defines
+			#define _NORMALMAP 1
+			// #define _NORMAL_DROPOFF_TS 1
+			// #define ATTRIBUTES_NEED_NORMAL
+			// #define ATTRIBUTES_NEED_TANGENT
+			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			
+			struct a2v
+			{
+				float3 positionOS: POSITION;
+				//float3 normalOS: NORMAL;
+				//float4 tangentOS: TANGENT;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			v2f vert(a2v v)
+			{
+				v2f o = (v2f)0;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
+				float3 positionWS = TransformObjectToWorld(v.positionOS);
+				o.positionCS = TransformWorldToHClip(positionWS);
+				
+				return o;
+			}
+			
+			float4 frag(v2f i): SV_TARGET
+			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
+				return 0;
+			}
+			
+			ENDHLSL
+			
+		}
+		
+		Pass
+		{
+			Name "DepthNormals"
+			Tags { "LightMode" = "DepthNormals" }
+			
+			HLSLPROGRAM
+			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			// Defines
+			#define _NORMALMAP 1
+			// #define _NORMAL_DROPOFF_TS 1
+			// #define ATTRIBUTES_NEED_NORMAL
+			// #define ATTRIBUTES_NEED_TANGENT
+			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			
+			struct a2v
+			{
+				float3 positionOS: POSITION;
+				float3 normalOS: NORMAL;
+				// float4 tangentOS: TANGENT;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				float3 normalWS: NORMAL;
+				// float4 tangentWS: TANGENT;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			v2f vert(a2v v)
+			{
+				v2f o = (v2f)0;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
+				float3 positionWS = TransformObjectToWorld(v.positionOS);
+				o.normalWS = TransformObjectToWorldNormal(v.normalOS);
+				o.positionCS = TransformWorldToHClip(positionWS);
+				
+				return o;
+			}
+			
+			/*
+			//Library\PackageCache\com.unity.render-pipelines.universal@10.0.0-preview.26\ShaderLibrary\ShaderVariablesFunctions.hlsl
+			real3 NormalizeNormalPerPixel(real3 normalWS)
+			{
+				#if defined(SHADER_QUALITY_HIGH) || defined(_NORMALMAP)
+					return normalize(normalWS);
+				#else
+					return normalWS;
+				#endif
+			}
+			*/
+			
+			/*
+			//Library\PackageCache\com.unity.render-pipelines.core@10.0.0-preview.30\ShaderLibrary\SpaceTransforms.hlsl
+			real3 TransformWorldToViewDir(real3 dirWS, bool doNormalize = false)
+			{
+				float3 dirVS = mul((real3x3)GetWorldToViewMatrix(), dirWS).xyz;
+				if (doNormalize)
+					return normalize(dirVS);
+				
+				return dirVS;
+			}
+			*/
+			
+			/*
+			//Library\PackageCache\com.unity.render-pipelines.core@10.0.0-preview.30\ShaderLibrary\Packing.hlsl
+			real2 PackNormalOctRectEncode(real3 n)
+			{
+				// Perform planar projection.
+				real3 p = n * rcp(dot(abs(n), 1.0));
+				real  x = p.x, y = p.y, z = p.z;
+				
+				// Unfold the octahedron.
+				// Also correct the aspect ratio from 2:1 to 1:1.
+				real r = saturate(0.5 - 0.5 * x + 0.5 * y);
+				real g = x + y;
+				
+				// Negative hemisphere on the left, positive on the right.
+				return real2(CopySign(r, z), g);
+			}
+			
+			real3 UnpackNormalOctRectEncode(real2 f)
+			{
+				real r = f.r, g = f.g;
+				
+				// Solve for {x, y, z} given {r, g}.
+				real x = 0.5 + 0.5 * g - abs(r);
+				real y = g - x;
+				real z = max(1.0 - abs(x) - abs(y), REAL_EPS); // EPS is absolutely crucial for anisotropy
+				
+				real3 p = real3(x, y, CopySign(z, r));
+				
+				return normalize(p);
+			}
+			*/
+			
+			float4 frag(v2f i): SV_TARGET
+			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
+				float3 normal = NormalizeNormalPerPixel(i.normalWS);
+				
+				return float4(PackNormalOctRectEncode(TransformWorldToViewDir(normal, true)), 0.0, 0.0);
+			}
+			
+			ENDHLSL
+			
+		}
+		
+		Pass
+		{
+			Name "Meta"
+			Tags { "LightMode" = "Meta" }
+			
+			HLSLPROGRAM
+			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			//#pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+			
+			// Defines
+			#define _NORMALMAP 1
+			// #define _NORMAL_DROPOFF_TS 1
+			// #define ATTRIBUTES_NEED_NORMAL
+			// #define ATTRIBUTES_NEED_TANGENT
+			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
+			
+			#include "MyCarToonPBR.hlsl"
+			
+			struct a2v
+			{
+				float3 positionOS: POSITION;
+				float3 normalOS: NORMAL;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				float3 normalWS: NORMAL;
+				float3 positionWS: TEXCOORD0;
+				float3 viewDirectionWS: TEXCOORD1;
+				float4 screenUV: TEXCOORD2;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			CBUFFER_START(UnityPerMaterial)
+			float3 _ToonShadedColor;
+			float3 _ToonLitColor;
+			float _ToonColorSteps;
+			float _ToonColorOffset;
+			float _ToonColorSpread;
+			float3 _ToonSpecularColor;
+			float _ToonHighlightIntensity;
+			float _OutlineDepthSensitivity;
+			float _OutlineNormalSensitivity;
+			int _OutlineThickness;
+			CBUFFER_END
+			
+			v2f vert(a2v v)
+			{
+				v2f o = (v2f)0;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
+				o.positionWS = TransformObjectToWorld(v.positionOS.xyz);
+				o.normalWS = TransformObjectToWorldNormal(v.normalOS.xyz);
+				o.positionCS = TransformWorldToHClip(o.positionWS);
+				o.viewDirectionWS = GetWorldSpaceViewDir(o.positionWS);
+				o.screenUV = ComputeScreenPos(o.positionCS, _ProjectionParams.x);
+				
+				return o;
+			}
+			
+			float4 frag(v2f i): SV_TARGET
+			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
+				i.normalWS = normalize(i.normalWS);
+				float2 screenPosition = i.screenUV.xy / i.screenUV.w;
+				
+				float3 lightingColor = ToonLighting(i.positionWS, i.normalWS, i.viewDirectionWS, _ToonColorOffset, _ToonColorSpread, _ToonHighlightIntensity, _ToonColorSteps, _ToonShadedColor, _ToonLitColor, _ToonSpecularColor);
+				float3 outlineColor = Outlines(screenPosition, _OutlineThickness, _OutlineDepthSensitivity, _OutlineNormalSensitivity);
+				float ao = AmbientOcclusion(screenPosition);
+				
+				MetaInput input = (MetaInput)0;
+				
+				input.Albedo = half3(0, 0, 0);
+				input.Emission = lightingColor * outlineColor * ao;
+				
+				
+				return MetaFragment(input);
 			}
 			
 			ENDHLSL

@@ -4,6 +4,10 @@
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 	
+	#include "CommonFunction.hlsl"
+	#include "MainLight.hlsl"
+	#include "OutlineObject.hlsl"
+	
 	struct MyInputData
 	{
 		float3  positionWS;
@@ -30,7 +34,10 @@
 		half  clearCoatSmoothness;
 	};
 	
-	half4 MyFragmentPBR(InputData inputData, SurfaceData surfaceData)
+	TEXTURE2D(_SSAO_OcclusionTexture3);
+	SAMPLER(sampler_SSAO_OcclusionTexture3);
+	
+	half4 MyFragmentPBR(MyInputData inputData, MySurfaceData surfaceData)
 	{
 		#ifdef _SPECULARHIGHLIGHTS_OFF
 			bool specularHighlightsOff = true;
@@ -96,6 +103,49 @@
 		color.rgb = MixFog(color.rgb, inputData.fogCoord);
 		
 		return color;
+	}
+	
+	float3 ToonLighting(float3 positionWS, float3 normalWS, float3 viewDirectionWS, float toonColorOffset, float toonColorSpread, float toonHighlightIntensity, float toonColorSteps, float3 toonShadedColor, float3 toonLitColor, float3 toonSpecularColor)
+	{
+		half3 lightDirection;
+		half3 lightColor;
+		half distanceAtten;
+		half shadowAtten;
+		MainLight_half(positionWS, lightDirection, lightColor, distanceAtten, shadowAtten);
+		
+		//------
+		float lerpVal = saturate(dot(normalWS, lightDirection)) * shadowAtten;
+		lerpVal = smoothstep(toonColorOffset -toonColorSpread, toonColorOffset +toonColorSpread, lerpVal);
+		float steps = toonColorSteps - 1;
+		lerpVal = floor(lerpVal / (1 / steps)) * (1 / steps);
+		
+		//------
+		float3 halfDir = normalize(lightDirection + viewDirectionWS);
+		float d = dot(halfDir, normalWS);
+		d = step(1 - toonHighlightIntensity, d);
+		
+		//------
+		float3 finalColor = lerp(toonShadedColor, toonLitColor, lerpVal);
+		finalColor = lerp(finalColor, toonSpecularColor, d);
+		
+		return finalColor;
+	}
+	
+	float3 Outlines(float2 screenPosition, float outlineThickness, float outlineDepthSensitivity, float outlineNormalSensitivity)
+	{
+		float outline;
+		float sceneDepth;
+		OutlineObject_float(screenPosition, outlineThickness, outlineDepthSensitivity, outlineNormalSensitivity, outline, sceneDepth);
+		float3 outlineColor = float3(1, 1, 1);
+		float3 normalColor = float3(0, 0, 0);
+		float3 finalColor = lerp(outlineColor, normalColor, outline);
+		return finalColor;
+	}
+	
+	float AmbientOcclusion(float2 screenPosition)
+	{
+		float ao = 1 - SAMPLE_TEXTURE2D(_SSAO_OcclusionTexture3, sampler_SSAO_OcclusionTexture3, screenPosition).r;
+		return ao;
 	}
 	
 #endif
