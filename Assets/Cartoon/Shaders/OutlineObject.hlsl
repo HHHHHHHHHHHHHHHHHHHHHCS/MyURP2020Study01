@@ -10,8 +10,23 @@
 	TEXTURE2D(_CameraDepthNormalsTexture);
 	SAMPLER(sampler_CameraDepthNormalsTexture);
 	
-	// 加密代码  在UnityCG.cginc
-	/*
+	// 加密解密代码 都在UnityCG.cginc
+	inline float2 EncodeFloatRG(float v)
+	{
+		float2 kEncodeMul = float2(1.0, 255.0);
+		float kEncodeBit = 1.0 / 255.0;
+		float2 enc = kEncodeMul * v;
+		enc = frac(enc);
+		enc.x -= enc.y * kEncodeBit;
+		return enc;
+	}
+	
+	inline float DecodeFloatRG(float2 enc)
+	{
+		float2 kDecodeDot = float2(1.0, 1 / 255.0);
+		return dot(enc, kDecodeDot);
+	}
+	
 	inline float2 EncodeViewNormalStereo(float3 n)
 	{
 		float kScale = 1.7777;
@@ -21,10 +36,8 @@
 		enc = enc * 0.5 + 0.5;
 		return enc;
 	}
-	*/
-
-	//解法线代码
-	float3 DecodeNormal(float4 enc)
+	
+	inline float3 DecodeViewNormalStereo(float4 enc)
 	{
 		float kScale = 1.7777;
 		float3 nn = enc.xyz * float3(2 * kScale, 2 * kScale, 0) + float3(-kScale, -kScale, 1);
@@ -34,6 +47,22 @@
 		n.z = g - 1;
 		return n;
 	}
+	
+	inline float4 EncodeDepthNormal(float depth, float3 normal)
+	{
+		float4 enc;
+		enc.xy = EncodeViewNormalStereo(normal);
+		enc.zw = EncodeFloatRG(depth);
+		return enc;
+	}
+	
+	
+	inline void DecodeDepthNormal(float4 enc, out float depth, out float3 normal)
+	{
+		depth = DecodeFloatRG(enc.zw);
+		normal = DecodeViewNormalStereo(enc);
+	}
+	
 	
 	void OutlineObject_float(float2 uv, float outlineThickness, float depthSensitivity, float normalSensitivity, out float outline, out float sceneDepth)
 	{
@@ -54,7 +83,7 @@
 		for (int i = 0; i < 4; i ++)
 		{
 			depthSamples[i] = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, uvSamples[i]).r;
-			normalSamples[i] = DecodeNormal(SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraDepthNormalsTexture, uvSamples[i]));
+			normalSamples[i] = DecodeViewNormalStereo(SAMPLE_TEXTURE2D(_CameraDepthNormalsTexture, sampler_CameraDepthNormalsTexture, uvSamples[i]));
 		}
 		
 		//Depth
