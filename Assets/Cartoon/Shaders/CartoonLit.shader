@@ -459,6 +459,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#pragma multi_compile_fog
 			#pragma multi_compile _ DOTS_INSTANCING_ON
 			
+			//#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
 			//#pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 			
 			// Defines
@@ -527,7 +528,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				
 				float3 lightingColor = ToonLighting(i.positionWS, i.normalWS, i.viewDirectionWS, _ToonColorOffset, _ToonColorSpread, _ToonHighlightIntensity, _ToonColorSteps, _ToonShadedColor, _ToonLitColor, _ToonSpecularColor);
 				float3 outlineColor = Outlines(screenPosition, _OutlineThickness, _OutlineDepthSensitivity, _OutlineNormalSensitivity);
-				float ao = AmbientOcclusion(screenPosition);
+				float ao = 1;//AmbientOcclusion(screenPosition);//META不需要  如果真要开启需要宏 _SCREEN_SPACE_OCCLUSION
 				
 				MetaInput input = (MetaInput)0;
 				

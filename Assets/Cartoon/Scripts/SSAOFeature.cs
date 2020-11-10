@@ -43,14 +43,7 @@ namespace Cartoon.Scripts
 
 		// Constants
 		private const string c_ShaderName = "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion";
-		private const string c_OrthographicCameraKeyword = "_ORTHOGRAPHIC";
-		private const string c_NormalReconstructionLowKeyword = "_RECONSTRUCT_NORMAL_LOW";
-		private const string c_NormalReconstructionMediumKeyword = "_RECONSTRUCT_NORMAL_MEDIUM";
-		private const string c_NormalReconstructionHighKeyword = "_RECONSTRUCT_NORMAL_HIGH";
-		private const string c_SourceDepthKeyword = "_SOURCE_DEPTH";
 
-		private const string c_SourceDepthNormalsKeyword = "_SOURCE_DEPTH_NORMALS";
-		//private const string c_SourceGBufferKeyword = "_SOURCE_GBUFFER";
 
 		[SerializeField, HideInInspector] private Shader shader = null;
 

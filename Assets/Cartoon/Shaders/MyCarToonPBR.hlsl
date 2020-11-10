@@ -144,7 +144,10 @@
 	
 	float AmbientOcclusion(float2 screenPosition)
 	{
-		float ao = 1 - SAMPLE_TEXTURE2D(_SSAO_OcclusionTexture3, sampler_SSAO_OcclusionTexture3, screenPosition).r;
+		float ao = 1;
+		#if defined(_SCREEN_SPACE_OCCLUSION)
+			ao = 1 - SAMPLE_TEXTURE2D(_SSAO_OcclusionTexture3, sampler_SSAO_OcclusionTexture3, screenPosition).r;
+		#endif
 		return ao;
 	}
 	
