@@ -79,12 +79,12 @@ namespace Cartoon.Scripts
 
 		public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
 		{
-			int downSampleDivider = currentSettings.downSample ? 2 : 1;
+			int downsampleDivider = currentSettings.downsample ? 2 : 1;
 
 			Vector4 ssaoParams = new Vector4(
 				currentSettings.intensity,
 				currentSettings.radius,
-				1.0f / downSampleDivider,
+				1.0f / downsampleDivider,
 				currentSettings.sampleCount
 			);
 			material.SetVector(s_SSAOParamsID, ssaoParams);
@@ -133,13 +133,13 @@ namespace Cartoon.Scripts
 			descriptor = renderingData.cameraData.cameraTargetDescriptor;
 			descriptor.msaaSamples = 1;
 			descriptor.depthBufferBits = 0;
-			descriptor.width /= downSampleDivider;
-			descriptor.height /= downSampleDivider;
+			descriptor.width /= downsampleDivider;
+			descriptor.height /= downsampleDivider;
 			descriptor.colorFormat = RenderTextureFormat.ARGB32;
 			cmd.GetTemporaryRT(s_SSAOTexture1ID, descriptor, FilterMode.Bilinear);
 
-			descriptor.width *= downSampleDivider;
-			descriptor.height *= downSampleDivider;
+			descriptor.width *= downsampleDivider;
+			descriptor.height *= downsampleDivider;
 			cmd.GetTemporaryRT(s_SSAOTexture2ID, descriptor, FilterMode.Bilinear);
 			cmd.GetTemporaryRT(s_SSAOTexture3ID, descriptor, FilterMode.Bilinear);
 

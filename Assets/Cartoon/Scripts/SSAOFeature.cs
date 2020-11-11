@@ -26,7 +26,7 @@ namespace Cartoon.Scripts
 				High,
 			}
 
-			[SerializeField] public bool downSample = false;
+			[SerializeField] public bool downsample = false;
 
 			[SerializeField] public DepthSource source = DepthSource.DepthNormals;
 
