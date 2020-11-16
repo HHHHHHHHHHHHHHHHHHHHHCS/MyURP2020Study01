@@ -3,17 +3,13 @@
 	
 	// Includes
 	#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
-	//#include "Packages/com.unity.shadergraph/ShaderGraphLibrary/ShaderVariablesFunctions.hlsl"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareNormalsTexture.hlsl"
 	
 	
 	// Textures & Samplers
 	TEXTURE2D_X(_BaseMap);
-	TEXTURE2D_X(_ScreenSpaceOcclusionTexture);
-	
 	SAMPLER(sampler_BaseMap);
-	SAMPLER(sampler_ScreenSpaceOcclusionTexture);
 	
 	// Params
 	float4 _BlurOffset;
@@ -282,7 +278,7 @@
 	{
 		float3x3 camProj = (float3x3)unity_CameraProjection;
 		
-		//11 = 0行0列    13 = 0行2列
+		//11 = 0行0列    13 = 0行2列  默认是width  height
 		p11_22 = rcp(float2(camProj._11, camProj._22));
 		// _13  _23 默认都是 0
 		p13_31 = float2(camProj._13, camProj._23);
@@ -290,7 +286,68 @@
 		return camProj;
 	}
 	
-	float4 SSAO(v2f input): SV_TARGET
+	// http://graphics.cs.williams.edu/papers/AlchemyHPG11/
+	float4 Blur(float2 uv, float2 delta)
+	{
+		float4 p0 = SAMPLE_BASEMAP(uv);
+		float4 p1a = SAMPLE_BASEMAP(uv - delta * 1.3846153846);
+		float4 p1b = SAMPLE_BASEMAP(uv + delta * 1.3846153846);
+		float4 p2a = SAMPLE_BASEMAP(uv - delta * 3.2307692308);
+		float4 p2b = SAMPLE_BASEMAP(uv + delta * 3.2307692308);
+		
+		#if defined(_SOURCE_DEPTH_NORMALS)
+			float3 n0 = SampleSceneNormals(uv);
+		#else
+			float3 n0 = GetPackedNormal(p0);
+		#endif
+		
+		//比较Normal
+		float w0 = 0.2270270270;
+		float w1a = CompareNormal(n0, GetPackedNormal(p1a)) * 0.3162162162;
+		float w1b = CompareNormal(n0, GetPackedNormal(p1b)) * 0.3162162162;
+		float w2a = CompareNormal(n0, GetPackedNormal(p2a)) * 0.0702702703;
+		float w2b = CompareNormal(n0, GetPackedNormal(p2b)) * 0.0702702703;
+		
+		//只有Normal相近  才能把他当作一个连续的面片 计算ao
+		float s;
+		s = GetPackedAO(p0) * w0;
+		s += GetPackedAO(p1a) * w1a;
+		s += GetPackedAO(p1b) * w1b;
+		s += GetPackedAO(p2a) * w2a;
+		s += GetPackedAO(p2b) * w2b;
+		
+		s *= rcp(w0 + w1a + w1b + w2a + w2b);
+		
+		return PackAONormal(s, n0);
+	}
+	
+	float BlurSmall(float2 uv, float2 delta)
+	{
+		float4 p0 = SAMPLE_BASEMAP(uv);
+		float4 p1 = SAMPLE_BASEMAP(uv + float2(-delta.x, -delta.y));
+		float4 p2 = SAMPLE_BASEMAP(uv + float2(delta.x, -delta.y));
+		float4 p3 = SAMPLE_BASEMAP(uv + float2(-delta.x, delta.y));
+		float4 p4 = SAMPLE_BASEMAP(uv + float2(delta.x, delta.y));
+		
+		float3 n0 = GetPackedNormal(p0);
+		
+		float w0 = 1.0;
+		float w1 = CompareNormal(n0, GetPackedNormal(p1));
+		float w2 = CompareNormal(n0, GetPackedNormal(p2));
+		float w3 = CompareNormal(n0, GetPackedNormal(p3));
+		float w4 = CompareNormal(n0, GetPackedNormal(p4));
+		
+		float s;
+		s = GetPackedAO(p0) * w0;
+		s += GetPackedAO(p1) * w1;
+		s += GetPackedAO(p2) * w2;
+		s += GetPackedAO(p3) * w3;
+		s += GetPackedAO(p4) * w4;
+		
+		return s * rcp(w0 + w1 + w2 + w3 + w4);
+	}
+	
+	float4 SSAO(v2f input): SV_Target
 	{
 		UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 		float2 uv = input.uv;
@@ -355,6 +412,34 @@
 		ao = PositivePow(ao * INTENSITY * rcpSampleCount, kContrast);
 		
 		return PackAONormal(ao, norm_o);
+	}
+	
+	float4 HorizontalBlur(v2f input): SV_Target
+	{
+		UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+		
+		float2 uv = input.uv;
+		float2 delta = float2(_BaseMap_TexelSize.x * 2.0, 0.0);
+		return Blur(uv, delta);
+	}
+	
+	float4 VerticalBlur(v2f input): SV_Target
+	{
+		UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+		
+		float2 uv = input.uv;
+		//如： 原来1920  ssao是缩小成860    到horblur又放大了1920   采样距离统一按照ssao尺寸算  原来是距离1   现在要距离2
+		float2 delta = float2(0.0, _BaseMap_TexelSize.y * rcp(DOWNSAMPLE) * 2.0);
+		return Blur(uv, delta);
+	}
+	
+	float4 FinalBlur(v2f input): SV_Target
+	{
+		UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+		
+		float2 uv = input.uv;
+		float2 delta = _BaseMap_TexelSize.xy * rcp(DOWNSAMPLE);
+		return 1.0 - BlurSmall(uv, delta);
 	}
 	
 #endif

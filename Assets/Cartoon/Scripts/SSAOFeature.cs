@@ -42,8 +42,7 @@ namespace Cartoon.Scripts
 		}
 
 		// Constants
-		private const string c_ShaderName = "Hidden/Universal Render Pipeline/ScreenSpaceAmbientOcclusion";
-
+		private const string c_ShaderName = "MyRP/Cartoon/SSAO";
 
 		[SerializeField, HideInInspector] private Shader shader = null;
 
@@ -89,12 +88,12 @@ namespace Cartoon.Scripts
 
 		private bool GetMaterial()
 		{
-			if (material == null)
+			if (material != null)
 			{
 				return true;
 			}
 
-			if (shader == null)
+			if (shader == null || shader.name != c_ShaderName)
 			{
 				shader = Shader.Find(c_ShaderName);
 				if (shader == null)

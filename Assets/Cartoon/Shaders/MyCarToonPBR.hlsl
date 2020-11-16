@@ -34,8 +34,9 @@
 		half  clearCoatSmoothness;
 	};
 	
-	TEXTURE2D(_SSAO_OcclusionTexture3);
-	SAMPLER(sampler_SSAO_OcclusionTexture3);
+	// 已经定义在Library\PackageCache\com.unity.render-pipelines.universal@10.0.0-preview.26\ShaderLibrary\Lighting.hlsl 
+	// TEXTURE2D(_ScreenSpaceOcclusionTexture);
+	// SAMPLER(sampler_ScreenSpaceOcclusionTexture);
 	
 	half4 MyFragmentPBR(MyInputData inputData, MySurfaceData surfaceData)
 	{
@@ -146,7 +147,7 @@
 	{
 		float ao = 1;
 		#if defined(_SCREEN_SPACE_OCCLUSION)
-			ao = 1 - SAMPLE_TEXTURE2D(_SSAO_OcclusionTexture3, sampler_SSAO_OcclusionTexture3, screenPosition).r;
+			ao = SAMPLE_TEXTURE2D(_ScreenSpaceOcclusionTexture, sampler_ScreenSpaceOcclusionTexture, screenPosition).r;
 		#endif
 		return ao;
 	}

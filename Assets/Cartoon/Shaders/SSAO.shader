@@ -69,6 +69,7 @@ Shader "MyRP/Cartoon/SSAO"
 			#pragma multi_compile_local _RECONSTRUCT_NORMAL_LOW _RECONSTRUCT_NORMAL_MEDIUM _RECONSTRUCT_NORMAL_HIGH
 			#pragma multi_compile_local _ _ORTHOGRAPHIC
 			#include "SSAO.hlsl"
+			
 			ENDHLSL
 			
 		}
@@ -82,10 +83,8 @@ Shader "MyRP/Cartoon/SSAO"
 			
 			#pragma vertex vert
 			#pragma fragment HorizontalBlur
-			#define BLUR_SAMPLE_CENTER_NORMAL
-			#pragma multi_compile_local _ _ORTHOGRAPHIC
-			#pragma multi_compile_local _SOURCE_DEPTH _SOURCE_DEPTH_NORMALS _SOURCE_GBUFFER
 			#include "SSAO.hlsl"
+			
 			ENDHLSL
 			
 		}
@@ -100,6 +99,7 @@ Shader "MyRP/Cartoon/SSAO"
 			#pragma vertex vert
 			#pragma fragment VerticalBlur
 			#include "SSAO.hlsl"
+			
 			ENDHLSL
 			
 		}
@@ -114,6 +114,7 @@ Shader "MyRP/Cartoon/SSAO"
 			#pragma vertex vert
 			#pragma fragment FinalBlur
 			#include "SSAO.hlsl"
+			
 			ENDHLSL
 			
 		}

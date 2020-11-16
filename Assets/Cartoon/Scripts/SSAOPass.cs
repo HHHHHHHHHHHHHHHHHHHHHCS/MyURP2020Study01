@@ -59,6 +59,7 @@ namespace Cartoon.Scripts
 		public bool Setup(SSAOFeature.SSAOSettings settings)
 		{
 			currentSettings = settings;
+			//必须设置  不然needsDepth/needsNormals 会不起作用
 			switch (currentSettings.source)
 			{
 				case SSAOFeature.SSAOSettings.DepthSource.Depth:
@@ -144,7 +145,8 @@ namespace Cartoon.Scripts
 			cmd.GetTemporaryRT(s_SSAOTexture3ID, descriptor, FilterMode.Bilinear);
 
 			//configure target and clear color
-			ConfigureTarget(ssaoTextureTarget2);
+			//必须要有这个  不然的话会清除color target
+			ConfigureTarget(ssaoTextureTarget1);
 			ConfigureClear(ClearFlag.None, Color.white);
 		}
 

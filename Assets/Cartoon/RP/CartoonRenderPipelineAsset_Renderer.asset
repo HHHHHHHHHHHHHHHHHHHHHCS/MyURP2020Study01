@@ -87,11 +87,11 @@ MonoBehaviour:
   m_Name: MySSAO
   m_EditorClassIdentifier: 
   m_Active: 1
-  shader: {fileID: 0}
+  shader: {fileID: 4800000, guid: fba9e524ef0c6bf44be77fb7fcd7a968, type: 3}
   settings:
     downsample: 0
     source: 1
-    normalSamples: 1
+    normalSamples: 2
     intensity: 0.64
     directLightStrength: 0.903
     radius: 0.09
