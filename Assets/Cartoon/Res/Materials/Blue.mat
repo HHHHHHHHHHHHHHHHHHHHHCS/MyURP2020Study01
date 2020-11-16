@@ -77,7 +77,7 @@ Material:
     - _SrcBlend: 1
     - _Surface: 0
     - _ToonColorOffset: 0.3
-    - _ToonColorSpread: 0.96
+    - _ToonColorSpread: 0.512
     - _ToonColorSteps: 9
     - _ToonHighlightIntensity: 0.003
     - _WorkflowMode: 1
@@ -87,8 +87,8 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
-    - _ToonLitColor: {r: 0.94835496, g: 1.0592737, b: 0.33830208, a: 1}
-    - _ToonShadedColor: {r: 0.09019608, g: 0.5529412, b: 0.7490196, a: 1}
+    - _ToonLitColor: {r: 0, g: 0.52093166, b: 1.4142135, a: 1}
+    - _ToonShadedColor: {r: 0, g: 0.021048341, b: 0.6698113, a: 1}
     - _ToonSpecularColor: {r: 0.91764706, g: 0.78431374, b: 0.5529412, a: 0}
   m_BuildTextureStacks: []
 --- !u!114 &3732562047946682290
