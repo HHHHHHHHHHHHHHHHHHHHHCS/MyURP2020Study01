@@ -145,9 +145,10 @@ namespace Cartoon.Scripts
 			cmd.GetTemporaryRT(s_SSAOTexture3ID, descriptor, FilterMode.Bilinear);
 
 			//configure target and clear color
-			//必须要有这个  不然的话会清除color target
+			//必须要有这个
+			//不然的话 没有标记overrideCameraTarget   会clear  colortarget
 			ConfigureTarget(ssaoTextureTarget1);
-			ConfigureClear(ClearFlag.None, Color.white);
+			// ConfigureClear(ClearFlag.None, Color.white);
 		}
 
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
