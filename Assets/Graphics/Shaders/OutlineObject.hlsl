@@ -6,6 +6,10 @@
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 	float4 _CameraDepthTexture_TexelSize;	//这个是没有定义的
 	
+	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
+	float4 _CameraOpaqueTexture_TexelSize;	//这个是没有定义的
+	
+	
 	#ifdef MY_DEPTH_NORMAL
 		
 		TEXTURE2D(_CameraDepthNormalsTexture);
@@ -121,5 +125,48 @@
 		float edge = max(edgeDepth, edgeNormal);
 		outline = edge;
 	}
+	
+	
+	void OutlineObjectAlpha_float(float2 uv, float outlineThickness, float depthSensitivity, float normalSensitivity, out float outline, out float sceneDepth)
+	{
+		sceneDepth = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, uv).r;
+		
+		float halfScaleFloor = floor(outlineThickness * 0.5);
+		float halfScaleCeil = ceil(outlineThickness * 0.5);
+		
+		float2 uvSamples[4];
+		float depthSamples[4];
+		float3 normalSamples[4];
+		float4 colorSamples[4];
+		
+		uvSamples[0] = uv - float2(_CameraDepthTexture_TexelSize.x, _CameraDepthTexture_TexelSize.y) * halfScaleFloor;
+		uvSamples[1] = uv + float2(_CameraDepthTexture_TexelSize.x, _CameraDepthTexture_TexelSize.y) * halfScaleCeil;
+		uvSamples[2] = uv + float2(_CameraDepthTexture_TexelSize.x * halfScaleCeil, -_CameraDepthTexture_TexelSize.y * halfScaleFloor);
+		uvSamples[3] = uv + float2(-_CameraDepthTexture_TexelSize.x * halfScaleFloor, _CameraDepthTexture_TexelSize.y * halfScaleCeil);
+		
+		for (int i = 0; i < 4; i ++)
+		{
+			depthSamples[i] = SampleSceneDepth(uvSamples[i]);
+			normalSamples[i] = SampleDepthNormal(uvSamples[i]);
+			//colorSamples[i] = 
+		}
+		
+		//Depth
+		float depthFiniteDifference0 = depthSamples[1] - depthSamples[0];
+		float depthFiniteDifference1 = depthSamples[3] - depthSamples[2];
+		float edgeDepth = sqrt(pow(depthFiniteDifference0, 2) + pow(depthFiniteDifference1, 2)) * 100;
+		float depthThreshold = (1 / depthSensitivity) * sceneDepth;//depthSamples[0];
+		edgeDepth = edgeDepth > depthThreshold?1: 0;
+		
+		//Normals
+		float3 normalFiniteDifference0 = normalSamples[1] - normalSamples[0];
+		float3 normalFiniteDifference1 = normalSamples[3] - normalSamples[2];
+		float edgeNormal = sqrt(dot(normalFiniteDifference0, normalFiniteDifference0) + dot(normalFiniteDifference1, normalFiniteDifference1));
+		edgeNormal = edgeNormal > (1 / normalSensitivity) ? 1: 0;
+		
+		float edge = max(edgeDepth, edgeNormal);
+		outline = edge;
+	}
+	
 	
 #endif
