@@ -15,7 +15,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 	}
 	SubShader
 	{
-		Tags { "RenderType" = "Opaque" "Queue" = "Geometry" }
+		Tags { "RenderType" = "Opaque" "Queue" = "Geometry" /*"RenderPipeline"="UniversalPipeline"*/ }
 		
 		Cull Back
 		Blend One Zero
@@ -49,7 +49,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
-
+			
 			#pragma multi_compile _ MY_DEPTH_NORMAL
 			
 			#define _NORMALMAP 1
@@ -83,7 +83,9 @@ Shader "MyRP/Cartoon/CartoonLit"
 				float4 tangentWS: TANGENT;
 				float3 positionWS: TEXCOORD0;
 				float2 uv: TEXCOORD1;
-				float2 lightmapUV: TEXCOORD2;
+				#if defined(LIGHTMAP_ON)
+					float2 lightmapUV: TEXCOORD2;
+				#endif
 				float3 viewDirectionWS: TEXCOORD3;
 				float4 screenUV: TEXCOORD4;
 				float3 sh: TEXCOORD5;
@@ -464,7 +466,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			//#pragma shader_feature _ _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 			
 			//#pragma multi_compile _ MY_DEPTH_NORMAL
-
+			
 			// Defines
 			#define _NORMALMAP 1
 			// #define _NORMAL_DROPOFF_TS 1
