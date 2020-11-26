@@ -9,7 +9,8 @@ Shader "MyRP/Cartoon/SSAO"
 	#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/ImageBasedLighting.hlsl"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	
-	half4 _ScaleBiasRt;
+	//Library\PackageCache\com.unity.render-pipelines.universal@10.2.0\ShaderLibrary\UnityInput.hlsl
+	//half4 _ScaleBiasRt;
 	
 	struct a2v
 	{
