@@ -279,7 +279,7 @@
 		float3x3 camProj = (float3x3)unity_CameraProjection;
 		
 		//11 = 0行0列    13 = 0行2列  默认是width  height
-		p11_22 = rcp(float2(camProj._11, camProj._22));
+		p11_22 = 1 / (float2(camProj._11, camProj._22));
 		// _13  _23 默认都是 0
 		p13_31 = float2(camProj._13, camProj._23);
 		
@@ -316,7 +316,7 @@
 		s += GetPackedAO(p2a) * w2a;
 		s += GetPackedAO(p2b) * w2b;
 		
-		s *= rcp(w0 + w1a + w1b + w2a + w2b);
+		s /= (w0 + w1a + w1b + w2a + w2b);
 		
 		return PackAONormal(s, n0);
 	}
@@ -344,12 +344,12 @@
 		s += GetPackedAO(p3) * w3;
 		s += GetPackedAO(p4) * w4;
 		
-		return s * rcp(w0 + w1 + w2 + w3 + w4);
+		return s / (w0 + w1 + w2 + w3 + w4);
 	}
 	
 	float4 SSAO(v2f input): SV_Target
 	{
-		UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+		//UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 		float2 uv = input.uv;
 		
 		//坐标转换使用参数
@@ -363,7 +363,7 @@
 		SampleDepthNormalView(uv, p11_22, p13_31, depth_o, norm_o, vpos_o);
 		
 		float randAddon = uv.x * 1e-10;
-		float rcpSampleCount = rcp(SAMPLE_COUNT);
+		float rcpSampleCount = 1 / SAMPLE_COUNT;
 		float ao = 0.0;
 		for (int s = 0; s < int(SAMPLE_COUNT); s ++)
 		{
@@ -388,7 +388,7 @@
 				float2 uv_s1_01 = clamp((spos_s1.xy + 1.0) * 0.5, 0.0, 1.0);
 			#else
 				//齐次对齐 重新校对
-				float2 uv_s1_01 = clamp((spos_s1.xy * rcp(vpos_s1.z) + 1.0) * 0.5, 0.0, 1.0);
+				float2 uv_s1_01 = clamp((spos_s1.xy / vpos_s1.z + 1.0) * 0.5, 0.0, 1.0);
 			#endif
 			
 			//重新转换为正确的点
@@ -401,7 +401,7 @@
 			float a1 = max(dot(v_s2, norm_o) - kBeta * depth_o, 0.0);
 			//随着距离变大而减少
 			float a2 = dot(v_s2, v_s2) + EPSILON;
-			ao += a1 * rcp(a2);
+			ao += a1 / a2;
 		}
 		
 		//因为之前radius越大 则距离越大 衰减越厉害
@@ -416,7 +416,7 @@
 	
 	float4 HorizontalBlur(v2f input): SV_Target
 	{
-		UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+		//UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 		
 		float2 uv = input.uv;
 		float2 delta = float2(_BaseMap_TexelSize.x * 2.0, 0.0);
@@ -425,20 +425,20 @@
 	
 	float4 VerticalBlur(v2f input): SV_Target
 	{
-		UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+		//UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 		
 		float2 uv = input.uv;
 		//如： 原来1920  ssao是缩小成860    到horblur又放大了1920   采样距离统一按照ssao尺寸算  原来是距离1   现在要距离2
-		float2 delta = float2(0.0, _BaseMap_TexelSize.y * rcp(DOWNSAMPLE) * 2.0);
+		float2 delta = float2(0.0, _BaseMap_TexelSize.y / (DOWNSAMPLE) * 2.0);
 		return Blur(uv, delta);
 	}
 	
 	float4 FinalBlur(v2f input): SV_Target
 	{
-		UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
+		//UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
 		
 		float2 uv = input.uv;
-		float2 delta = _BaseMap_TexelSize.xy * rcp(DOWNSAMPLE);
+		float2 delta = _BaseMap_TexelSize.xy / DOWNSAMPLE;
 		return 1.0 - BlurSmall(uv, delta);
 	}
 	
