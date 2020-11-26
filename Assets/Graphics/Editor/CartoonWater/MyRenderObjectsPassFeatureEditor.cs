@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Graphics.Scripts.CartoonWater;
 using UnityEditor;
 using UnityEngine;
 
-namespace RoyaleBattle.Editor
+namespace Graphics.Editor.CartoonWater
 {
 	[CustomPropertyDrawer(typeof(MyRenderObjectsFeature.RenderObjectsSettings), true)]
 	public class MyRenderObjectsPassFeatureEditor : PropertyDrawer

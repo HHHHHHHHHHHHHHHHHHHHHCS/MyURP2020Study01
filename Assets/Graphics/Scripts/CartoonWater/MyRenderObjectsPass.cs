@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using static RoyaleBattle.MyRenderObjectsFeature;
+using static Graphics.Scripts.CartoonWater.MyRenderObjectsFeature;
 
-namespace RoyaleBattle
+namespace Graphics.Scripts.CartoonWater
 {
 	public class MyRenderObjectsPass : ScriptableRenderPass
 	{

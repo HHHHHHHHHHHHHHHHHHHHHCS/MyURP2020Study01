@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace Graphics.Scripts
+namespace Graphics.Scripts.Cartoon
 {
 	//SSAO有depthnormal 所以开启ssao可以不需要
 	//但是没有SSAO 就要走这套

@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
-using UnityEngine.Experimental.Rendering.Universal;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace RoyaleBattle
+namespace Graphics.Scripts.CartoonWater
 {
 	//Copy by unity urp RenderObjectsFeature
 	//ExcludeFromPreset    防止从该类的实例创建预设值

@@ -1,8 +1,9 @@
 using Graphics.Scripts;
+using Graphics.Scripts.Cartoon;
 using UnityEditor;
 using UnityEngine;
 
-namespace Graphics.Editor.Scripts
+namespace Graphics.Editor.Cartoon
 {
 	[CustomEditor(typeof(SSAOFeature))]
 	public class SSAOEditor : UnityEditor.Editor

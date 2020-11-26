@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace Graphics.Scripts
+namespace Graphics.Scripts.Cartoon
 {
 	public class SSAOPass : ScriptableRenderPass
 	{
