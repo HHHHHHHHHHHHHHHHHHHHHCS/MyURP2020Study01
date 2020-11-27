@@ -123,7 +123,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				UNITY_TRANSFER_INSTANCE_ID(v, o);
 				
 				o.positionWS = TransformObjectToWorld(v.vertex.xyz);
-				o.normalWS = TransformObjectToWorldNormal(v.normal.xyz);
+				o.normalWS = TransformObjectToWorldNormal(v.normal.xyz , true);
 				o.tangentWS = float4(TransformObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 				o.positionCS = TransformWorldToHClip(o.positionWS);
 				o.uv = v.uv;
@@ -132,6 +132,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				
 				//LightmapUV and SH
 				OUTPUT_LIGHTMAP_UV(v.lightUV, unity_LightmapST, o.lightmapUV);
+				//这里需要归一化normal 所以  在上面的Vertex归一化了
 				OUTPUT_SH(o.normalWS, o.sh);
 				
 				//Fog and vertexLight
