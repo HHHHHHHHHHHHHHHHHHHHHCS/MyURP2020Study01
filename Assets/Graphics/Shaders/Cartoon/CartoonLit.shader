@@ -64,7 +64,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			
-			#include "MyCarToonPBR.hlsl"
+			#include "../Common/MyCartoonPBR.hlsl"
 			
 			struct a2v
 			{
@@ -476,7 +476,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
 			
-			#include "MyCarToonPBR.hlsl"
+			#include "../Common/MyCartoonPBR.hlsl"
 			
 			struct a2v
 			{

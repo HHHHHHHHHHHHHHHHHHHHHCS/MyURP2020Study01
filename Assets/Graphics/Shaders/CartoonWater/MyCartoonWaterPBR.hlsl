@@ -43,7 +43,9 @@
 		float2 f = frac(uv * cellDensity);
 		float t = 8.0;
 		float3 res = float3(8.0, 0.0, 0.0);
-		
+		float2 ret = float2(0,0);
+
+
 		for (int y = -1; y <= 1; y ++)
 		{
 			for (int x = -1; x <= 1; x ++)
@@ -55,24 +57,25 @@
 				if (d < res.x)
 				{
 					res = float3(d, offset.x, offset.y);
+					ret = res.xy;
 				}
 			}
 		}
 		
-		return res.xy;
+		return ret;
 	}
 	
-	inline float2 DetailAlpha(float2 uv, float2 detailScale, float detailNoiseStrength, float detailNoiseScale, float detailDensity)
+	inline float2 DetailAlpha(float2 uv0, float2 detailScale, float detailNoiseStrength, float detailNoiseScale, float detailDensity)
 	{
 		float2 uv = uv0 * detailScale;
 		
-		float noise0 = GradientNoise(uv, detailNoiseScale) * detailNoiseStrength;
+		float noise0 = GradientNoise(uv0, detailNoiseScale) * detailNoiseStrength;
 		
 		uv += noise0.xx;
 		
-		float noise1 = GradientNoise(uv, 3) * detailDensity;
+		float noise1 = GradientNoise(uv0, 3) * detailDensity;
 		
-		return Voronoi(uv, 2, noise1, ret, cells);
+		return Voronoi(uv, 2, noise1);
 	}
 	
 	inline float DetailAlphaX(float2 uv, float2 detailScale, float detailNoiseStrength, float detailNoiseScale, float detailDensity)
@@ -83,22 +86,6 @@
 	inline float DetailAlphaY(float2 uv, float2 detailScale, float detailNoiseStrength, float detailNoiseScale, float detailDensity)
 	{
 		return DetailAlpha(uv, detailScale, detailNoiseStrength, detailNoiseScale, detailDensity).y;
-	}
-	
-	
-	float AmbientOcclusion(float2 screenPosition)
-	{
-		float ao = 1;
-		#if defined(_SCREEN_SPACE_OCCLUSION)
-			ao = SAMPLE_TEXTURE2D(_ScreenSpaceOcclusionTexture, sampler_ScreenSpaceOcclusionTexture, screenPosition).r;
-		#endif
-		return ao;
-	}
-	
-	
-	float3 ToonLighting(float3 positionWS, float3 normalWS, float3 viewDirectionWS, float toonColorOffset, float toonColorSpread, float toonHighlightIntensity, float toonColorSteps, float3 toonShadedColor, float3 toonLitColor, float3 toonSpecularColor)
-	{
-		
 	}
 	
 #endif

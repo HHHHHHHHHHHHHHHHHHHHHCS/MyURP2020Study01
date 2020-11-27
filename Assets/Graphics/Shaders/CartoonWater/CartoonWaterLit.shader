@@ -9,6 +9,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 		_ToonColorSpread ("Toon Color Spread", Range(0, 1)) = 0.96
 		_ToonSpecularColor ("Toon Specular Color", Color) = (0.9528302, 0.9528302, 0.9528302, 0)
 		_ToonHighlightIntensity ("Toon Highlight Intensity", Range(0, 0.25)) = 0.05
+		[Toggle(_DetailAlphaX_ON)]DetailAlphaX ("Detail Alpha X", Int) = 1
 		_DetailDensity ("Detail Density", Float) = 3
 		_DetailScale ("Detail Scale", Vector) = (1, 0.2, 0, 0)
 		_DetailNoiseStrength ("Detail Noise Strength", Float) = 0.01
@@ -44,6 +45,9 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
+
+			#pragma multi_compile _ _DetailAlphaX_ON
+
 			
 			#define _AlphaClip 1
 			#define _NORMALMAP 1
@@ -61,8 +65,13 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			// #define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
 			// #define FEATURES_GRAPH_VERTEX
 			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+
+			#include "../Common/MyCartoonPBR.hlsl"
+			#include "MyCartoonWaterPBR.hlsl"
+
 			
 			struct a2v
 			{
@@ -76,12 +85,35 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			
 			struct v2f
 			{
-				float2 uv: TEXCOORD0;
-				float4 vertex: SV_POSITION;
+				float4 positionCS: SV_POSITION;
+				float3 normalWS: NORMAL;
+				float4 tangentWS: TANGENT;
+				float3 positionWS: TEXCOORD0;
+				float2 uv: TEXCOORD1;
+				#if defined(LIGHTMAP_ON)
+					float2 lightmapUV: TEXCOORD2;
+				#endif
+				float3 viewDirectionWS: TEXCOORD3;
+				float4 screenUV: TEXCOORD4;
+				float3 sh: TEXCOORD5;
+				half4 fogFactorAndVertexLight: TEXCOORD6;
+				float4 shadowCoord: TEXCOORD7;
 			};
 			
-			sampler2D _MainTex;
-			float4 _MainTex_ST;
+			CBUFFER_START(UnityPerMaterial)
+			float3 _ToonShadedColor;
+			float3 _ToonLitColor;
+			float _ToonColorSteps;
+			float _ToonColorOffset;
+			float _ToonColorSpread;
+			float3 _ToonSpecularColor;
+			float _ToonHighlightIntensity;
+			float _DetailDensity;
+			float4 _DetailScale;
+			float _DetailNoiseStrength;
+			float _DetailNoiseScale;
+			CBUFFER_END
+			
 			
 			v2f vert(a2v v)
 			{
@@ -119,14 +151,48 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				
 				i.normalWS = normalize(i.normalWS);
 				float2 screenPosition = i.screenUV.xy / i.screenUV.w;
-				float3 absoluteWorldSpacePosition = GetAbsolutePositionWS(input.positionWS);
 				
+				MyInputData inputData = (MyInputData)0;
+				inputData.positionWS = i.positionWS;
+				inputData.normalWS = i.normalWS;
+				inputData.viewDirectionWS = i.viewDirectionWS;
+				inputData.shadowCoord = i.shadowCoord;
+				inputData.fogCoord = i.fogFactorAndVertexLight.x;
+				inputData.vertexLighting = i.fogFactorAndVertexLight.yzw;
+				inputData.bakedGI = SAMPLE_GI(i.lightmapUV, i.sh, i.normalWS);
+				inputData.normalizedScreenSpaceUV = i.positionCS.xy;
+				
+				float alphaClipThreshold = 0.5;
 				#if _AlphaClip
+					#ifdef _DetailAlphaX_ON
+						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#else
+						float alpha = DetailAlphaY(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#endif
+					clip(alpha - alphaClipThreshold);
 				#else
+					float alpha = 1;
 				#endif
 				
+				float3 lightingColor = ToonLighting(i.positionWS, i.normalWS, i.viewDirectionWS, _ToonColorOffset, _ToonColorSpread, _ToonHighlightIntensity, _ToonColorSteps, _ToonShadedColor, _ToonLitColor, _ToonSpecularColor);
+				float ao = AmbientOcclusion(screenPosition);
 				
-				return 0;
+				MySurfaceData surfaceData = (MySurfaceData)0;
+				surfaceData.albedo = half3(0, 0, 0);
+				surfaceData.specular = IsGammaSpace() ? half3(0.5, 0.5, 0.5): SRGBToLinear(half3(0.5, 0.5, 0.5));
+				surfaceData.metallic = 0;
+				surfaceData.smoothness = 0;
+				surfaceData.normalTS = float3(0.0f, 0.0f, 1.0f);
+				surfaceData.emission = lightingColor * ao;
+				surfaceData.occlusion = 1;
+				surfaceData.alpha = alpha;
+				surfaceData.clearCoatMask = 0.0;
+				surfaceData.clearCoatSmoothness = 1.0;
+				
+				
+				float4 col = CalcPBRColor(inputData, surfaceData);
+				
+				return col;
 			}
 			ENDHLSL
 			
