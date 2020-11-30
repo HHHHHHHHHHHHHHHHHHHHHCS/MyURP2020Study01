@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Toon Spike 1
-  m_Shader: {fileID: 4800000, guid: 749316c93f4550646be1f6795bdbf3be, type: 3}
+  m_Shader: {fileID: 4800000, guid: 5625e7e3d1579b94b95a4d2bd5c857a1, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -36,6 +36,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
+    - DetailAlphaX: 0
     - Vector1_02b4005b8a69416382e3e1f9791d0104: 1
     - Vector1_27ace27f2db94cc9ab92d91c25c1bb49: 20
     - Vector1_610805d7363e4c5a95e5a4fc2beb64ed: 0
@@ -46,19 +47,23 @@ Material:
     - Vector1_eca29d57f06f4c40ba3b31cbd7eed379: 0
     - Vector1_f0fd6eda6d1547f9b0b2babf25cd0666: 0.2
     - Vector1_fd36bbf533f74140892d9a76400243a4: 2
+    - _DetailDensity: 0
+    - _DetailNoiseScale: 20
+    - _DetailNoiseStrength: 0.005
     - _OutlineDepthSensitivity: 0.025
     - _OutlineNormalSensitivity: 2
     - _OutlineThickness: 1
-    - _ToonColorOffset: 0.3
-    - _ToonColorSpread: 0.96
-    - _ToonColorSteps: 9
-    - _ToonHighlightIntensity: 0.05
+    - _ToonColorOffset: 0.093
+    - _ToonColorSpread: 0
+    - _ToonColorSteps: 10
+    - _ToonHighlightIntensity: 0
     m_Colors:
     - Color_7c94ed4f0fd241e1b0fa8c311979867e: {r: 0.9176471, g: 0.7843138, b: 0.5529412, a: 1}
     - Color_a2697f6422104fac8dbfa6b556508922: {r: 1, g: 0.504717, b: 0.504717, a: 1}
     - Color_af94935346864900b9ec2f92b5e1d09b: {r: 0.5566038, g: 0.50146854, b: 0.50146854, a: 1}
     - Vector2_9339ab105cec41619a25aa9876743178: {r: 0.1, g: 0.1, b: 0, a: 0}
-    - _ToonLitColor: {r: 0.9245283, g: 0.6391348, b: 0.2921858, a: 1}
-    - _ToonShadedColor: {r: 0.5019608, g: 0.3019608, b: 0.05882353, a: 1}
-    - _ToonSpecularColor: {r: 0.95283014, g: 0.95283014, b: 0.95283014, a: 0}
+    - _DetailScale: {r: 0.1, g: 0.1, b: 0, a: 0}
+    - _ToonLitColor: {r: 0.9245283, g: 0.5058824, b: 0.5058824, a: 1}
+    - _ToonShadedColor: {r: 0.5568628, g: 0.5019608, b: 0.5019608, a: 1}
+    - _ToonSpecularColor: {r: 0.91764706, g: 0.78431374, b: 0.55294114, a: 1}
   m_BuildTextureStacks: []

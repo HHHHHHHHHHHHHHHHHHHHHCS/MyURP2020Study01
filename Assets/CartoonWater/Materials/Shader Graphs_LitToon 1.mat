@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Shader Graphs_LitToon 1
   m_Shader: {fileID: 4800000, guid: 5625e7e3d1579b94b95a4d2bd5c857a1, type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: _DetailAlphaX_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -20,7 +20,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs: []
     m_Floats:
-    - DetailAlphaX: 0
+    - DetailAlphaX: 1
     - Vector1_27ace27f2db94cc9ab92d91c25c1bb49: 30
     - Vector1_610805d7363e4c5a95e5a4fc2beb64ed: 0
     - Vector1_7a5a00e63c8f4f2f980e8ced040bc355: 0.005

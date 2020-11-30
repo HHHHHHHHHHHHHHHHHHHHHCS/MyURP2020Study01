@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Toon Background
   m_Shader: {fileID: 4800000, guid: 5625e7e3d1579b94b95a4d2bd5c857a1, type: 3}
-  m_ShaderKeywords: _DetailAlphaX_ON
+  m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -36,7 +36,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - DetailAlphaX: 1
+    - DetailAlphaX: 0
     - Vector1_02b4005b8a69416382e3e1f9791d0104: 1
     - Vector1_27ace27f2db94cc9ab92d91c25c1bb49: 20
     - Vector1_610805d7363e4c5a95e5a4fc2beb64ed: 0

@@ -89,7 +89,7 @@ Material:
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _ToonLitColor: {r: 0, g: 1.4142135, b: 0.29372138, a: 1}
     - _ToonShadedColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ToonSpecularColor: {r: 0.91764706, g: 0.78431374, b: 0.5529412, a: 0}
+    - _ToonSpecularColor: {r: 0.91764706, g: 0.78431374, b: 0.55294114, a: 1}
   m_BuildTextureStacks: []
 --- !u!114 &3732562047946682290
 MonoBehaviour:
