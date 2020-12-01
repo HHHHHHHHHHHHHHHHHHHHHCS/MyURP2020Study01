@@ -36,6 +36,11 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			#pragma fragment frag
 			
 			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			// Keywords
 			#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
 			#pragma multi_compile _ LIGHTMAP_ON
 			#pragma multi_compile _ DIRLIGHTMAP_COMBINED
@@ -45,9 +50,9 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
-
+			
 			#pragma multi_compile _ _DetailAlphaX_ON
-
+			
 			
 			#define _AlphaClip 1
 			#define _NORMALMAP 1
@@ -68,10 +73,10 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
-
+			
 			#include "../Common/MyCartoonPBR.hlsl"
 			#include "MyCartoonWaterPBR.hlsl"
-
+			
 			
 			struct a2v
 			{
@@ -98,6 +103,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				float3 sh: TEXCOORD5;
 				half4 fogFactorAndVertexLight: TEXCOORD6;
 				float4 shadowCoord: TEXCOORD7;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
 			CBUFFER_START(UnityPerMaterial)
@@ -123,7 +129,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				UNITY_TRANSFER_INSTANCE_ID(v, o);
 				
 				o.positionWS = TransformObjectToWorld(v.vertex.xyz);
-				o.normalWS = TransformObjectToWorldNormal(v.normal.xyz , true);
+				o.normalWS = TransformObjectToWorldNormal(v.normal.xyz, true);
 				o.tangentWS = float4(TransformObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 				o.positionCS = TransformWorldToHClip(o.positionWS);
 				o.uv = v.uv;
@@ -151,6 +157,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				UNITY_SETUP_INSTANCE_ID(i);
 				
 				i.normalWS = normalize(i.normalWS);
+				i.viewDirectionWS = normalize(i.viewDirectionWS);
 				float2 screenPosition = i.screenUV.xy / i.screenUV.w;
 				
 				MyInputData inputData = (MyInputData)0;
@@ -179,7 +186,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				float ao = AmbientOcclusion(screenPosition);
 				
 				MySurfaceData surfaceData = (MySurfaceData)0;
-				surfaceData.albedo = half3(0, 0, 0);
+				surfaceData.albedo = IsGammaSpace() ? half3(0.0, 0.0, 0.0): SRGBToLinear(half3(0.0, 0.0, 0.0));
 				surfaceData.specular = IsGammaSpace() ? half3(0.5, 0.5, 0.5): SRGBToLinear(half3(0.5, 0.5, 0.5));
 				surfaceData.metallic = 0;
 				surfaceData.smoothness = 0;
@@ -194,6 +201,329 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				float4 col = CalcPBRColor(inputData, surfaceData);
 				
 				return col;
+			}
+			ENDHLSL
+			
+		}
+		
+		Pass
+		{
+			Name "ShadowCaster"
+			Tags { "LightMode" = "ShadowCaster" }
+			
+			HLSLPROGRAM
+			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			#pragma multi_compile _ _DetailAlphaX_ON
+			
+			
+			#define _AlphaClip 1
+			#define _NORMALMAP 1
+			
+			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+			
+			#include "../Common/MyCartoonPBR.hlsl"
+			#include "MyCartoonWaterPBR.hlsl"
+			
+			
+			struct a2v
+			{
+				float4 vertex: POSITION;
+				float4 normal: NORMAL;
+				float2 uv: TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				float2 uv: TEXCOORD1;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			CBUFFER_START(UnityPerMaterial)
+			float3 _ToonShadedColor;
+			float3 _ToonLitColor;
+			float _ToonColorSteps;
+			float _ToonColorOffset;
+			float _ToonColorSpread;
+			float3 _ToonSpecularColor;
+			float _ToonHighlightIntensity;
+			float _DetailDensity;
+			float4 _DetailScale;
+			float _DetailNoiseStrength;
+			float _DetailNoiseScale;
+			CBUFFER_END
+			
+			// x: global clip space bias, y: normal world space bias
+			float3 _LightDirection;
+			
+			
+			v2f vert(a2v v)
+			{
+				v2f o;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
+				float3 positionWS = TransformObjectToWorld(v.vertex.xyz);
+				float3 normalWS = TransformObjectToWorldNormal(v.normal.xyz, true);
+				o.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+				o.uv = v.uv;
+				
+				return o;
+			}
+			
+			float4 frag(v2f i): SV_Target
+			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
+				float alphaClipThreshold = 0.5;
+				#if _AlphaClip
+					#ifdef _DetailAlphaX_ON
+						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#else
+						float alpha = DetailAlphaY(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#endif
+					clip(alpha - alphaClipThreshold);
+				#endif
+				
+				return 0;
+			}
+			ENDHLSL
+			
+		}
+		
+		Pass
+		{
+			Name "DepthOnly"
+			Tags { "LightMode" = "DepthOnly" }
+			
+			ColorMask 0
+			
+			HLSLPROGRAM
+			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			#pragma multi_compile _ _DetailAlphaX_ON
+			
+			
+			#define _AlphaClip 1
+			#define _NORMALMAP 1
+			
+			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			
+			#include "../Common/MyCartoonPBR.hlsl"
+			#include "MyCartoonWaterPBR.hlsl"
+			
+			
+			struct a2v
+			{
+				float4 vertex: POSITION;
+				float2 uv: TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				float2 uv: TEXCOORD1;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			CBUFFER_START(UnityPerMaterial)
+			float3 _ToonShadedColor;
+			float3 _ToonLitColor;
+			float _ToonColorSteps;
+			float _ToonColorOffset;
+			float _ToonColorSpread;
+			float3 _ToonSpecularColor;
+			float _ToonHighlightIntensity;
+			float _DetailDensity;
+			float4 _DetailScale;
+			float _DetailNoiseStrength;
+			float _DetailNoiseScale;
+			CBUFFER_END
+			
+			v2f vert(a2v v)
+			{
+				v2f o;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
+				float3 positionWS = TransformObjectToWorld(v.vertex.xyz);
+				o.positionCS = TransformWorldToHClip(positionWS);
+				o.uv = v.uv;
+				
+				return o;
+			}
+			
+			float4 frag(v2f i): SV_Target
+			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
+				float alphaClipThreshold = 0.5;
+				#if _AlphaClip
+					#ifdef _DetailAlphaX_ON
+						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#else
+						float alpha = DetailAlphaY(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#endif
+					clip(alpha - alphaClipThreshold);
+				#endif
+				
+				return 0;
+			}
+			ENDHLSL
+			
+		}
+		
+		Pass
+		{
+			Name "Meta"
+			Tags { "LightMode" = "Meta" }
+			
+			HLSLPROGRAM
+			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			
+			#pragma multi_compile _ _DetailAlphaX_ON
+			
+			
+			#define _AlphaClip 1
+			#define _NORMALMAP 1
+			// #define _SPECULAR_SETUP
+			// #define _NORMAL_DROPOFF_TS 1
+			// #define ATTRIBUTES_NEED_NORMAL
+			// #define ATTRIBUTES_NEED_TANGENT
+			// #define ATTRIBUTES_NEED_TEXCOORD0
+			// #define ATTRIBUTES_NEED_TEXCOORD1
+			// #define VARYINGS_NEED_POSITION_WS
+			// #define VARYINGS_NEED_NORMAL_WS
+			// #define VARYINGS_NEED_TANGENT_WS
+			// #define VARYINGS_NEED_TEXCOORD0
+			// #define VARYINGS_NEED_VIEWDIRECTION_WS
+			// #define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
+			// #define FEATURES_GRAPH_VERTEX
+			
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
+			
+			#include "../Common/MyCartoonPBR.hlsl"
+			#include "MyCartoonWaterPBR.hlsl"
+			
+			struct a2v
+			{
+				float4 vertex: POSITION;
+				float4 normal: NORMAL;
+				float2 uv: TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				float3 normalWS: NORMAL;
+				float3 positionWS: TEXCOORD0;
+				float2 uv: TEXCOORD1;
+				float3 viewDirectionWS: TEXCOORD2;
+				float4 screenUV: TEXCOORD3;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			CBUFFER_START(UnityPerMaterial)
+			float3 _ToonShadedColor;
+			float3 _ToonLitColor;
+			float _ToonColorSteps;
+			float _ToonColorOffset;
+			float _ToonColorSpread;
+			float3 _ToonSpecularColor;
+			float _ToonHighlightIntensity;
+			float _DetailDensity;
+			float4 _DetailScale;
+			float _DetailNoiseStrength;
+			float _DetailNoiseScale;
+			CBUFFER_END
+			
+			
+			v2f vert(a2v v)
+			{
+				v2f o;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
+				o.positionWS = TransformObjectToWorld(v.vertex.xyz);
+				o.normalWS = TransformObjectToWorldNormal(v.normal.xyz, true);
+				o.positionCS = TransformWorldToHClip(o.positionWS);
+				o.uv = v.uv;
+				o.viewDirectionWS = GetWorldSpaceViewDir(o.positionWS);
+				o.screenUV = ComputeScreenPos(o.positionCS, _ProjectionParams.x);
+				
+				return o;
+			}
+			
+			float4 frag(v2f i): SV_Target
+			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
+				i.normalWS = normalize(i.normalWS);
+				i.viewDirectionWS = normalize(i.viewDirectionWS);
+				float2 screenPosition = i.screenUV.xy / i.screenUV.w;
+				
+				
+				float alphaClipThreshold = 0.5;
+				#if _AlphaClip
+					#ifdef _DetailAlphaX_ON
+						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#else
+						float alpha = DetailAlphaY(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#endif
+					clip(alpha - alphaClipThreshold);
+				#else
+					float alpha = 1;
+				#endif
+				
+				float3 lightingColor = ToonLighting(i.positionWS, i.normalWS, i.viewDirectionWS, _ToonColorOffset, _ToonColorSpread, _ToonHighlightIntensity, _ToonColorSteps, _ToonShadedColor, _ToonLitColor, _ToonSpecularColor);
+				float ao = AmbientOcclusion(screenPosition);
+				
+				MetaInput input = (MetaInput)0;
+				
+				input.Albedo = IsGammaSpace() ? half3(0.0, 0.0, 0.0): SRGBToLinear(half3(0.0, 0.0, 0.0));
+				input.Emission = lightingColor * ao;
+				
+				return MetaFragment(input);
 			}
 			ENDHLSL
 			

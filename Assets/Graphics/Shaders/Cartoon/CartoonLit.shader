@@ -143,6 +143,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				UNITY_SETUP_INSTANCE_ID(i);
 				
 				i.normalWS = normalize(i.normalWS);
+				i.viewDirectionWS = normalize(i.viewDirectionWS);
 				float2 screenPosition = i.screenUV.xy / i.screenUV.w;
 				
 				
@@ -529,6 +530,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				UNITY_SETUP_INSTANCE_ID(i);
 				
 				i.normalWS = normalize(i.normalWS);
+				i.viewDirectionWS = normalize(i.viewDirectionWS);
 				float2 screenPosition = i.screenUV.xy / i.screenUV.w;
 				
 				float3 lightingColor = ToonLighting(i.positionWS, i.normalWS, i.viewDirectionWS, _ToonColorOffset, _ToonColorSpread, _ToonHighlightIntensity, _ToonColorSteps, _ToonShadedColor, _ToonLitColor, _ToonSpecularColor);
