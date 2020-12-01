@@ -57,9 +57,20 @@ namespace Graphics.Scripts.AreaLight
 			sourceRenderer = GetComponent<MeshRenderer>();
 			sourceRenderer.enabled = true;
 			sourceMesh = Instantiate(quadMesh);
-			
-			//TODO:
+			sourceMesh.hideFlags = HideFlags.HideAndDontSave;
+			MeshFilter mfs = gameObject.GetComponent<MeshFilter>();
+			mfs.sharedMesh = sourceMesh;
 
+			Transform t = transform;
+			if (t.localScale != Vector3.one)
+			{
+#if UNITY_EDITOR
+				Debug.LogError("AreaLights don't like to be scaled. Setting local scale to 1.", this);
+#endif
+				t.localScale = Vector3.one;
+			}
+
+			initialized = true;
 			return false;
 		}
 
