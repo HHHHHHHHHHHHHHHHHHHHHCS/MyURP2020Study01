@@ -27,6 +27,7 @@ namespace Graphics.Scripts.AreaLight
 			return null;
 		}
 
+		//TODO:texture 保存在本地
 		private static Texture2D CreateLUT(TextureFormat format, Color[] pixels)
 		{
 			Texture2D tex = new Texture2D(kLUTResolution, kLUTResolution, format, false, true)

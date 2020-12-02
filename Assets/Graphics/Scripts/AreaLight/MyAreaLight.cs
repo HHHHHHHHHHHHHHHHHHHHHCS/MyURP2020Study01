@@ -6,11 +6,14 @@ namespace Graphics.Scripts.AreaLight
 	[ExecuteInEditMode, RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
 	public partial class MyAreaLight : MonoBehaviour
 	{
+		private static Vector3[] vertices = new Vector3[4];
+
+
 		public bool renderSource = true;
 		public Vector3 size = new Vector3(1, 1, 2);
 		[Range(0, 179)] public float angle = 0.0f;
 		[MinValue(0)] public float intensity = 0.8f;
-		public Color color = Color.white;
+		public Color lightColor = Color.white;
 
 
 		[Header("Shadows")] public bool shadows = false;
@@ -39,7 +42,7 @@ namespace Graphics.Scripts.AreaLight
 				return;
 			}
 
-			UpdateSourceMesh();
+			//UpdateSourceMesh();
 		}
 
 		private bool Init()
@@ -70,19 +73,139 @@ namespace Graphics.Scripts.AreaLight
 				t.localScale = Vector3.one;
 			}
 
+			SetupLUTs();
+
+			props = new MaterialPropertyBlock();
+
 			initialized = true;
 			return false;
 		}
 
-		private bool InitDirect()
+		private void OnEnable()
 		{
-			throw new NotImplementedException();
+			if (!initialized)
+			{
+				return;
+			}
+
+
+			props.Clear();
+			UpdateSourceMesh();
+		}
+
+		private void OnDisable()
+		{
+			if (Application.isPlaying == false)
+			{
+				Cleanup();
+			}
+			else
+			{
+				using var e = cameras.GetEnumerator();
+				for (; e.MoveNext();)
+				{
+					e.Current.Value?.Clear();
+				}
+			}
+		}
+
+		private void Update()
+		{
+			if (!initialized)
+			{
+				return;
+			}
+
+			UpdateSourceMesh();
+
+			if (Application.isPlaying)
+			{
+				using var e = cameras.GetEnumerator();
+				for (; e.MoveNext();)
+				{
+					e.Current.Value?.Clear();
+				}
+			}
+		}
+
+		private void OnDestroy()
+		{
+			if (proxyMaterial != null)
+			{
+				DestroyImmediate(proxyMaterial);
+			}
+
+			if (sourceMesh != null)
+			{
+				DestroyImmediate(sourceMesh);
+			}
+
+			Cleanup();
+		}
+
+		private void OnWillRenderObject()
+		{
+			if (!initialized)
+			{
+				return;
+			}
+
+			Color color = new Color(
+				Mathf.GammaToLinearSpace(lightColor.r),
+				Mathf.GammaToLinearSpace(lightColor.g),
+				Mathf.GammaToLinearSpace(lightColor.b),
+				1.0f
+			);
+			
+			//TODO:
 		}
 
 
 		private void UpdateSourceMesh()
 		{
-			throw new NotImplementedException();
+			size.x = Mathf.Max(size.x, 0);
+			size.y = Mathf.Max(size.y, 0);
+			size.z = Mathf.Max(size.z, 0);
+
+			Vector2 quadSize = renderSource && enabled ? new Vector2(size.x, size.y) : new Vector2(0.0001f, 0.0001f);
+			if (quadSize != currentQuadSize)
+			{
+				float x = quadSize.x * 0.5f;
+				float y = quadSize.y * 0.5f;
+				//稍微往后一点 阴影贴图用
+				float z = -0.001f;
+
+				vertices[0].Set(-x, y, z);
+				vertices[1].Set(x, -y, z);
+				vertices[2].Set(x, y, z);
+				vertices[3].Set(-x, -y, z);
+
+				sourceMesh.vertices = vertices;
+
+				currentQuadSize = quadSize;
+			}
+
+			if (size != currentSize || angle != currentAngle)
+			{
+				sourceMesh.bounds = GetFrustumBounds();
+			}
+		}
+
+		private Bounds GetFrustumBounds()
+		{
+			if (angle == 0.0f)
+			{
+				return new Bounds(Vector3.zero, size);
+			}
+
+			//near plane
+			float tanHalfFov = Mathf.Tan(angle * 0.5f * Mathf.Deg2Rad);
+			float near = size.y * 0.5f / tanHalfFov;
+			float z = size.z;
+			float y = (near + size.z) * tanHalfFov * 2.0f;
+			float x = size.x * y / size.y;
+
+			return new Bounds(Vector3.forward * size.z * 0.5f, new Vector3(x, y, z));
 		}
 	}
 }
