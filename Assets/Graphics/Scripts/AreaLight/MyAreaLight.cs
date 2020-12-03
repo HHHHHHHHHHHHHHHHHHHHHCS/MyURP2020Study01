@@ -16,7 +16,7 @@ namespace Graphics.Scripts.AreaLight
 		public Color lightColor = Color.white;
 
 
-		[Header("Shadows")] public bool shadows = false;
+		[Header("Shadows")] public bool enableShadows = false;
 		public LayerMask shadowCullingMask = ~0;
 		public TextureSize shadowmapRes = TextureSize.x2048;
 		[MinValue(0)] public float receiverSearchDistance = 24.0f;
@@ -150,15 +150,12 @@ namespace Graphics.Scripts.AreaLight
 				return;
 			}
 
-			Color color = new Color(
-				Mathf.GammaToLinearSpace(lightColor.r),
-				Mathf.GammaToLinearSpace(lightColor.g),
-				Mathf.GammaToLinearSpace(lightColor.b),
-				1.0f
-			);
-			
-			//TODO:
+			props.SetVector("_EmissionColor",GetColor());
+			sourceRenderer.SetPropertyBlock(props);
+
+			SetupCommandBuffer();
 		}
+
 
 
 		private void UpdateSourceMesh()
@@ -207,5 +204,6 @@ namespace Graphics.Scripts.AreaLight
 
 			return new Bounds(Vector3.forward * size.z * 0.5f, new Vector3(x, y, z));
 		}
+		
 	}
 }
