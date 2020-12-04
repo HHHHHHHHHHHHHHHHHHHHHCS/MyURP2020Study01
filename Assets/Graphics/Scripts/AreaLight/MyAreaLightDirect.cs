@@ -138,7 +138,17 @@ namespace Graphics.Scripts.AreaLight
 			return buffer;
 		}
 
-
+		private void ReleaseTemporary(ref RenderTexture rt)
+		{
+			if (rt == null)
+			{
+				return;
+			}
+			
+			RenderTexture.ReleaseTemporary(rt);
+			rt = null;
+		}
+		
 		private Color GetColor()
 		{
 			if (QualitySettings.activeColorSpace == ColorSpace.Gamma)

@@ -21,11 +21,21 @@ namespace Graphics.Scripts.AreaLight
 
 
 		private RenderTexture shadowmap;
+		private RenderTexture blurredShadowmap = null;
+		private Texture2D shadowmapDummy = null;
+
 
 		private int shadowmapRenderTime = -1;
 
-		private void SetupShadowmapForSampling(CommandBuffer buf)
+		private void SetupShadowmapForSampling(CommandBuffer cmd)
 		{
+			UpdateShadowmap((int) shadowmapRes);
+
+			cmd.SetGlobalTexture("_Shadowmap", shadowmap);
+			InitShadowmapDummy();
+			proxyMaterial.SetTexture("_ShadowmapDummy",shadowmapDummy);
+			//TODO:Doing
+			// cmd.SetGlobalMatrix("_ShadowProjectionMatrix",);
 		}
 
 		private void UpdateShadowmap(int res)
@@ -40,25 +50,24 @@ namespace Graphics.Scripts.AreaLight
 				return;
 			}
 
-			if (angle == 0.0f)
-			{
-				//角度是0  则是orthographic
-				shadowmapCamera.orthographic = true;
-				shadowmapCameraTransform.localPosition = Vector3.zero;
-				shadowmapCamera.nearClipPlane = 0;
-				shadowmapCamera.farClipPlane = size.z;
-				shadowmapCamera.orthographicSize = 0.5f * size.y;
-				shadowmapCamera.aspect = size.x / size.y;
-			}
-			else
-			{
-				shadowmapCamera.orthographic = false;
-				float near = GetNearToCenter();
-				//local vector3.forward  ==  world trasnform.forward
-				shadowmapCameraTransform.localPosition = -near * Vector3.forward;
-				shadowmapCamera.nearClipPlane = near;
-				//TODO:
-			}
+			UpdateShadowmapCamera();
+
+			CreateShadowmap(res);
+
+			// TODO:清空RT. RenderWithShader() 也应该被clear, 但是它没有  应该属于BUG.
+			shadowmapCamera.cullingMask = 0;
+			shadowmapCamera.Render();
+			shadowmapCamera.cullingMask = shadowCullingMask;
+
+			//我们可能在PlaneReflections内部渲染，这会反转剔除。暂时禁用。
+			var oldCulling = GL.invertCulling;
+			GL.invertCulling = false;
+
+			//把 根shadowmapShader的"RenderType"相同的shader 替换成  shadowmapShader
+			shadowmapCamera.RenderWithShader(shadowmapShader, "RenderType");
+
+			GL.invertCulling = oldCulling;
+			shadowmapRenderTime = Time.renderedFrameCount;
 		}
 
 		private bool CreateCamera()
@@ -87,6 +96,60 @@ namespace Graphics.Scripts.AreaLight
 			}
 
 			return true;
+		}
+
+		private void UpdateShadowmapCamera()
+		{
+			if (angle == 0.0f)
+			{
+				//角度是0  则是orthographic
+				shadowmapCamera.orthographic = true;
+				shadowmapCameraTransform.localPosition = Vector3.zero;
+				shadowmapCamera.nearClipPlane = 0;
+				shadowmapCamera.farClipPlane = size.z;
+				shadowmapCamera.orthographicSize = 0.5f * size.y;
+				shadowmapCamera.aspect = size.x / size.y;
+			}
+			else
+			{
+				shadowmapCamera.orthographic = false;
+				float near = GetNearToCenter();
+				//local vector3.forward  ==  world trasnform.forward
+				shadowmapCameraTransform.localPosition = -near * Vector3.forward;
+				shadowmapCamera.nearClipPlane = near;
+				shadowmapCamera.farClipPlane = near + size.z;
+				shadowmapCamera.fieldOfView = angle;
+				shadowmapCamera.aspect = size.x / size.y;
+			}
+		}
+
+		private void CreateShadowmap(int res)
+		{
+			if (shadowmap != null && shadowmap.width == res)
+			{
+				return;
+			}
+
+			ReleaseTemporary(ref shadowmap);
+			shadowmap = RenderTexture.GetTemporary(res, res, 24, RenderTextureFormat.Shadowmap);
+			shadowmap.name = "AreaLight Shadowmap";
+			shadowmap.filterMode = FilterMode.Bilinear;
+			shadowmap.wrapMode = TextureWrapMode.Clamp;
+
+			shadowmapCamera.targetTexture = shadowmap;
+		}
+
+		private void InitShadowmapDummy()
+		{
+			if (shadowmapDummy != null)
+			{
+				return;
+			}
+
+			shadowmapDummy = new Texture2D(1, 1, TextureFormat.Alpha8, false, true);
+			shadowmapDummy.filterMode = FilterMode.Point;
+			shadowmapDummy.SetPixel(0, 0, new Color(0, 0, 0, 0));
+			shadowmapDummy.Apply(false, true);
 		}
 
 		private float GetNearToCenter()

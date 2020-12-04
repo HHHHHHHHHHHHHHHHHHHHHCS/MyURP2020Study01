@@ -68,6 +68,11 @@ namespace Graphics.Scripts.CartoonWater
 			RenderSettings.fog = oldFog;
 			QualitySettings.maximumLODLevel = 1;
 			QualitySettings.lodBias = oldBias * 0.5f;
+
+			UpdateReflectionCamera(camera);
+
+			//var res = ReflectionResolution(camera, UniversalRenderPipeline.asset.renderScale);
+			//TODO:
 		}
 
 		private void UpdateReflectionCamera(Camera realCamera)
@@ -101,6 +106,15 @@ namespace Graphics.Scripts.CartoonWater
 			reflectionCamera.transform.forward = Vector3.Scale(realCamera.transform.forward, new Vector3(1, -1, 1));
 			//矩阵转换到 反射矩阵下
 			reflectionCamera.worldToCameraMatrix = reflectionCamera.worldToCameraMatrix * reflection;
+
+			//斜投影矩阵
+			//https://acgmart.com/render/planar-reflection-based-on-distance/
+			//https://www.cnblogs.com/wantnon/p/4569096.html
+			Vector4 clipPlane = CameraSpacePlane(reflectionCamera, pos - Vector3.up * 0.1f, normal, 1.0f);
+			Matrix4x4 projection = realCamera.CalculateObliqueMatrix(clipPlane);
+			reflectionCamera.projectionMatrix = projection;
+			reflectionCamera.cullingMask = settings.reflectLayers;
+			reflectionCamera.transform.position = newPos;
 		}
 
 		private Camera CreateMirrorObjects(Camera currentCamera)
@@ -137,7 +151,7 @@ namespace Graphics.Scripts.CartoonWater
 			}
 
 			dest.CopyFrom(src); //赋值camera设置
-			dest.cameraType = CameraType.Game;
+			dest.cameraType = src.cameraType;
 			dest.useOcclusionCulling = false;
 		}
 
@@ -171,6 +185,15 @@ namespace Graphics.Scripts.CartoonWater
 		{
 			Vector3 newPos = new Vector3(pos.x, -pos.y, pos.z);
 			return newPos;
+		}
+
+		private Vector4 CameraSpacePlane(Camera cam, Vector3 pos, Vector3 normal, float sideSign)
+		{
+			Vector3 offsetPos = pos + normal * settings.clipPlaneOffset;
+			Matrix4x4 m = cam.worldToCameraMatrix;
+			Vector3 cpos = m.MultiplyPoint(offsetPos);
+			Vector3 cnormal = m.MultiplyVector(normal).normalized * sideSign; //direction
+			return new Vector4(cnormal.x, cnormal.y, cnormal.z, -Vector3.Dot(cpos, cnormal));
 		}
 	}
 }
