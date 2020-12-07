@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -9,7 +10,7 @@ namespace Graphics.Scripts.CartoonWater
 	//1.其实可以用上一帧的图 做翻转  这样不会重新再次渲染一遍
 	//2.添加一个pass 设置VP 只画简单的opaque和transparent
 	//但是这里  只是做尝试
-	[ExecuteAlways]
+	[ExecuteAlways, RequireComponent(typeof(Camera))]
 	public class PlanarReflections : MonoBehaviour
 	{
 		[System.Serializable]
@@ -36,10 +37,9 @@ namespace Graphics.Scripts.CartoonWater
 
 
 		[SerializeField] public PlanarReflectionSettings settings = new PlanarReflectionSettings();
-		public GameObject target;
+		public GameObject target; //水面板
 		public float planeOffset;
 
-		private Vector2Int textureSize = new Vector2Int(256 * 32, 128 * 32);
 		private RenderTexture reflectionTexture = null;
 		private Vector2Int oldReflectionTextureSize;
 
@@ -50,7 +50,36 @@ namespace Graphics.Scripts.CartoonWater
 
 		private void OnDisable()
 		{
+			Cleanup();
+		}
+
+		private void Cleanup()
+		{
 			RenderPipelineManager.beginCameraRendering -= ExecuteBeforeCameraRender;
+
+			if (reflectionCamera)
+			{
+				reflectionCamera.targetTexture = null;
+				SafeDestroy(reflectionCamera.gameObject);
+			}
+
+			if (reflectionTexture)
+			{
+				RenderTexture.ReleaseTemporary(reflectionTexture);
+				reflectionTexture = null;
+			}
+		}
+
+		private void SafeDestroy(UnityEngine.Object obj)
+		{
+			if (Application.isEditor)
+			{
+				DestroyImmediate(obj);
+			}
+			else
+			{
+				Destroy(obj);
+			}
 		}
 
 		private void ExecuteBeforeCameraRender(ScriptableRenderContext context, Camera camera)
@@ -60,19 +89,40 @@ namespace Graphics.Scripts.CartoonWater
 				return;
 			}
 
-			//剔除时针改变  显示背面
-			GL.invertCulling = true;
+			var oldCulling = GL.invertCulling;
 			var oldFog = RenderSettings.fog;
 			var oldMax = QualitySettings.maximumLODLevel;
 			var oldBias = QualitySettings.lodBias;
+			//剔除时针改变  显示背面  因为水可能要背面
+			GL.invertCulling = true;
 			RenderSettings.fog = oldFog;
 			QualitySettings.maximumLODLevel = 1;
 			QualitySettings.lodBias = oldBias * 0.5f;
 
 			UpdateReflectionCamera(camera);
 
-			//var res = ReflectionResolution(camera, UniversalRenderPipeline.asset.renderScale);
-			//TODO:
+			var res = ReflectionResolution(camera, UniversalRenderPipeline.asset.renderScale);
+			if (reflectionTexture == null)
+			{
+				bool useHDR10 = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.RGB111110Float);
+				RenderTextureFormat hdrFormat = useHDR10
+					? RenderTextureFormat.RGB111110Float
+					: RenderTextureFormat.Default;
+				reflectionTexture = RenderTexture.GetTemporary(res.x, res.y, 16
+					, GraphicsFormatUtility.GetGraphicsFormat(hdrFormat, true));
+				reflectionTexture.useMipMap = true;
+				reflectionTexture.autoGenerateMips = true;
+			}
+
+			reflectionCamera.targetTexture = reflectionTexture;
+
+			UniversalRenderPipeline.RenderSingleCamera(context, reflectionCamera);
+
+			GL.invertCulling = oldCulling;
+			RenderSettings.fog = oldFog;
+			QualitySettings.maximumLODLevel = oldMax;
+			QualitySettings.lodBias = oldBias;
+			Shader.SetGlobalTexture(planarReflectionTexture_PTID, reflectionTexture);
 		}
 
 		private void UpdateReflectionCamera(Camera realCamera)
@@ -90,15 +140,12 @@ namespace Graphics.Scripts.CartoonWater
 				normal = target.transform.up;
 			}
 
-			UpdateCamera(realCamera, reflectionCamera);
+			UpdateCameraProperties(realCamera, reflectionCamera);
 
 			float d = -Vector3.Dot(normal, pos) - settings.clipPlaneOffset; //摄像机旋转相对的高度偏移
 			Vector4 reflectionPlane = new Vector4(normal.x, normal.y, normal.z, d); //平面方程式
-
-			Matrix4x4 reflection = Matrix4x4.identity;
-			//reflection *= Matrix4x4.Scale(new Vector3(1, -1, 1)); //反射方向
-
-			CalculateReflectionMatrix(ref reflection, reflectionPlane);
+			Matrix4x4 reflection = CalculateReflectionMatrix(reflectionPlane);//平面矩阵
+			
 			// Vector3 oldPos = realCamera.transform.position - new Vector3(0, pos.y * 2, 0);
 			// Vector3 newPos = ReflectionPosition(oldPos);
 			Vector3 newPos = realCamera.transform.position;
@@ -131,7 +178,7 @@ namespace Graphics.Scripts.CartoonWater
 			// 	currentCamera.GetComponent<UniversalAdditionalCameraData>();
 			newCameraData.renderShadows = settings.shadows;
 			newCameraData.requiresColorOption = CameraOverrideOption.Off;
-			newCameraData.requiresColorOption = CameraOverrideOption.Off;
+			newCameraData.requiresDepthOption = CameraOverrideOption.Off;
 
 			var refCam = go.GetComponent<Camera>();
 			refCam.transform.SetPositionAndRotation(transform.position, transform.rotation);
@@ -143,14 +190,14 @@ namespace Graphics.Scripts.CartoonWater
 			return refCam;
 		}
 
-		private void UpdateCamera(Camera src, Camera dest)
+		private void UpdateCameraProperties(Camera src, Camera dest)
 		{
 			if (dest == null)
 			{
 				return;
 			}
 
-			dest.CopyFrom(src); //赋值camera设置
+			dest.CopyFrom(src); //复制camera设置
 			dest.cameraType = src.cameraType;
 			dest.useOcclusionCulling = false;
 		}
@@ -158,8 +205,10 @@ namespace Graphics.Scripts.CartoonWater
 		//将这个摄像机的worldToCameraMatrix乘以反射矩阵reflectionMatrix
 		//https://gameinstitute.qq.com/community/detail/106151
 		//https://zhuanlan.zhihu.com/p/74529106
-		private void CalculateReflectionMatrix(ref Matrix4x4 reflectionMatrix, Vector4 plane)
+		private Matrix4x4 CalculateReflectionMatrix(Vector4 plane)
 		{
+			Matrix4x4 reflectionMatrix;
+
 			reflectionMatrix.m00 = (1f - 2f * plane[0] * plane[0]);
 			reflectionMatrix.m01 = (-2f * plane[0] * plane[1]);
 			reflectionMatrix.m02 = (-2f * plane[0] * plane[2]);
@@ -179,6 +228,8 @@ namespace Graphics.Scripts.CartoonWater
 			reflectionMatrix.m31 = 0f;
 			reflectionMatrix.m32 = 0f;
 			reflectionMatrix.m33 = 1f;
+
+			return reflectionMatrix;
 		}
 
 		private Vector3 ReflectionPosition(Vector3 pos)
@@ -194,6 +245,30 @@ namespace Graphics.Scripts.CartoonWater
 			Vector3 cpos = m.MultiplyPoint(offsetPos);
 			Vector3 cnormal = m.MultiplyVector(normal).normalized * sideSign; //direction
 			return new Vector4(cnormal.x, cnormal.y, cnormal.z, -Vector3.Dot(cpos, cnormal));
+		}
+
+		private float GetScaleValue()
+		{
+			switch (settings.resolutionMultiplier)
+			{
+				case ResolutionMultiplier.Full:
+					return 1f;
+				case ResolutionMultiplier.Half:
+					return 0.5f;
+				case ResolutionMultiplier.Third:
+					return 0.33f;
+				case ResolutionMultiplier.Quarter:
+					return 0.25f;
+			}
+
+			return 0.5f;
+		}
+
+		private Vector2Int ReflectionResolution(Camera cam, float scale)
+		{
+			var x = (int) (cam.pixelWidth * scale * GetScaleValue());
+			var y = (int) (cam.pixelHeight * scale * GetScaleValue());
+			return new Vector2Int(x, y);
 		}
 	}
 }
