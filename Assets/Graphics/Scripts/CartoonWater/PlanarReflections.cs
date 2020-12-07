@@ -144,8 +144,8 @@ namespace Graphics.Scripts.CartoonWater
 
 			float d = -Vector3.Dot(normal, pos) - settings.clipPlaneOffset; //摄像机旋转相对的高度偏移
 			Vector4 reflectionPlane = new Vector4(normal.x, normal.y, normal.z, d); //平面方程式
-			Matrix4x4 reflection = CalculateReflectionMatrix(reflectionPlane);//平面矩阵
-			
+			Matrix4x4 reflection = CalculateReflectionMatrix(reflectionPlane); //平面矩阵
+
 			// Vector3 oldPos = realCamera.transform.position - new Vector3(0, pos.y * 2, 0);
 			// Vector3 newPos = ReflectionPosition(oldPos);
 			Vector3 newPos = realCamera.transform.position;
@@ -160,8 +160,8 @@ namespace Graphics.Scripts.CartoonWater
 			Vector4 clipPlane = CameraSpacePlane(reflectionCamera, pos - Vector3.up * 0.1f, normal, 1.0f);
 			Matrix4x4 projection = realCamera.CalculateObliqueMatrix(clipPlane);
 			reflectionCamera.projectionMatrix = projection;
-			reflectionCamera.cullingMask = settings.reflectLayers;
-			reflectionCamera.transform.position = newPos;
+			reflectionCamera.cullingMask = settings.reflectLayers; //不渲染水 layer
+			reflectionCamera.transform.position = newPos; //其实意义不大
 		}
 
 		private Camera CreateMirrorObjects(Camera currentCamera)

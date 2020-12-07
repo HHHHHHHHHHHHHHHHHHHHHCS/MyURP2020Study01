@@ -153,7 +153,35 @@ namespace Graphics.Scripts.AreaLight
 			props.SetVector("_EmissionColor", GetColor());
 			sourceRenderer.SetPropertyBlock(props);
 
-			SetupCommandBuffer();
+			
+			//TODO:doing
+			//SetupCommandBuffer();
+		}
+
+		private void OnDrawGizmosSelected()
+		{
+			Gizmos.color = Color.white;
+
+			if (angle == 0.0f)
+			{
+				Gizmos.matrix = transform.localToWorldMatrix;
+				Gizmos.DrawWireCube(new Vector3(0, 0, 0.5f * size.z), size);
+				Gizmos.matrix = Matrix4x4.identity;
+				return;
+			}
+
+			float near = GetNearToCenter();
+			Gizmos.matrix = transform.localToWorldMatrix * GetOffsetMatrix(-near); //去掉near clip
+
+			Gizmos.DrawFrustum(Vector3.zero, angle, near + size.z, near, size.x / size.y);
+			
+			Gizmos.matrix = transform.localToWorldMatrix;
+			Gizmos.color = Color.yellow;
+			Bounds bounds = GetFrustumBounds();
+			Gizmos.DrawWireCube(bounds.center, bounds.size);
+			
+			
+			Gizmos.matrix = Matrix4x4.identity;
 		}
 
 
@@ -237,6 +265,17 @@ namespace Graphics.Scripts.AreaLight
 			//area light  vp  需要Z翻转
 			return m * transform.worldToLocalMatrix;
 		}
+
+		private float GetNearToCenter()
+		{
+			if (angle == 0.0f)
+			{
+				return 0;
+			}
+
+			return size.y * 0.5f / Mathf.Tan(angle * 0.5f * Mathf.Deg2Rad);
+		}
+
 
 		private Matrix4x4 PerspectiveLinearZ(float fov, float aspect, float near, float far)
 		{

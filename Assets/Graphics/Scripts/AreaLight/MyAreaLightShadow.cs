@@ -13,6 +13,8 @@ namespace Graphics.Scripts.AreaLight
 			x4096 = 4096,
 		}
 
+		private const float c_maxDistance = 2048.0f;
+
 		public Shader shadowmapShader;
 		public Shader blurShadowmapShader;
 
@@ -30,12 +32,23 @@ namespace Graphics.Scripts.AreaLight
 		private void SetupShadowmapForSampling(CommandBuffer cmd)
 		{
 			UpdateShadowmap((int) shadowmapRes);
-
 			cmd.SetGlobalTexture("_Shadowmap", shadowmap);
+			
 			InitShadowmapDummy();
-			proxyMaterial.SetTexture("_ShadowmapDummy",shadowmapDummy);
-			//TODO:Doing
-			// cmd.SetGlobalMatrix("_ShadowProjectionMatrix",);
+			proxyMaterial.SetTexture("_ShadowmapDummy", shadowmapDummy);
+			
+			cmd.SetGlobalMatrix("_ShadowProjectionMatrix", GetProjectionMatrix());
+
+			float texelsInMap = (int) shadowmapRes;
+
+			cmd.SetGlobalFloat("_ShadowReceiverWidth", receiverSearchDistance / c_maxDistance);
+			cmd.SetGlobalFloat("_ShadowReceiverDistanceScale",
+				receiverDistanceScale * 0.5f / 10.0f); //在shader中的10次采样的单次距离 左右*0.5
+
+			//[near,far]=>[0,1]
+			cmd.SetGlobalVector("_ShadowLightWidth", new Vector2(lightNearSize, lightFarSize) / c_maxDistance);
+
+			cmd.SetGlobalFloat("_ShadowBias", shadowBias);
 		}
 
 		private void UpdateShadowmap(int res)
@@ -152,15 +165,6 @@ namespace Graphics.Scripts.AreaLight
 			shadowmapDummy.Apply(false, true);
 		}
 
-		private float GetNearToCenter()
-		{
-			if (angle == 0.0f)
-			{
-				return 0;
-			}
-
-			return size.y * 0.5f / Mathf.Tan(angle * 0.5f * Mathf.Deg2Rad);
-		}
 
 		//camera target is shadowmap?
 		private bool InsideShadowmapCameraRender()

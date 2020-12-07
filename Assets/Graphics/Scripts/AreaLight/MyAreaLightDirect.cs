@@ -68,16 +68,16 @@ namespace Graphics.Scripts.AreaLight
 			}
 
 			var cam = Camera.current;
-			var buf = GetOrCreateCommandBuffer(cam);
+			var cmd = GetOrCreateCommandBuffer(cam);
 
-			buf.SetGlobalVector("_LightPos", transform.position);
-			buf.SetGlobalVector("_LightColor", GetColor());
+			cmd.SetGlobalVector("_LightPos", transform.position);
+			cmd.SetGlobalVector("_LightColor", GetColor());
 			SetupLUTs();
 
 			//vert_deferred vertex shader 需要 UnityDeferredLibrary.cginc
 			//TODO:如果灯光与近平面和远平面相交，则将其渲染为四边形。
 			//（还缺少：当靠近不相交时作为前面板渲染，模板优化）
-			buf.SetGlobalFloat("_LightAsQuad", 0);
+			cmd.SetGlobalFloat("_LightAsQuad", 0);
 
 			//向前偏移一点，以防止光照到自己-四边片
 			var z = 0.01f;
@@ -89,13 +89,17 @@ namespace Graphics.Scripts.AreaLight
 				lightVerts.SetRow(i
 					, t.TransformPoint(new Vector3(size.x * s_offsets[i, 0], size.y * s_offsets[i, 1], z) * 0.5f));
 			}
-			buf.SetGlobalMatrix("_LightVerts",lightVerts);
+
+			cmd.SetGlobalMatrix("_LightVerts", lightVerts);
 
 			if (enableShadows)
 			{
-				
+				SetupShadowmapForSampling(cmd);
 			}
-			
+
+			var m = Matrix4x4.TRS(new Vector3(0, 0, 10f), Quaternion.identity, Vector3.one * 20.0f);
+			cmd.DrawMesh(cubeMesh, t.localToWorldMatrix * m, proxyMaterial, 0,
+				enableShadows ? /*shadows*/ 0 : /*no shadows*/ 1);
 		}
 
 		private void Cleanup()
@@ -120,22 +124,22 @@ namespace Graphics.Scripts.AreaLight
 				return null;
 			}
 
-			CommandBuffer buffer = null;
+			CommandBuffer cmd = null;
 			if (!cameras.ContainsKey(cam))
 			{
-				buffer = new CommandBuffer();
-				buffer.name = /*"Area Light: "+*/gameObject.name;
-				cameras[cam] = buffer;
-				cam.AddCommandBuffer(c_cameraEvent, buffer);
+				cmd = new CommandBuffer();
+				cmd.name = /*"Area Light: "+*/gameObject.name;
+				cameras[cam] = cmd;
+				cam.AddCommandBuffer(c_cameraEvent, cmd);
 				cam.depthTextureMode |= DepthTextureMode.Depth;
 			}
 			else
 			{
-				buffer = cameras[cam];
-				buffer.Clear();
+				cmd = cameras[cam];
+				cmd.Clear();
 			}
 
-			return buffer;
+			return cmd;
 		}
 
 		private void ReleaseTemporary(ref RenderTexture rt)
@@ -144,11 +148,11 @@ namespace Graphics.Scripts.AreaLight
 			{
 				return;
 			}
-			
+
 			RenderTexture.ReleaseTemporary(rt);
 			rt = null;
 		}
-		
+
 		private Color GetColor()
 		{
 			if (QualitySettings.activeColorSpace == ColorSpace.Gamma)
