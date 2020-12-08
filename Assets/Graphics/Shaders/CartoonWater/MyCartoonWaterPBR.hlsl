@@ -17,7 +17,7 @@
 		return normalize(float2(x - floor(x + 0.5), abs(x) - 0.5));
 	}
 	
-	inline float GradientNoise(float2 uv, float scale)
+	float GradientNoise(float2 uv, float scale)
 	{
 		float2 p = uv * scale;
 		float2 ip = floor(p);
@@ -37,15 +37,15 @@
 		return float2(sin(uv.y * offset) * 0.5 + 0.5, cos(uv.x * offset) * 0.5 + 0.5);
 	}
 	
-	inline float2 Voronoi(float2 uv, float angleOffset, float cellDensity)
+	float2 Voronoi(float2 uv, float angleOffset, float cellDensity)
 	{
 		float2 g = floor(uv * cellDensity);
 		float2 f = frac(uv * cellDensity);
 		float t = 8.0;
 		float3 res = float3(8.0, 0.0, 0.0);
-		float2 ret = float2(0,0);
-
-
+		float2 ret = float2(0, 0);
+		
+		
 		for (int y = -1; y <= 1; y ++)
 		{
 			for (int x = -1; x <= 1; x ++)
@@ -65,7 +65,7 @@
 		return ret;
 	}
 	
-	inline float2 DetailAlpha(float2 uv0, float2 detailScale, float detailNoiseStrength, float detailNoiseScale, float detailDensity)
+	float2 DetailAlpha(float2 uv0, float2 detailScale, float detailNoiseStrength, float detailNoiseScale, float detailDensity)
 	{
 		float2 uv = uv0 * detailScale;
 		
@@ -87,5 +87,33 @@
 	{
 		return DetailAlpha(uv, detailScale, detailNoiseStrength, detailNoiseScale, detailDensity).y;
 	}
+	
+	
+	#if defined(_PLANAR_REFLECTION)
+		TEXTURE2D(_PlanarReflectionTexture);
+		SAMPLER(sampler_PlanarReflectionTexture);
+		
+		float2 WaterDetailAlpha(float2 uv0, float detailNoiseStrength, float detailNoiseScale, float detailDensity)
+		{
+			float2 uv = float2(uv0.x, uv0.y * 0.2);
+			
+			float noise0 = GradientNoise(uv0, detailNoiseScale) * detailNoiseStrength;
+			
+			uv += noise0.xx;
+			
+			return Voronoi(uv, 2, detailDensity).y;
+		}
+		
+		float3 PlanarReflection(float3 positionWS, float2 screenPosition)
+		{
+			float2 temp = positionWS.xy + (_Time * 0.1).xx;
+			float noise = GradientNoise(temp, 15);
+			float2 uv = screenPosition + noise * 0.005;
+			
+			float3 col = SAMPLE_TEXTURE2D(_PlanarReflectionTexture, sampler_PlanarReflectionTexture, uv).rgb;
+			return col;
+		}
+	#endif
+	
 	
 #endif

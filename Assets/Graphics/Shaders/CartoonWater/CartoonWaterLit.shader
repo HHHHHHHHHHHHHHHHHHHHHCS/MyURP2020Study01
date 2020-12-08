@@ -115,7 +115,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			float3 _ToonSpecularColor;
 			float _ToonHighlightIntensity;
 			float _DetailDensity;
-			float4 _DetailScale;
+			float2 _DetailScale;
 			float _DetailNoiseStrength;
 			float _DetailNoiseScale;
 			CBUFFER_END
@@ -170,8 +170,8 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				inputData.bakedGI = SAMPLE_GI(i.lightmapUV, i.sh, i.normalWS);
 				inputData.normalizedScreenSpaceUV = i.positionCS.xy;
 				
-				float alphaClipThreshold = 0.5;
 				#if _AlphaClip
+					float alphaClipThreshold = 0.5;
 					#ifdef _DetailAlphaX_ON
 						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
 					#else
@@ -262,7 +262,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			float3 _ToonSpecularColor;
 			float _ToonHighlightIntensity;
 			float _DetailDensity;
-			float4 _DetailScale;
+			float2 _DetailScale;
 			float _DetailNoiseStrength;
 			float _DetailNoiseScale;
 			CBUFFER_END
@@ -290,8 +290,8 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			{
 				UNITY_SETUP_INSTANCE_ID(i);
 				
-				float alphaClipThreshold = 0.5;
 				#if _AlphaClip
+					float alphaClipThreshold = 0.5;
 					#ifdef _DetailAlphaX_ON
 						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
 					#else
@@ -361,7 +361,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			float3 _ToonSpecularColor;
 			float _ToonHighlightIntensity;
 			float _DetailDensity;
-			float4 _DetailScale;
+			float2 _DetailScale;
 			float _DetailNoiseStrength;
 			float _DetailNoiseScale;
 			CBUFFER_END
@@ -384,8 +384,8 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			{
 				UNITY_SETUP_INSTANCE_ID(i);
 				
-				float alphaClipThreshold = 0.5;
 				#if _AlphaClip
+					float alphaClipThreshold = 0.5;
 					#ifdef _DetailAlphaX_ON
 						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
 					#else
@@ -471,7 +471,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			float3 _ToonSpecularColor;
 			float _ToonHighlightIntensity;
 			float _DetailDensity;
-			float4 _DetailScale;
+			float2 _DetailScale;
 			float _DetailNoiseStrength;
 			float _DetailNoiseScale;
 			CBUFFER_END
@@ -503,8 +503,8 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				float2 screenPosition = i.screenUV.xy / i.screenUV.w;
 				
 				
-				float alphaClipThreshold = 0.5;
 				#if _AlphaClip
+					float alphaClipThreshold = 0.5;
 					#ifdef _DetailAlphaX_ON
 						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
 					#else

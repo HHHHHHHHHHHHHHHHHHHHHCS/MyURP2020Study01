@@ -31,6 +31,8 @@ namespace Graphics.Scripts.CartoonWater
 			public bool shadows;
 		}
 
+		private const string c_cameraName = "Planar Reflection Camera";
+
 		public static Camera reflectionCamera;
 
 		private readonly int planarReflectionTexture_PTID = Shader.PropertyToID("_PlanarReflectionTexture");
@@ -72,6 +74,11 @@ namespace Graphics.Scripts.CartoonWater
 
 		private void SafeDestroy(UnityEngine.Object obj)
 		{
+			if (obj == null)
+			{
+				return;
+			}
+
 			if (Application.isEditor)
 			{
 				DestroyImmediate(obj);
@@ -129,6 +136,7 @@ namespace Graphics.Scripts.CartoonWater
 		{
 			if (reflectionCamera == null)
 			{
+				SafeDestroy(GameObject.Find(c_cameraName));
 				reflectionCamera = CreateMirrorObjects(realCamera);
 			}
 
@@ -157,7 +165,7 @@ namespace Graphics.Scripts.CartoonWater
 			//斜投影矩阵
 			//https://acgmart.com/render/planar-reflection-based-on-distance/
 			//https://www.cnblogs.com/wantnon/p/4569096.html
-			Vector4 clipPlane = CameraSpacePlane(reflectionCamera, pos - Vector3.up * 0.1f, normal, 1.0f);
+			Vector4 clipPlane = CameraSpacePlane(realCamera, pos - Vector3.up * 0.1f, normal, 1.0f);
 			Matrix4x4 projection = realCamera.CalculateObliqueMatrix(clipPlane);
 			reflectionCamera.projectionMatrix = projection;
 			reflectionCamera.cullingMask = settings.reflectLayers; //不渲染水 layer
@@ -169,9 +177,7 @@ namespace Graphics.Scripts.CartoonWater
 			//SRP 应该可以直接set vp 的
 			//不用创建新的摄像机
 			GameObject go =
-				new GameObject(
-					$"Planar Refl Camera id{GetInstanceID().ToString()} for {currentCamera.GetInstanceID().ToString()}",
-					typeof(Camera));
+				new GameObject(c_cameraName, typeof(Camera));
 			var newCameraData =
 				go.AddComponent<UniversalAdditionalCameraData>();
 			// var currentCameraData =
@@ -185,7 +191,8 @@ namespace Graphics.Scripts.CartoonWater
 			refCam.allowMSAA = currentCamera.allowMSAA;
 			refCam.depth = currentCamera.depth - 10; //保证优先渲染
 			refCam.allowHDR = currentCamera.allowHDR;
-			go.hideFlags = HideFlags.HideAndDontSave;
+			refCam.enabled = false;
+			//go.hideFlags = HideFlags.HideAndDontSave;
 
 			return refCam;
 		}
@@ -198,7 +205,7 @@ namespace Graphics.Scripts.CartoonWater
 			}
 
 			dest.CopyFrom(src); //复制camera设置
-			dest.cameraType = src.cameraType;
+			dest.cameraType = CameraType.Game;//加上一些game的处理
 			dest.useOcclusionCulling = false;
 		}
 
@@ -232,11 +239,11 @@ namespace Graphics.Scripts.CartoonWater
 			return reflectionMatrix;
 		}
 
-		private Vector3 ReflectionPosition(Vector3 pos)
-		{
-			Vector3 newPos = new Vector3(pos.x, -pos.y, pos.z);
-			return newPos;
-		}
+		// private Vector3 ReflectionPosition(Vector3 pos)
+		// {
+		// 	Vector3 newPos = new Vector3(pos.x, -pos.y, pos.z);
+		// 	return newPos;
+		// }
 
 		private Vector4 CameraSpacePlane(Camera cam, Vector3 pos, Vector3 normal, float sideSign)
 		{

@@ -106,7 +106,7 @@
 		return color;
 	}
 	
-	float AmbientOcclusion(float2 screenPosition)
+	inline float AmbientOcclusion(float2 screenPosition)
 	{
 		float ao = 1;
 		#if defined(_SCREEN_SPACE_OCCLUSION)
