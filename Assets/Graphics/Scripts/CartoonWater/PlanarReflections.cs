@@ -6,9 +6,8 @@ using UnityEngine.Rendering.Universal;
 
 namespace Graphics.Scripts.CartoonWater
 {
-	//TODO:
-	//1.其实可以用上一帧的图 做翻转  这样不会重新再次渲染一遍
-	//2.添加一个pass 设置VP 只画简单的opaque和transparent
+	//1.其实可以用上一帧的图 做翻转  这样不会重新再次渲染一遍    参考URP2019Study01已经做过了
+	//TODO: 2.添加一个pass 设置VP 只画简单的opaque和transparent
 	//但是这里  只是做尝试
 	[ExecuteAlways, RequireComponent(typeof(Camera))]
 	public class PlanarReflections : MonoBehaviour
@@ -101,8 +100,8 @@ namespace Graphics.Scripts.CartoonWater
 			var oldMax = QualitySettings.maximumLODLevel;
 			var oldBias = QualitySettings.lodBias;
 			//剔除时针改变  显示背面  因为水可能要背面
-			GL.invertCulling = true;
-			RenderSettings.fog = oldFog;
+			GL.invertCulling = false;
+			RenderSettings.fog = false;
 			QualitySettings.maximumLODLevel = 1;
 			QualitySettings.lodBias = oldBias * 0.5f;
 
@@ -154,22 +153,22 @@ namespace Graphics.Scripts.CartoonWater
 			Vector4 reflectionPlane = new Vector4(normal.x, normal.y, normal.z, d); //平面方程式
 			Matrix4x4 reflection = CalculateReflectionMatrix(reflectionPlane); //平面矩阵
 
-			// Vector3 oldPos = realCamera.transform.position - new Vector3(0, pos.y * 2, 0);
-			// Vector3 newPos = ReflectionPosition(oldPos);
-			Vector3 newPos = realCamera.transform.position;
-			//摄像机朝向翻转
-			reflectionCamera.transform.forward = Vector3.Scale(realCamera.transform.forward, new Vector3(1, -1, 1));
+			//摄像机朝向翻转 意义不大
+			//reflectionCamera.transform.forward = Vector3.Scale(realCamera.transform.forward, new Vector3(1, -1, 1));
 			//矩阵转换到 反射矩阵下
-			reflectionCamera.worldToCameraMatrix = reflectionCamera.worldToCameraMatrix * reflection;
+			reflectionCamera.worldToCameraMatrix = realCamera.worldToCameraMatrix * reflection;
 
 			//斜投影矩阵
 			//https://acgmart.com/render/planar-reflection-based-on-distance/
 			//https://www.cnblogs.com/wantnon/p/4569096.html
-			Vector4 clipPlane = CameraSpacePlane(realCamera, pos - Vector3.up * 0.1f, normal, 1.0f);
-			Matrix4x4 projection = realCamera.CalculateObliqueMatrix(clipPlane);
+			Vector4 clipPlane = CameraSpacePlane(reflectionCamera, pos - Vector3.up * 0.1f, normal, 1.0f);
+			Matrix4x4 projection = reflectionCamera.CalculateObliqueMatrix(clipPlane);
 			reflectionCamera.projectionMatrix = projection;
 			reflectionCamera.cullingMask = settings.reflectLayers; //不渲染水 layer
-			reflectionCamera.transform.position = newPos; //其实意义不大
+
+			// Vector3 oldPos = realCamera.transform.position - new Vector3(0, pos.y * 2, 0);
+			// Vector3 newPos = ReflectionPosition(oldPos);
+			//reflectionCamera.transform.position = newPos; //其实意义不大
 		}
 
 		private Camera CreateMirrorObjects(Camera currentCamera)
@@ -192,7 +191,7 @@ namespace Graphics.Scripts.CartoonWater
 			refCam.depth = currentCamera.depth - 10; //保证优先渲染
 			refCam.allowHDR = currentCamera.allowHDR;
 			refCam.enabled = false;
-			//go.hideFlags = HideFlags.HideAndDontSave;
+			go.hideFlags = HideFlags.HideAndDontSave;
 
 			return refCam;
 		}
@@ -205,7 +204,7 @@ namespace Graphics.Scripts.CartoonWater
 			}
 
 			dest.CopyFrom(src); //复制camera设置
-			dest.cameraType = CameraType.Game;//加上一些game的处理
+			dest.cameraType = src.cameraType;//加上一些game的处理
 			dest.useOcclusionCulling = false;
 		}
 

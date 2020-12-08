@@ -106,7 +106,7 @@
 		
 		float3 PlanarReflection(float3 positionWS, float2 screenPosition)
 		{
-			float2 temp = positionWS.xy + (_Time * 0.1).xx;
+			float2 temp = positionWS.xy + (_Time.y * 0.1).xx;
 			float noise = GradientNoise(temp, 15);
 			float2 uv = screenPosition + noise * 0.005;
 			
