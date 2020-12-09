@@ -13,6 +13,26 @@ Shader "MyRP/Cartoon/CartoonLit"
 		_OutlineNormalSensitivity ("Outline Normal Sensitivity", Float) = 2
 		_OutlineThickness ("Outline Thickness", Int) = 1
 	}
+	
+	HLSLINCLUDE
+	
+	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+	
+	CBUFFER_START(UnityPerMaterial)
+	float3 _ToonShadedColor;
+	float3 _ToonLitColor;
+	float _ToonColorSteps;
+	float _ToonColorOffset;
+	float _ToonColorSpread;
+	float3 _ToonSpecularColor;
+	float _ToonHighlightIntensity;
+	float _OutlineDepthSensitivity;
+	float _OutlineNormalSensitivity;
+	int _OutlineThickness;
+	CBUFFER_END
+	
+	ENDHLSL
+	
 	SubShader
 	{
 		Tags { "RenderType" = "Opaque" "Queue" = "Geometry" /*"RenderPipeline"="UniversalPipeline"*/ }
@@ -94,18 +114,6 @@ Shader "MyRP/Cartoon/CartoonLit"
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _OutlineDepthSensitivity;
-			float _OutlineNormalSensitivity;
-			int _OutlineThickness;
-			CBUFFER_END
 			
 			
 			v2f vert(a2v v)
@@ -205,7 +213,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			// #define ATTRIBUTES_NEED_NORMAL
 			// #define ATTRIBUTES_NEED_TANGENT
 			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			
@@ -282,7 +290,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			// #define ATTRIBUTES_NEED_NORMAL
 			// #define ATTRIBUTES_NEED_TANGENT
 			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
 			
 			struct a2v
 			{
@@ -345,7 +353,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			// #define ATTRIBUTES_NEED_NORMAL
 			// #define ATTRIBUTES_NEED_TANGENT
 			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
 			
 			struct a2v
 			{
@@ -474,7 +482,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 			// #define ATTRIBUTES_NEED_NORMAL
 			// #define ATTRIBUTES_NEED_TANGENT
 			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
 			
 			#include "../Common/MyCartoonPBR.hlsl"
@@ -495,19 +503,6 @@ Shader "MyRP/Cartoon/CartoonLit"
 				float4 screenUV: TEXCOORD2;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _OutlineDepthSensitivity;
-			float _OutlineNormalSensitivity;
-			int _OutlineThickness;
-			CBUFFER_END
 			
 			v2f vert(a2v v)
 			{

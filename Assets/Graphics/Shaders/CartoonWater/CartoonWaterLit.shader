@@ -15,6 +15,25 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 		_DetailNoiseStrength ("Detail Noise Strength", Float) = 0.01
 		_DetailNoiseScale ("Detail Noise Scale", Float) = 30
 	}
+
+	HLSLINCLUDE
+	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+	
+	CBUFFER_START(UnityPerMaterial)
+	float3 _ToonShadedColor;
+	float3 _ToonLitColor;
+	float _ToonColorSteps;
+	float _ToonColorOffset;
+	float _ToonColorSpread;
+	float3 _ToonSpecularColor;
+	float _ToonHighlightIntensity;
+	float _DetailDensity;
+	float2 _DetailScale;
+	float _DetailNoiseStrength;
+	float _DetailNoiseScale;
+	CBUFFER_END
+	ENDHLSL
+	
 	SubShader
 	{
 		Tags { "RenderType" = "Opaque" "Queue" = "AlphaTest" /*"RenderPipeline"="UniversalPipeline"*/ }
@@ -70,7 +89,6 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			// #define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
 			// #define FEATURES_GRAPH_VERTEX
 			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			
@@ -105,20 +123,6 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				float4 shadowCoord: TEXCOORD7;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _DetailDensity;
-			float2 _DetailScale;
-			float _DetailNoiseStrength;
-			float _DetailNoiseScale;
-			CBUFFER_END
 			
 			
 			v2f vert(a2v v)
@@ -229,8 +233,6 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			#define _AlphaClip 1
 			#define _NORMALMAP 1
 			
-			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			
@@ -253,19 +255,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _DetailDensity;
-			float2 _DetailScale;
-			float _DetailNoiseStrength;
-			float _DetailNoiseScale;
-			CBUFFER_END
+			
 			
 			// x: global clip space bias, y: normal world space bias
 			float3 _LightDirection;
@@ -332,8 +322,6 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			#define _NORMALMAP 1
 			
 			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-			
 			#include "../Common/MyCartoonPBR.hlsl"
 			#include "MyCartoonWaterPBR.hlsl"
 			
@@ -352,19 +340,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _DetailDensity;
-			float2 _DetailScale;
-			float _DetailNoiseStrength;
-			float _DetailNoiseScale;
-			CBUFFER_END
+			
 			
 			v2f vert(a2v v)
 			{
@@ -437,7 +413,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			// #define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
 			// #define FEATURES_GRAPH_VERTEX
 			
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+		
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
 			
 			#include "../Common/MyCartoonPBR.hlsl"
@@ -461,21 +437,6 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				float4 screenUV: TEXCOORD3;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _DetailDensity;
-			float2 _DetailScale;
-			float _DetailNoiseStrength;
-			float _DetailNoiseScale;
-			CBUFFER_END
-			
 			
 			v2f vert(a2v v)
 			{

@@ -14,6 +14,25 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 		_DetailNoiseScale ("Detail Noise Scale", Float) = 30
 		_ReflectionStrength ("Reflection Strength", Float) = 0.399
 	}
+	
+	HLSLINCLUDE
+	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+	
+	CBUFFER_START(UnityPerMaterial)
+	float3 _ToonShadedColor;
+	float3 _ToonLitColor;
+	float _ToonColorSteps;
+	float _ToonColorOffset;
+	float _ToonColorSpread;
+	float3 _ToonSpecularColor;
+	float _ToonHighlightIntensity;
+	float _DetailDensity;
+	float _DetailNoiseStrength;
+	float _DetailNoiseScale;
+	float _ReflectionStrength;
+	CBUFFER_END
+	ENDHLSL
+	
 	SubShader
 	{
 		Tags { "RenderType" = "Opaque" "Queue" = "Geometry" /*"RenderPipeline"="UniversalPipeline"*/ }
@@ -101,20 +120,6 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 				float4 shadowCoord: TEXCOORD7;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _DetailDensity;
-			float _DetailNoiseStrength;
-			float _DetailNoiseScale;
-			float _ReflectionStrength;
-			CBUFFER_END
 			
 			
 			v2f vert(a2v v)
@@ -238,19 +243,6 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _DetailDensity;
-			float _DetailNoiseStrength;
-			float _DetailNoiseScale;
-			float _ReflectionStrength;
-			CBUFFER_END
 			
 			// x: global clip space bias, y: normal world space bias
 			float3 _LightDirection;
@@ -324,19 +316,6 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _DetailDensity;
-			float _DetailNoiseStrength;
-			float _DetailNoiseScale;
-			float _ReflectionStrength;
-			CBUFFER_END
 			
 			v2f vert(a2v v)
 			{
@@ -420,20 +399,6 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 				float4 screenUV: TEXCOORD3;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
-			
-			CBUFFER_START(UnityPerMaterial)
-			float3 _ToonShadedColor;
-			float3 _ToonLitColor;
-			float _ToonColorSteps;
-			float _ToonColorOffset;
-			float _ToonColorSpread;
-			float3 _ToonSpecularColor;
-			float _ToonHighlightIntensity;
-			float _DetailDensity;
-			float _DetailNoiseStrength;
-			float _DetailNoiseScale;
-			float _ReflectionStrength;
-			CBUFFER_END
 			
 			
 			v2f vert(a2v v)

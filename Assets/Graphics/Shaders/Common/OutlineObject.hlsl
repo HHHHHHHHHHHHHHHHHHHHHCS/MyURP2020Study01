@@ -67,9 +67,6 @@
 		
 	#else
 		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareNormalsTexture.hlsl"
-		
-		
-		
 	#endif
 	
 	inline float3 SampleDepthNormal(float2 uv)
