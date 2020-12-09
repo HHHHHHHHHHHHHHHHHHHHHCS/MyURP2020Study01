@@ -7,7 +7,7 @@ using UnityEngine.Rendering.Universal;
 namespace Graphics.Scripts.CartoonWater
 {
 	//1.其实可以用上一帧的图 做翻转  这样不会重新再次渲染一遍    参考URP2019Study01已经做过了
-	//TODO: 2.添加一个pass 设置VP 只画简单的opaque和transparent
+	//TODO: 2.其实可以 添加一个feature pass 设置VP 拿culling渲染一次单纯的opaque   这样可以少一次culling 和一堆东西   
 	//但是这里  只是做尝试
 	[ExecuteAlways, RequireComponent(typeof(Camera))]
 	public class PlanarReflections : MonoBehaviour

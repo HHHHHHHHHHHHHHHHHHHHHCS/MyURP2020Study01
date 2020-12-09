@@ -154,8 +154,7 @@ namespace Graphics.Scripts.AreaLight
 			sourceRenderer.SetPropertyBlock(props);
 
 			
-			//TODO:doing
-			//SetupCommandBuffer();
+			SetupCommandBuffer();
 		}
 
 		private void OnDrawGizmosSelected()

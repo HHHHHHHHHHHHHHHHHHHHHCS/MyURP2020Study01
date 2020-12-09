@@ -10,9 +10,7 @@ namespace Graphics.Scripts.AreaLight
 
 		private static readonly float[,] s_offsets = new float[4, 2] {{1, 1}, {1, -1}, {-1, -1}, {-1, 1}};
 
-		private static Texture2D s_TransformInvTexture_Specular;
-		private static Texture2D s_TransformInvTexture_Diffuse;
-		private static Texture2D s_AmpDiffAmpSpecFresnel;
+		public MyAreaLightLUT areaLightLUTAsset;
 
 		private readonly Dictionary<Camera, CommandBuffer> cameras = new Dictionary<Camera, CommandBuffer>();
 
@@ -38,25 +36,9 @@ namespace Graphics.Scripts.AreaLight
 
 		private void SetupLUTs()
 		{
-			if (s_TransformInvTexture_Diffuse == null)
-			{
-				s_TransformInvTexture_Diffuse =
-					MyAreaLightLUT.LoadLut(MyAreaLightLUT.LUTType.TransformInv_DisneyDiffuse);
-			}
-
-			if (s_TransformInvTexture_Specular == null)
-			{
-				s_TransformInvTexture_Specular = MyAreaLightLUT.LoadLut(MyAreaLightLUT.LUTType.TransformInv_GGX);
-			}
-
-			if (s_AmpDiffAmpSpecFresnel == null)
-			{
-				s_AmpDiffAmpSpecFresnel = MyAreaLightLUT.LoadLut(MyAreaLightLUT.LUTType.AmpDiffAmpSpecFresnel);
-			}
-
-			proxyMaterial.SetTexture("_TransformInv_Diffuse", s_TransformInvTexture_Diffuse);
-			proxyMaterial.SetTexture("_TransformInv_Specular", s_TransformInvTexture_Specular);
-			proxyMaterial.SetTexture("_AmpDiffAmpSpecFresnel", s_AmpDiffAmpSpecFresnel);
+			proxyMaterial.SetTexture("_TransformInv_Diffuse", areaLightLUTAsset.transformInvTexture_Diffuse);
+			proxyMaterial.SetTexture("_TransformInv_Specular", areaLightLUTAsset.transformInvTexture_Specular);
+			proxyMaterial.SetTexture("_AmpDiffAmpSpecFresnel", areaLightLUTAsset.ampDiffAmpSpecFresnel);
 		}
 
 		private void SetupCommandBuffer()

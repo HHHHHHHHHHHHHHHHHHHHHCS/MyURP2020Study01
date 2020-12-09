@@ -2,13 +2,22 @@ using System.IO;
 using Graphics.Scripts.AreaLight;
 using UnityEditor;
 using UnityEngine;
+using static Graphics.Scripts.AreaLight.MyAreaLightLUT;
+
 
 namespace Graphics.Editor.AreaLight
 {
-	public static class MyAreaLightLUTEditor
+	public static class MyAreaLightLUTCreateEditor
 	{
-		[MenuItem("Tools/AreaLight/All")]
-		public static void CreateAll()
+		[MenuItem("Tools/AreaLight/LutAsset")]
+		public static void CreateLut()
+		{
+			MyAreaLightLUT lut = ScriptableObject.CreateInstance<MyAreaLightLUT>();
+			AssetDatabase.CreateAsset(lut, "Assets/LUTAsset.asset");
+		}
+
+		[MenuItem("Tools/AreaLight/AllTexture")]
+		public static void CreateAllTexture()
 		{
 			CreateDisneyDiffuse();
 			CreateGGX();
@@ -18,27 +27,27 @@ namespace Graphics.Editor.AreaLight
 		[MenuItem("Tools/AreaLight/DisneyDiffuse")]
 		public static void CreateDisneyDiffuse()
 		{
-			CreateAndSave("DisneyDiffuse", MyAreaLightLUT.LUTType.TransformInv_DisneyDiffuse);
+			CreateAndSave("DisneyDiffuse", LUTType.TransformInv_DisneyDiffuse);
 		}
 
 		[MenuItem("Tools/AreaLight/GGX")]
 		public static void CreateGGX()
 		{
-			CreateAndSave("GGX", MyAreaLightLUT.LUTType.TransformInv_GGX);
+			CreateAndSave("GGX", LUTType.TransformInv_GGX);
 		}
 
 		[MenuItem("Tools/AreaLight/AmpDiffAmpSpecFresnel")]
 		public static void CreateAmpDiffAmpSpecFresnel()
 		{
-			CreateAndSave("AreaLightAmpDiffAmpSpecFresnel", MyAreaLightLUT.LUTType.AmpDiffAmpSpecFresnel);
+			CreateAndSave("AreaLightAmpDiffAmpSpecFresnel", LUTType.AmpDiffAmpSpecFresnel);
 		}
 
-		private static void CreateAndSave(string name, MyAreaLightLUT.LUTType type)
+		private static void CreateAndSave(string name, LUTType type)
 		{
-			var filePath =   name + ".exr";
+			var filePath = name + ".exr";
 
 			var texture =
-				MyAreaLightLUT.LoadLut(type);
+				MyAreaLightLUTTools.LoadLut(type);
 
 			//using auto close
 			using var fs = new FileStream(Application.dataPath + "/" + filePath, FileMode.Create);

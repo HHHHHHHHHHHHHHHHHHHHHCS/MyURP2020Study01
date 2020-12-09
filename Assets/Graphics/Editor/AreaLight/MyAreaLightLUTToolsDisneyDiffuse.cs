@@ -1,6 +1,6 @@
-namespace Graphics.Scripts.AreaLight
+namespace Graphics.Editor.AreaLight
 {
-	public partial class MyAreaLightLUT
+	public partial class MyAreaLightLUTTools
 	{
 		#region s_LUTTransformInv_DisneyDiffuse
 
