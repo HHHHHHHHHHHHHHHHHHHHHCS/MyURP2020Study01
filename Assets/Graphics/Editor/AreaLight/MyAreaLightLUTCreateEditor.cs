@@ -62,7 +62,7 @@ namespace Graphics.Editor.AreaLight
 			ti.wrapMode = TextureWrapMode.Clamp;
 
 			var defaultSettings = ti.GetDefaultPlatformTextureSettings();
-			defaultSettings.format = TextureImporterFormat.RGBA32;
+			defaultSettings.format = TextureImporterFormat.Automatic;
 			defaultSettings.textureCompression = TextureImporterCompression.Uncompressed;
 			ti.SetPlatformTextureSettings(defaultSettings);
 

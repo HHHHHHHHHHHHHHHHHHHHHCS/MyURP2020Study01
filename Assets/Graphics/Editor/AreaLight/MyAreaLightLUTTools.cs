@@ -5,6 +5,8 @@ namespace Graphics.Editor.AreaLight
 {
 	public partial class MyAreaLightLUTTools
 	{
+		[ColorUsage(false)]
+		private Color c;
 		private const int kLUTResolution = 64;
 		private const int kLUTMatrixDim = 3;
 
