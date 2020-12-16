@@ -65,6 +65,7 @@ Shader "MyRP/HDR/CustomSkybox"
 				return float2(0.5, 1.0) - sphereCoords;//[0,1]
 			}
 			
+			//其实URP 也有 DecodeHDREnvironment
 			inline half3 DecodeHDR(half4 data, half4 decodeInstructions)
 			{
 				// 如果decodeInstructions.w为真（alpha值影响RGB通道），请考虑纹理alpha
@@ -77,7 +78,7 @@ Shader "MyRP/HDR/CustomSkybox"
 					#if defined(UNITY_USE_NATIVE_HDR)
 						return decodeInstructions.x * data.rgb; // 直接乘法
 					#else
-						return(decodeInstructions.x * pow(alpha, decodeInstructions.y)) * data.rgb;
+						return(decodeInstructions.x * PositivePow(alpha, decodeInstructions.y)) * data.rgb;
 					#endif
 				#endif
 			}
