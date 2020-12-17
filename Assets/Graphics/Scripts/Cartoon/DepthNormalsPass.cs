@@ -8,14 +8,17 @@ namespace Graphics.Scripts.Cartoon
 	public class DepthNormalsPass : ScriptableRenderPass
 	{
 		private const string c_My_Depth_Normal_ID = "MY_DEPTH_NORMAL";
+		private const string k_tag = "DepthNormals Prepass";
 
 		private RenderTargetHandle destination { get; set; }
 		private Material depthNormalsMaterial;
 		private FilteringSettings filteringSettings;
 		private ShaderTagId shaderTagId;
+		private ProfilingSampler profilingSampler ;
 
 		public DepthNormalsPass(RenderQueueRange range, LayerMask layerMask, Material _depthNormalsMaterial)
 		{
+			profilingSampler =  new ProfilingSampler(k_tag);
 			filteringSettings = new FilteringSettings(range, layerMask);
 			depthNormalsMaterial = _depthNormalsMaterial;
 			shaderTagId = new ShaderTagId("DepthNormals");
@@ -55,12 +58,12 @@ namespace Graphics.Scripts.Cartoon
 
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
-			CommandBuffer cmd = CommandBufferPool.Get("DepthNormals Prepass");
+			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 
-			using (new ProfilingSample(cmd, "DpethNormals Prepass"))
+			using (new ProfilingScope(cmd, profilingSampler))
 			{
-				context.ExecuteCommandBuffer(cmd);
-				cmd.Clear();
+				// context.ExecuteCommandBuffer(cmd);
+				// cmd.Clear();
 
 				var sortFlags = renderingData.cameraData.defaultOpaqueSortFlags;
 				var drawSettings = CreateDrawingSettings(shaderTagId, ref renderingData, sortFlags);
