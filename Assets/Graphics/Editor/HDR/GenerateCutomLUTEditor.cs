@@ -15,6 +15,7 @@ namespace Graphics.Editor.HDR
 			if (GUILayout.Button("Generate"))
 			{
 				script.Generate();
+				AssetDatabase.Refresh();
 			}
 		}
 	}

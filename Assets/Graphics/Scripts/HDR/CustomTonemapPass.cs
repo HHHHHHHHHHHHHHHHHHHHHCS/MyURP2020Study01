@@ -7,9 +7,12 @@ namespace Graphics.Scripts.HDR
 	public class CustomTonemapPass : ScriptableRenderPass
 	{
 		private const string k_tag = "Custom Tonemap";
+		
+		private static readonly int s_ScaleBiasID = Shader.PropertyToID("_ScaleBiasRt");
 
 		private ProfilingSampler profilingSampler;
 		private CustomTonemapSettings settings;
+		private RenderTargetIdentifier colorTarget;
 		private Material material;
 
 		public CustomTonemapPass(Material _material)
@@ -18,8 +21,9 @@ namespace Graphics.Scripts.HDR
 			material = _material;
 		}
 
-		public void Setup(CustomTonemapSettings _customTonemapSettings)
+		public void Setup(RenderTargetIdentifier input, CustomTonemapSettings _customTonemapSettings)
 		{
+			colorTarget = input;
 			settings = _customTonemapSettings;
 		}
 
@@ -34,6 +38,16 @@ namespace Graphics.Scripts.HDR
 
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
+				// scaleBias.x = flipSign
+				// scaleBias.y = scale
+				// scaleBias.z = bias
+				// scaleBias.w = unused
+				float flipSign = (renderingData.cameraData.IsCameraProjectionMatrixFlipped()) ? -1.0f : 1.0f;
+				Vector4 scaleBias = (flipSign < 0.0f)
+					? new Vector4(flipSign, 1.0f, -1.0f, 1.0f)
+					: new Vector4(flipSign, 0.0f, 1.0f, 1.0f);
+				cmd.SetGlobalVector(s_ScaleBiasID, scaleBias);
+				
 				material.SetFloat("_Exposure", settings.exposure.value);
 				material.SetFloat("_Saturation", settings.saturation.value);
 				material.SetFloat("_Contrast", settings.contrast.value);

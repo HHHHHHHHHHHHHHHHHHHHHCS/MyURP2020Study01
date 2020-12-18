@@ -593,7 +593,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 774c803d037218e47923932dcf1b1386, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  generateShader: {fileID: 0}
+  generateShader: {fileID: 7200000, guid: 4c7bc997483b5a2439ea9fbf5df4606b, type: 3}
   inputLUT: {fileID: 2800000, guid: 077e6d0b4b9efe94c8640ff598285baa, type: 3}
   outputName: custom_lut
 --- !u!1 &1281990096

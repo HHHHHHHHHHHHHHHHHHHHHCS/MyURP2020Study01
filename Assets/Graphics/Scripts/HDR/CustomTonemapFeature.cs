@@ -8,7 +8,7 @@ namespace Graphics.Scripts.HDR
 	public class CustomTonemapFeature : ScriptableRendererFeature
 	{
 		public Shader customTonemapShader;
-		
+
 		private CustomTonemapPass customTonemapPass;
 		private Material customTonemapMaterial;
 
@@ -16,7 +16,8 @@ namespace Graphics.Scripts.HDR
 		{
 			customTonemapMaterial = CoreUtils.CreateEngineMaterial("MyRP/HDR/CustomTonemap");
 			customTonemapPass = new CustomTonemapPass(customTonemapMaterial);
-			customTonemapPass.renderPassEvent = RenderPassEvent.AfterRenderingPostProcessing;
+			customTonemapPass.renderPassEvent =
+				RenderPassEvent.BeforeRenderingPostProcessing; //AfterRenderingPostProcessing;
 		}
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -26,15 +27,10 @@ namespace Graphics.Scripts.HDR
 				var settings = VolumeManager.instance.stack.GetComponent<CustomTonemapSettings>();
 				if (settings != null && settings.IsActive())
 				{
-					customTonemapPass.Setup(settings);
+					customTonemapPass.Setup(renderer.cameraColorTarget, settings);
 					renderer.EnqueuePass(customTonemapPass);
 				}
 			}
-		}
-
-		private void OnDestroy()
-		{
-			
 		}
 	}
 }

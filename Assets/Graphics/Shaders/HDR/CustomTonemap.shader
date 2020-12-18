@@ -3,7 +3,8 @@ Shader "MyRP/HDR/CustomTonemap"
 	HLSLINCLUDE
 	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
+	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
+	
 	#include "TonemapCommon.hlsl"
 	
 	struct a2v
@@ -18,8 +19,6 @@ Shader "MyRP/HDR/CustomTonemap"
 		float2 uv: TEXCOORD0;
 	};
 	
-	TEXTURE2D_X(_MainTex);
-	SAMPLER(sampler_MainTex);
 	float _Exposure;
 	float _Saturation;
 	float _Contrast;
@@ -29,16 +28,18 @@ Shader "MyRP/HDR/CustomTonemap"
 	{
 		v2f o = (v2f)0;
 		o.pos = v.vertex;
+		o.pos.y *= _ScaleBiasRt.x;
+		
 		o.uv = v.uv;
 		return o;
 	}
 	
 	float4 frag(v2f i): SV_TARGET
 	{
-		float4 color = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv);
+		float3 color = SampleSceneColor(i.uv);
 		color.rgb = ColorCorrect(color.rgb, _Saturation, _Contrast, _Exposure);
 		color.rgb = ACESFilm(color.rgb);
-		return color;
+		return float4(color, 1.0);
 	}
 	
 	ENDHLSL

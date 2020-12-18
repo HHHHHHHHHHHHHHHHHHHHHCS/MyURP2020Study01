@@ -17,15 +17,14 @@ namespace Graphics.Scripts.HDR
 				return;
 			}
 
-			var volume = gameObject.GetComponent<Volume>();
-			if (!volume)
+			var stack = VolumeManager.instance.stack;
+			if (stack == null)
 			{
 				return;
 			}
 
-			volume.profile.TryGet(out CustomTonemapSettings tonemapSettings);
-
-			if (!tonemapSettings)
+			var tonemapSettings = stack.GetComponent<CustomTonemapSettings>();
+			if (!tonemapSettings || !tonemapSettings.enable.value)
 			{
 				return;
 			}

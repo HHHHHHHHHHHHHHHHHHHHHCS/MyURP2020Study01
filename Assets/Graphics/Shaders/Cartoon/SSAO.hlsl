@@ -436,7 +436,7 @@
 	float4 FinalBlur(v2f input): SV_Target
 	{
 		//UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-		
+
 		float2 uv = input.uv;
 		float2 delta = _BaseMap_TexelSize.xy / DOWNSAMPLE;
 		return 1.0 - BlurSmall(uv, delta);
