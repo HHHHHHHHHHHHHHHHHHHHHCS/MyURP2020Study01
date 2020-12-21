@@ -14,12 +14,12 @@ Shader "MyRP/AreaLight/AreaLight"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 	
-	// #define AREA_LIGHT_ENABLE_DIFFUSE 1
+	#define AREA_LIGHT_ENABLE_DIFFUSE 1
 	
-	// #if AREA_LIGHT_SHADOWS
-	// 	#include "AreaLightShadows.hlsl"
-	// #endif
-	// #include "AreaLighting.hlsl"
+	#if AREA_LIGHT_SHADOWS
+		#include "AreaLightShadows.hlsl"
+	#endif
+	#include "AreaLighting.hlsl"
 	
 	struct a2v
 	{
@@ -88,9 +88,12 @@ Shader "MyRP/AreaLight/AreaLight"
 	v2f vert(a2v i)
 	{
 		v2f o = (v2f)0;
-		o.pos = UnityObjectToClipPos(i.vertex);
+		float3 positionWS = TransformObjectToWorld(i.vertex);
+		float3 positionVS = TransformWorldToView(input.positionWS);
+		float4 positionCS = TransformWorldToHClip(input.positionWS);
+		o.pos = positionCS;
 		o.uv = ComputeScreenPos(o.pos);
-		o.ray = UnityObjectToViewPos(i.vertex) * float3(-1, -1, 1);//view空间需要翻转下(左右手坐标系互换)
+		o.ray = positionVS * float3(-1, -1, 1);//view空间需要翻转下(左右手坐标系互换)
 		return o;
 	}
 	
@@ -125,7 +128,7 @@ Shader "MyRP/AreaLight/AreaLight"
 			#pragma vertex vert
 			#pragma fragment frag
 			
-			//#define AREA_LIGHT_SHADOWS 1
+			#define AREA_LIGHT_SHADOWS 1
 			
 			ENDHLSL
 			
@@ -139,7 +142,7 @@ Shader "MyRP/AreaLight/AreaLight"
 			#pragma vertex vert
 			#pragma fragment frag
 			
-			//#define AREA_LIGHT_SHADOWS 0
+			#define AREA_LIGHT_SHADOWS 0
 			
 			ENDHLSL
 			
