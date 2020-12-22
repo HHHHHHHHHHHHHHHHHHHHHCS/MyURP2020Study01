@@ -24,13 +24,12 @@ Shader "MyRP/AreaLight/AreaLight"
 	struct a2v
 	{
 		float4 vertex: POSITION;
-		float2 uv: TEXCOORD0;
 	};
 	
 	struct v2f
 	{
 		float4 pos: SV_POSITION;
-		float2 uv: TEXCOORD0;
+		float4 screenPos: TEXCOORD0;
 		float3 ray: TEXCOORD1;
 	};
 	
@@ -88,21 +87,14 @@ Shader "MyRP/AreaLight/AreaLight"
 	v2f vert(a2v i)
 	{
 		v2f o = (v2f)0;
-		float3 positionWS = TransformObjectToWorld(i.vertex);
-		float3 positionVS = TransformWorldToView(input.positionWS);
-		float4 positionCS = TransformWorldToHClip(input.positionWS);
+		float3 positionWS = TransformObjectToWorld(i.vertex.xyz);
+		float3 positionVS = TransformWorldToView(positionWS);
+		float4 positionCS = TransformWorldToHClip(positionWS);
 		o.pos = positionCS;
-		o.uv = ComputeScreenPos(o.pos);
+		o.screenPos = ComputeScreenPos(positionCS);
 		o.ray = positionVS * float3(-1, -1, 1);//view空间需要翻转下(左右手坐标系互换)
 		return o;
 	}
-	
-	
-	half4 frag(v2f i): SV_TARGET
-	{
-		return CalculateLightDeferred(i.ray, i.screenPos);
-	}
-	
 	
 	ENDHLSL
 	
@@ -130,6 +122,12 @@ Shader "MyRP/AreaLight/AreaLight"
 			
 			#define AREA_LIGHT_SHADOWS 1
 			
+			
+			half4 frag(v2f i): SV_TARGET
+			{
+				return CalculateLightDeferred(i.ray, i.screenPos);
+			}
+			
 			ENDHLSL
 			
 		}
@@ -143,6 +141,12 @@ Shader "MyRP/AreaLight/AreaLight"
 			#pragma fragment frag
 			
 			#define AREA_LIGHT_SHADOWS 0
+			
+			
+			half4 frag(v2f i): SV_TARGET
+			{
+				return CalculateLightDeferred(i.ray, i.screenPos);
+			}
 			
 			ENDHLSL
 			

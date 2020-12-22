@@ -3,11 +3,12 @@ using UnityEngine;
 
 namespace Graphics.Scripts.AreaLight
 {
+	//因为要延迟渲染  所以放弃了
+	//Copy by https://github.com/Unity-Technologies/VolumetricLighting
 	[ExecuteInEditMode, RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
 	public partial class MyAreaLight : MonoBehaviour
 	{
 		private static Vector3[] vertices = new Vector3[4];
-
 
 		public bool renderSource = true;
 		public Vector3 size = new Vector3(1, 1, 2);
@@ -25,7 +26,7 @@ namespace Graphics.Scripts.AreaLight
 		[MinValue(0)] public float lightFarSize = 22.0f;
 		[Range(0f, 0.1f)] public float shadowBias = 0.001f;
 
-		[HideInInspector] public Mesh quadMesh;
+		public Mesh quadMesh;
 
 		private bool initialized = false;
 		private MaterialPropertyBlock props;
@@ -37,6 +38,8 @@ namespace Graphics.Scripts.AreaLight
 
 		private void Awake()
 		{
+			Debug.LogError("有问题,暂时弃坑这个先!!!");
+			return;
 			if (!Init())
 			{
 				return;
@@ -182,7 +185,6 @@ namespace Graphics.Scripts.AreaLight
 			
 			Gizmos.matrix = Matrix4x4.identity;
 		}
-
 
 		private void UpdateSourceMesh()
 		{

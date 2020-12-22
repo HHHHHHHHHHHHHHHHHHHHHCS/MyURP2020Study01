@@ -12,8 +12,16 @@
 	
 	float4x4 _LightVerts;
 	
+	half IntegrateEdge(half3 v1, half3 v2)
+	{
+		half theta = acos(max(-0.9999, dot(v1, v2)));
+		half theta_sintheta = theta / sin(theta);
+		return theta_sintheta * (v1.x * v2.y - v1.y * v2.x);
+	}
+	
 	half PolygonRadiance(half4x3 L)
 	{
+		//z<=0 则在后面 不可见
 		uint config = 0;
 		if (L[0].z > 0)
 		{
@@ -37,6 +45,11 @@
 		//把事情搞砸了，所以我们需要用矩阵+L4顶点。
 		half3 L4 = L[3];
 		
+		//尝试用顶点的查找数组替换它。
+		//尽管这只是用一些索引代替了开关，没有分支
+		//但是还是比较慢
+		
+		//n代表 被裁剪后 一共有几个顶点
 		uint n = 0;
 		switch(config)
 		{
@@ -93,7 +106,6 @@
 				break;
 			}
 			
-			
 			case 7: // V1 V2 V3 clip V4
 			{
 				n = 5;
@@ -101,7 +113,6 @@
 				L[3] = -L[3].z * L[2] + L[2].z * L[3];
 				break;
 			}
-			
 			
 			case 8: // V4 clip V1 V2 V3
 			{
@@ -111,7 +122,6 @@
 				L[2] = L[3];
 				break;
 			}
-			
 			
 			case 9: // V1 V4 clip V2 V3
 			{
@@ -175,10 +185,49 @@
 		{
 			return 0;
 		}
+		
+		//normalize
+		L[0] = normalize(L[0]);
+		L[1] = normalize(L[1]);
+		L[2] = normalize(L[2]);
+		if (n == 3)
+		{
+			L[3] = L[0];
+		}
+		else
+		{
+			L[3] = normalize(L[3]);
+			if (n == 4)
+			{
+				L4 = L[0];
+			}
+			else
+			{
+				L4 = normalize(L4);
+			}
+		}
+		
+		half sum = 0;
+		sum += IntegrateEdge(L[0], L[1]);
+		sum += IntegrateEdge(L[1], L[2]);
+		sum += IntegrateEdge(L[2], L[3]);
+		if (n >= 4)
+		{
+			sum += IntegrateEdge(L[3], L4);
+		}
+		if (n == 5)
+		{
+			sum += IntegrateEdge(L4, L[0]);
+		}
+		
+		sum *= 0.15915;
+		
+		return max(0, sum);
 	}
 	
-	half TransformedPolygonRadiance(half4x4 L, half2 uv, TEXTURE2D_X(transformInv), SAMPLER(sampler_transformInv), half amplitude)
+	half TransformedPolygonRadiance(half4x3 L, half2 uv, TEXTURE2D_X(transformInv), SAMPLER(sampler_transformInv), half amplitude)
 	{
+		// Get the inverse LTC matrix M
 		half3x3 minv = 0;
 		minv._m22 = 1;
 		minv._m00_m02_m11_m20 = SAMPLE_TEXTURE2D_X(transformInv, sampler_transformInv, uv);
@@ -191,13 +240,11 @@
 	half3 CalculateLight(half3 position, half3 diffColor, half3 specColor, half oneMinusRoughness, half3 N, half3 lightPos, half3 lightColor)
 	{
 		#if AREA_LIGHT_SHADOWS
-			/*
 			half shadow = Shadow(position);
 			if (shadow == 0.0)
 			{
 				return 0;
 			}
-			*/
 		#endif
 		
 		//太大或者太小的值会失真
@@ -224,17 +271,17 @@
 		
 		half3 result = 0;
 		#if AREA_LIGHT_ENABLE_DIFFUSE
-			half diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
+			half diffuseTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Diffuse, sampler_TransformInv_Diffuse, AmpDiffAmpSpecFresnel.x);
 			result = diffuseTerm * diffColor;
 		#endif
 		
-		half specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, AmpDiffAmpSpecFresnel.y);
+		half specularTerm = TransformedPolygonRadiance(L, uv, _TransformInv_Specular, sampler_TransformInv_Specular, AmpDiffAmpSpecFresnel.y);
 		half fresnelFactor = max(specColor.r, max(specColor.g, specColor.b));
 		half fresnelTerm = fresnelFactor + (1.0 - fresnelFactor) * AmpDiffAmpSpecFresnel.z;
-		result += specularTerm * fresnelTerm * UNITY_PI;
+		result += specularTerm * fresnelTerm * PI;
 		
 		#if AREA_LIGHT_SHADOWS
-			//result *= shadow;
+			result *= shadow;
 		#endif
 		
 		return result * lightColor;

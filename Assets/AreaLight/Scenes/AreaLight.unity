@@ -155,9 +155,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderSource: 1
-  size: {x: 1, y: 1, z: 2}
+  size: {x: 2, y: 4, z: 10}
   angle: 45
-  intensity: 0.8
+  intensity: 1.6
   lightColor: {r: 1, g: 1, b: 1, a: 1}
   enableShadows: 0
   shadowCullingMask:
@@ -169,10 +169,10 @@ MonoBehaviour:
   lightNearSize: 4
   lightFarSize: 22
   shadowBias: 0.0396
-  quadMesh: {fileID: 0}
-  areaLightLUTAsset: {fileID: 0}
-  proxyShader: {fileID: 0}
-  cubeMesh: {fileID: 0}
+  quadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  areaLightLUTAsset: {fileID: 11400000, guid: 307f390c17770b641ad38d2b954b8c9d, type: 2}
+  proxyShader: {fileID: 4800000, guid: e3dc5b5ae55043e44a54f0bfdad9ca29, type: 3}
+  cubeMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   shadowmapShader: {fileID: 0}
   blurShadowmapShader: {fileID: 0}
 --- !u!33 &421093957
@@ -232,7 +232,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 421093955}
   m_LocalRotation: {x: 0.38268343, y: 0, z: 0, w: 0.92387956}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 2.04, z: -1.52}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -459,7 +459,7 @@ Transform:
   m_GameObject: {fileID: 1861447591}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 5, y: 1, z: 5}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2

@@ -33,10 +33,10 @@ namespace Graphics.Scripts.AreaLight
 		{
 			UpdateShadowmap((int) shadowmapRes);
 			cmd.SetGlobalTexture("_Shadowmap", shadowmap);
-			
+
 			InitShadowmapDummy();
 			proxyMaterial.SetTexture("_ShadowmapDummy", shadowmapDummy);
-			
+
 			cmd.SetGlobalMatrix("_ShadowProjectionMatrix", GetProjectionMatrix());
 
 			float texelsInMap = (int) shadowmapRes;
@@ -169,7 +169,7 @@ namespace Graphics.Scripts.AreaLight
 		//camera target is shadowmap?
 		private bool InsideShadowmapCameraRender()
 		{
-			RenderTexture target = Camera.current.targetTexture;
+			RenderTexture target = Camera.current == null ? null : Camera.current.targetTexture;
 			return target != null && target.format == RenderTextureFormat.Shadowmap;
 		}
 	}

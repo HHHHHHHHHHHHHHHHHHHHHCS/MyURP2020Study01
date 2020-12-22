@@ -14,7 +14,6 @@ namespace Graphics.Scripts.AreaLight
 
 		private readonly Dictionary<Camera, CommandBuffer> cameras = new Dictionary<Camera, CommandBuffer>();
 
-
 		public Shader proxyShader;
 
 		public Mesh cubeMesh;
