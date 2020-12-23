@@ -18,7 +18,7 @@ Shader "MyRP/Cartoon/DepthNormals"
 			
 			#define MY_DEPTH_NORMAL
 			
-			#include "../Common/OutlineObject.hlsl"
+			#include "../CartoonCommon/OutlineObject.hlsl"
 			
 			struct a2v
 			{

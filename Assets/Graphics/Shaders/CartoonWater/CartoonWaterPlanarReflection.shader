@@ -89,7 +89,7 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			
-			#include "../Common/MyCartoonPBR.hlsl"
+			#include "../CartoonCommon/MyCartoonPBR.hlsl"
 			#include "MyCartoonWaterPBR.hlsl"
 			
 			
@@ -97,7 +97,7 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 			{
 				float4 vertex: POSITION;
 				float4 normal: NORMAL;
-				float4 tangent: TANGENT;
+				// float4 tangent: TANGENT;
 				float2 uv: TEXCOORD0;
 				float2 lightmapUV: TEXCOORD1;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
@@ -107,7 +107,7 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 			{
 				float4 positionCS: SV_POSITION;
 				float3 normalWS: NORMAL;
-				float4 tangentWS: TANGENT;
+				// float4 tangentWS: TANGENT;
 				float3 positionWS: TEXCOORD0;
 				float2 uv: TEXCOORD1;
 				#if defined(LIGHTMAP_ON)
@@ -131,7 +131,7 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 				
 				o.positionWS = TransformObjectToWorld(v.vertex.xyz);
 				o.normalWS = TransformObjectToWorldNormal(v.normal.xyz, true);
-				o.tangentWS = float4(TransformObjectToWorldDir(v.tangent.xyz), v.tangent.w);
+				// o.tangentWS = float4(TransformObjectToWorldDir(v.tangent.xyz), v.tangent.w);
 				o.positionCS = TransformWorldToHClip(o.positionWS);
 				o.uv = v.uv;
 				o.viewDirectionWS = GetWorldSpaceViewDir(o.positionWS);
@@ -224,7 +224,7 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 			
-			#include "../Common/MyCartoonPBR.hlsl"
+			#include "../CartoonCommon/MyCartoonPBR.hlsl"
 			#include "MyCartoonWaterPBR.hlsl"
 			
 			
@@ -298,7 +298,7 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 			
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			
-			#include "../Common/MyCartoonPBR.hlsl"
+			#include "../CartoonCommon/MyCartoonPBR.hlsl"
 			#include "MyCartoonWaterPBR.hlsl"
 			
 			
@@ -378,7 +378,7 @@ Shader "MyRP/CartoonWater/CartoonWaterPlanarReflection"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
 			
-			#include "../Common/MyCartoonPBR.hlsl"
+			#include "../CartoonCommon/MyCartoonPBR.hlsl"
 			#include "MyCartoonWaterPBR.hlsl"
 			
 			struct a2v

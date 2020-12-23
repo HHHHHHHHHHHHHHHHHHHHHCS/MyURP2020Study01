@@ -133,7 +133,7 @@
 	}
 	
 	/*
-	//Library\PackageCache\com.unity.render-pipelines.core@10.0.0-preview.30\ShaderLibrary\Common.hlsl
+	//Library\PackageCache\com.unity.render-pipelines.core@10.0.0-preview.30\ShaderLibrary\CartoonCommon.hlsl
 	float LinearEyeDepth(float depth, float4 zBufferParam)
 	{
 		return 1.0 / (zBufferParam.z * depth + zBufferParam.w);

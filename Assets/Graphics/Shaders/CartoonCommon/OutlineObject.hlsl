@@ -6,6 +6,9 @@
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 	float4 _CameraDepthTexture_TexelSize;	//这个是没有定义的
 	
+	#ifdef _ALPHA_COMPARE
+		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
+	#endif
 	
 	#ifdef MY_DEPTH_NORMAL
 		
@@ -78,12 +81,17 @@
 		#endif
 	}
 	
-	
-	
-	
-	void OutlineObject_float(float2 uv, float outlineThickness, float depthSensitivity, float normalSensitivity, out float outline, out float sceneDepth)
+	#ifdef _ALPHA_COMPARE
+		void OutlineObject_float(float2 uv, float outlineThickness, float depthSensitivity, float normalSensitivity, out float outline, out float sceneDepth, out float4 originalColor, out float alphaDetail)
+	#else
+		void OutlineObject_float(float2 uv, float outlineThickness, float depthSensitivity, float normalSensitivity, out float outline, out float sceneDepth)
+	#endif
 	{
-		sceneDepth = SAMPLE_TEXTURE2D(_CameraDepthTexture, sampler_CameraDepthTexture, uv).r;
+		#ifdef _ALPHA_COMPARE
+			originalColor = SampleSceneColor(uv);
+		#endif
+		
+		sceneDepth = SampleSceneDepth(uv);
 		
 		float halfScaleFloor = floor(outlineThickness * 0.5);
 		float halfScaleCeil = ceil(outlineThickness * 0.5);
@@ -91,16 +99,24 @@
 		float2 uvSamples[4];
 		float depthSamples[4];
 		float3 normalSamples[4];
+		#ifdef _ALPHA_COMPARE
+			float3 colorSamples[4];
+		#endif
 		
-		uvSamples[0] = uv - float2(_CameraDepthTexture_TexelSize.x, _CameraDepthTexture_TexelSize.y) * halfScaleFloor;
-		uvSamples[1] = uv + float2(_CameraDepthTexture_TexelSize.x, _CameraDepthTexture_TexelSize.y) * halfScaleCeil;
-		uvSamples[2] = uv + float2(_CameraDepthTexture_TexelSize.x * halfScaleCeil, -_CameraDepthTexture_TexelSize.y * halfScaleFloor);
-		uvSamples[3] = uv + float2(-_CameraDepthTexture_TexelSize.x * halfScaleFloor, _CameraDepthTexture_TexelSize.y * halfScaleCeil);
+		//类似于 1,1  -1,-1  1,-1  -1,1
+		float2 offsetStep = float2(_CameraDepthTexture_TexelSize.x, _CameraDepthTexture_TexelSize.y);
+		uvSamples[0] = uv - offsetStep * halfScaleFloor;
+		uvSamples[1] = uv + offsetStep * halfScaleCeil;
+		uvSamples[2] = uv + offsetStep * float2(halfScaleCeil, -halfScaleFloor);
+		uvSamples[3] = uv + offsetStep * float2(-halfScaleFloor, halfScaleCeil);
 		
 		for (int i = 0; i < 4; i ++)
 		{
 			depthSamples[i] = SampleSceneDepth(uvSamples[i]);
 			normalSamples[i] = SampleDepthNormal(uvSamples[i]);
+			#ifdef _ALPHA_COMPARE
+				colorSamples[i] = SampleSceneColor(uvSamples[i]);
+			#endif
 		}
 		
 		//Depth
@@ -116,8 +132,14 @@
 		float edgeNormal = sqrt(dot(normalFiniteDifference0, normalFiniteDifference0) + dot(normalFiniteDifference1, normalFiniteDifference1));
 		edgeNormal = edgeNormal > (1 / normalSensitivity) ? 1: 0;
 		
-		float edge = max(edgeDepth, edgeNormal);
-		outline = edge;
+		#ifdef _ALPHA_COMPARE
+			//Alpha
+			float4 colorFiniteDifference0 = colorSamples[1] - colorSamples[0];
+			float4 colorFiniteDifference1 = colorSamples[3] - colorSamples[2];
+			float alphaDetail = step(0.001, sqrt(dot(colorFiniteDifference0.a, colorFiniteDifference0.a) + dot(colorFiniteDifference1.a, colorFiniteDifference1.a)));
+		#endif
+		
+		outline = clamp(max(edgeDepth, edgeNormal), 0, 1);
 	}
 	
 	float3 Outlines(float2 screenPosition, float outlineThickness, float outlineDepthSensitivity, float outlineNormalSensitivity)
