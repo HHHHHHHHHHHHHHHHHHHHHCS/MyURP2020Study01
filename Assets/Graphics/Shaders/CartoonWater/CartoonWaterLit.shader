@@ -15,7 +15,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 		_DetailNoiseStrength ("Detail Noise Strength", Float) = 0.01
 		_DetailNoiseScale ("Detail Noise Scale", Float) = 30
 	}
-
+	
 	HLSLINCLUDE
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	
@@ -378,6 +378,148 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 		
 		Pass
 		{
+			Name "DepthNormals"
+			Tags { "LightMode" = "DepthNormals" }
+			
+			HLSLPROGRAM
+			
+			//#pragma target 4.5
+			//#pragma exclude_renderers d3d11_9x gles
+			#pragma vertex vert
+			#pragma fragment frag
+			
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+			
+			#pragma multi_compile _ _DetailAlphaX_ON
+			
+			// Defines
+			#define _AlphaClip 1
+			#define _NORMALMAP 1
+			// #define _NORMAL_DROPOFF_TS 1
+			// #define ATTRIBUTES_NEED_NORMAL
+			// #define ATTRIBUTES_NEED_TANGENT
+			
+			#include "../CartoonCommon/MyCartoonPBR.hlsl"
+			#include "MyCartoonWaterPBR.hlsl"
+			
+			struct a2v
+			{
+				float3 positionOS: POSITION;
+				float3 normalOS: NORMAL;
+				float2 uv: TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				float3 normalWS: NORMAL;
+				float2 uv: TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			v2f vert(a2v v)
+			{
+				v2f o = (v2f)0;
+				
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+				
+				float3 positionWS = TransformObjectToWorld(v.positionOS);
+				o.normalWS = TransformObjectToWorldNormal(v.normalOS);
+				o.positionCS = TransformWorldToHClip(positionWS);
+				o.uv = v.uv;
+				
+				return o;
+			}
+			
+			/*
+			//Library\PackageCache\com.unity.render-pipelines.universal@10.0.0-preview.26\ShaderLibrary\ShaderVariablesFunctions.hlsl
+			real3 NormalizeNormalPerPixel(real3 normalWS)
+			{
+				#if defined(SHADER_QUALITY_HIGH) || defined(_NORMALMAP)
+					return normalize(normalWS);
+				#else
+					return normalWS;
+				#endif
+			}
+			*/
+			
+			/*
+			//Library\PackageCache\com.unity.render-pipelines.core@10.0.0-preview.30\ShaderLibrary\SpaceTransforms.hlsl
+			real3 TransformWorldToViewDir(real3 dirWS, bool doNormalize = false)
+			{
+				float3 dirVS = mul((real3x3)GetWorldToViewMatrix(), dirWS).xyz;
+				if (doNormalize)
+					return normalize(dirVS);
+				
+				return dirVS;
+			}
+			*/
+			
+			/*
+			//Library\PackageCache\com.unity.render-pipelines.core@10.0.0-preview.30\ShaderLibrary\Packing.hlsl
+			real2 PackNormalOctRectEncode(real3 n)
+			{
+				// Perform planar projection.
+				real3 p = n * rcp(dot(abs(n), 1.0));
+				real  x = p.x, y = p.y, z = p.z;
+				
+				// Unfold the octahedron.
+				// Also correct the aspect ratio from 2:1 to 1:1.
+				real r = saturate(0.5 - 0.5 * x + 0.5 * y);
+				real g = x + y;
+				
+				// Negative hemisphere on the left, positive on the right.
+				return real2(CopySign(r, z), g);
+			}
+			
+			real3 UnpackNormalOctRectEncode(real2 f)
+			{
+				real r = f.r, g = f.g;
+				
+				// Solve for {x, y, z} given {r, g}.
+				real x = 0.5 + 0.5 * g - abs(r);
+				real y = g - x;
+				real z = max(1.0 - abs(x) - abs(y), REAL_EPS); // EPS is absolutely crucial for anisotropy
+				
+				real3 p = real3(x, y, CopySign(z, r));
+				
+				return normalize(p);
+			}
+			*/
+			
+			float4 frag(v2f i): SV_TARGET
+			{
+				UNITY_SETUP_INSTANCE_ID(i);
+				
+				float3 normal = NormalizeNormalPerPixel(i.normalWS);
+				
+				#if _AlphaClip
+					float alphaClipThreshold = 0.5;
+					#ifdef _DetailAlphaX_ON
+						float alpha = DetailAlphaX(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#else
+						float alpha = DetailAlphaY(i.uv, _DetailScale, _DetailNoiseStrength, _DetailNoiseScale, _DetailDensity);
+					#endif
+					clip(alpha - alphaClipThreshold);
+				#else
+					float alpha = 1;
+				#endif
+				
+				return float4(PackNormalOctRectEncode(TransformWorldToViewDir(normal, true)), 0.0, 0.0);
+			}
+			
+			ENDHLSL
+			
+		}
+		
+		
+		Pass
+		{
 			Name "Meta"
 			Tags { "LightMode" = "Meta" }
 			
@@ -413,7 +555,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 			// #define VARYINGS_NEED_FOG_AND_VERTEX_LIGHT
 			// #define FEATURES_GRAPH_VERTEX
 			
-		
+			
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/MetaInput.hlsl"
 			
 			#include "../CartoonCommon/MyCartoonPBR.hlsl"

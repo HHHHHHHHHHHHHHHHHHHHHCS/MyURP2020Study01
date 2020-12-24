@@ -131,11 +131,11 @@ Shader "MyRP/CartoonWater/Outlines"
 				//Detail Noise
 				//随机 noise outline
 				//outline alphaDetail 这些基本都是0或者1
+				//alphaDetail 是因为 前面的一些Opaque 是 clip 需要给边缘加上outline
 				float noise = GradientNoise(i.uv, _DetailNoiseScale);
 				noise = 1 - step(_DetailNoiseStep, noise) * alphaDetail;
 				noise *= 1 - outline;
 				float4 outlineColor = lerp(_OutlineColor, originalColor, noise);
-				return alphaDetail;
 
 				//Outline Fade
 				//类似于菲尼尔的outline

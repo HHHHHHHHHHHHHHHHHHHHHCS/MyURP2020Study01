@@ -7,16 +7,12 @@ namespace Graphics.Scripts.HDR
 {
 	public class CustomTonemapFeature : ScriptableRendererFeature
 	{
-		[SerializeField]
-		private Shader customTonemapShader;
-
 		private CustomTonemapPass customTonemapPass;
 		private Material customTonemapMaterial;
 
 		public override void Create()
 		{
-			customTonemapShader = Shader.Find("MyRP/HDR/CustomTonemap");
-			customTonemapMaterial = CoreUtils.CreateEngineMaterial(customTonemapShader);
+			customTonemapMaterial = CoreUtils.CreateEngineMaterial("MyRP/HDR/CustomTonemap");
 			customTonemapPass = new CustomTonemapPass(customTonemapMaterial);
 			customTonemapPass.renderPassEvent =
 				RenderPassEvent.BeforeRenderingPostProcessing; //AfterRenderingPostProcessing;

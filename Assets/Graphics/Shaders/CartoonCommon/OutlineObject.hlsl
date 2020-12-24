@@ -99,6 +99,7 @@
 			originalColor = MySampleSceneColor(uv);
 		#endif
 		
+		//Scene View 下 sceneDepth 可能有BUG
 		sceneDepth = SampleSceneDepth(uv);
 		
 		float halfScaleFloor = floor(outlineThickness * 0.5);
