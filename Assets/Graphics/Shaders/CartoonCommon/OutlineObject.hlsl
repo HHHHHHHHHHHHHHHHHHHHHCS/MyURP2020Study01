@@ -6,7 +6,7 @@
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 	float4 _CameraDepthTexture_TexelSize;	//这个是没有定义的
 	
-	#ifdef _ALPHA_COMPARE
+	#ifdef _OUTLINE_ALPHA_COMPARE
 		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
 	#endif
 	
@@ -81,14 +81,22 @@
 		#endif
 	}
 	
-	#ifdef _ALPHA_COMPARE
+	#ifdef _OUTLINE_ALPHA_COMPARE
+		//UNITY 提供的是 返回 float3  rgb
+		inline float4 MySampleSceneColor(float2 uv)
+		{
+			return SAMPLE_TEXTURE2D_X(_CameraOpaqueTexture, sampler_CameraOpaqueTexture, UnityStereoTransformScreenSpaceTex(uv));
+		}
+	#endif
+	
+	#ifdef _OUTLINE_ALPHA_COMPARE
 		void OutlineObject_float(float2 uv, float outlineThickness, float depthSensitivity, float normalSensitivity, out float outline, out float sceneDepth, out float4 originalColor, out float alphaDetail)
 	#else
 		void OutlineObject_float(float2 uv, float outlineThickness, float depthSensitivity, float normalSensitivity, out float outline, out float sceneDepth)
 	#endif
 	{
-		#ifdef _ALPHA_COMPARE
-			originalColor = SampleSceneColor(uv);
+		#ifdef _OUTLINE_ALPHA_COMPARE
+			originalColor = MySampleSceneColor(uv);
 		#endif
 		
 		sceneDepth = SampleSceneDepth(uv);
@@ -99,31 +107,32 @@
 		float2 uvSamples[4];
 		float depthSamples[4];
 		float3 normalSamples[4];
-		#ifdef _ALPHA_COMPARE
-			float3 colorSamples[4];
+		#ifdef _OUTLINE_ALPHA_COMPARE
+			float4 colorSamples[4];
 		#endif
 		
-		//类似于 1,1  -1,-1  1,-1  -1,1
+		//不是很规则的边缘判断
 		float2 offsetStep = float2(_CameraDepthTexture_TexelSize.x, _CameraDepthTexture_TexelSize.y);
 		uvSamples[0] = uv - offsetStep * halfScaleFloor;
 		uvSamples[1] = uv + offsetStep * halfScaleCeil;
 		uvSamples[2] = uv + offsetStep * float2(halfScaleCeil, -halfScaleFloor);
 		uvSamples[3] = uv + offsetStep * float2(-halfScaleFloor, halfScaleCeil);
 		
+		UNITY_UNROLL
 		for (int i = 0; i < 4; i ++)
 		{
 			depthSamples[i] = SampleSceneDepth(uvSamples[i]);
 			normalSamples[i] = SampleDepthNormal(uvSamples[i]);
-			#ifdef _ALPHA_COMPARE
-				colorSamples[i] = SampleSceneColor(uvSamples[i]);
+			#ifdef _OUTLINE_ALPHA_COMPARE
+				colorSamples[i] = MySampleSceneColor(uvSamples[i]);
 			#endif
 		}
 		
 		//Depth
 		float depthFiniteDifference0 = depthSamples[1] - depthSamples[0];
 		float depthFiniteDifference1 = depthSamples[3] - depthSamples[2];
-		float edgeDepth = sqrt(pow(depthFiniteDifference0, 2) + pow(depthFiniteDifference1, 2)) * 100;
-		float depthThreshold = (1 / depthSensitivity) * sceneDepth;//depthSamples[0];
+		float edgeDepth = sqrt(depthFiniteDifference0 * depthFiniteDifference0 + depthFiniteDifference1 * depthFiniteDifference1) * 100;
+		float depthThreshold = (1 / depthSensitivity) * sceneDepth;//但是会根据sceneDepth而变化 可以考虑删除
 		edgeDepth = edgeDepth > depthThreshold?1: 0;
 		
 		//Normals
@@ -132,11 +141,12 @@
 		float edgeNormal = sqrt(dot(normalFiniteDifference0, normalFiniteDifference0) + dot(normalFiniteDifference1, normalFiniteDifference1));
 		edgeNormal = edgeNormal > (1 / normalSensitivity) ? 1: 0;
 		
-		#ifdef _ALPHA_COMPARE
+		#ifdef _OUTLINE_ALPHA_COMPARE
 			//Alpha
 			float4 colorFiniteDifference0 = colorSamples[1] - colorSamples[0];
 			float4 colorFiniteDifference1 = colorSamples[3] - colorSamples[2];
-			float alphaDetail = step(0.001, sqrt(dot(colorFiniteDifference0.a, colorFiniteDifference0.a) + dot(colorFiniteDifference1.a, colorFiniteDifference1.a)));
+			alphaDetail = step(0.001, sqrt(dot(colorFiniteDifference0.a, colorFiniteDifference0.a) + dot(colorFiniteDifference1.a, colorFiniteDifference1.a)));
+			alphaDetail = clamp(alphaDetail, 0, 1);
 		#endif
 		
 		outline = clamp(max(edgeDepth, edgeNormal), 0, 1);
@@ -146,7 +156,13 @@
 	{
 		float outline;
 		float sceneDepth;
-		OutlineObject_float(screenPosition, outlineThickness, outlineDepthSensitivity, outlineNormalSensitivity, outline, sceneDepth);
+		#ifdef _OUTLINE_ALPHA_COMPARE
+			float4 originalColor;
+			float alphaDetail;
+			OutlineObject_float(screenPosition, outlineThickness, outlineDepthSensitivity, outlineNormalSensitivity, outline, sceneDepth, originalColor, alphaDetail);
+		#else
+			OutlineObject_float(screenPosition, outlineThickness, outlineDepthSensitivity, outlineNormalSensitivity, outline, sceneDepth);
+		#endif
 		float3 outlineColor = float3(1, 1, 1);
 		float3 normalColor = float3(0, 0, 0);
 		float3 finalColor = lerp(outlineColor, normalColor, outline);

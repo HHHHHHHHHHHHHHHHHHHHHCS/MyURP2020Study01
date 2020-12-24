@@ -9,7 +9,7 @@ Shader "MyRP/CartoonWater/Outlines"
 		_AngleFade ("Angle Fade", Float) = 1
 		_HorizonFade ("Horizon Fade", Range(0, 1)) = 0
 		_HorizonColor ("Horizon Color", Color) = (0, 0, 0, 0)
-		_Color ("Color", Color) = (1, 0, 0, 0)
+		_OutlineColor ("Color", Color) = (1, 0, 0, 0)
 		_DetailNoiseScale ("Detail Noise Scale", Float) = 2
 		_DetailNoiseStep ("Detail Noise Step", Float) = 0.6
 	}
@@ -25,7 +25,7 @@ Shader "MyRP/CartoonWater/Outlines"
 	float _AngleFade;
 	float _HorizonFade;
 	float4 _HorizonColor;
-	float4 _Color;
+	float4 _OutlineColor;
 	float _DetailNoiseScale;
 	float _DetailNoiseStep;
 	CBUFFER_END
@@ -62,7 +62,7 @@ Shader "MyRP/CartoonWater/Outlines"
 			
 			
 			#pragma multi_compile _ MY_DEPTH_NORMAL
-			#define _ALPHA_COMPARE 1
+			#define _OUTLINE_ALPHA_COMPARE 1
 			
 			#define _NORMALMAP 1
 			// #define ATTRIBUTES_NEED_NORMAL
@@ -91,6 +91,7 @@ Shader "MyRP/CartoonWater/Outlines"
 				float3 normalWS: NORMAL;
 				float3 positionWS: TEXCOORD0;
 				float2 uv: TEXCOORD1;
+				float4 screenUV: TEXCOORD2;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 			
@@ -116,25 +117,42 @@ Shader "MyRP/CartoonWater/Outlines"
 			{
 				UNITY_SETUP_INSTANCE_ID(i);
 				
-				
+				float2 screenUV = i.screenUV.xy / i.screenUV.w;
 				
 				//Outlines With Alpha Detail
+				//正常的normal 和 depth outline
 				float outline;
 				float sceneDepth;
 				float4 originalColor;
 				float alphaDetail;
-				OutlineObject_float(i.screenUV, _Thickness, _DepthSensitivity, _NormalsSensitivity, out  outline, out  sceneDepth, out  originalColor, out  alphaDetail);
+				OutlineObject_float(screenUV, _Thickness, _DepthSensitivity, _NormalsSensitivity, outline, sceneDepth, originalColor, alphaDetail);
+				
 				
 				//Detail Noise
+				//随机 noise outline
+				//outline alphaDetail 这些基本都是0或者1
 				float noise = GradientNoise(i.uv, _DetailNoiseScale);
 				noise = 1 - step(_DetailNoiseStep, noise) * alphaDetail;
 				noise *= 1 - outline;
-				float4 outlineColor = noise * originalColor + (1 - noise) * _Color;
+				float4 outlineColor = lerp(_OutlineColor, originalColor, noise);
+				return alphaDetail;
 
 				//Outline Fade
-				//TODO:
+				//类似于菲尼尔的outline
+				//因为view是反转的
+				float fade = 1 - dot(i.normalWS, -1 * mul((float3x3)UNITY_MATRIX_M, transpose(mul(UNITY_MATRIX_I_M, UNITY_MATRIX_I_V))[2].xyz));
+				fade = min(smoothstep(0, _AngleFade, fade), (sceneDepth * _DepthFade));
 				
-				return col;
+				float4 finalColor = lerp(originalColor, outlineColor, fade);
+				
+				//Horizon Fade
+				//有点类似于fog
+				float depth = 1 - sceneDepth;
+				float lerpVal = smoothstep(1 - _HorizonFade, 1, depth);
+				
+				finalColor = lerp(finalColor, _HorizonColor, lerpVal);
+				
+				return finalColor;
 			}
 			ENDHLSL
 			

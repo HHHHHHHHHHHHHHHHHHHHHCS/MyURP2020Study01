@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Outlines
-  m_Shader: {fileID: 4800000, guid: 749316c93f4550646be1f6795bdbf3be, type: 3}
+  m_Shader: {fileID: 4800000, guid: 34fa6afd4c8e796489640272c6c08df3, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -37,9 +37,17 @@ Material:
     - Vector1_ec3115f95086412084e1d61dd51d5ce0: 2
     - Vector1_f631192acb264229bd975ca92b24ed67: 0.2
     - Vector1_fd56d9a567124d14a1598782c266a6c8: 0.6
+    - _AngleFade: 3
+    - _DepthFade: 15
+    - _DepthSensitivity: 0.2
+    - _DetailNoiseScale: 2
+    - _DetailNoiseStep: 0.6
+    - _HorizonFade: 0.016
+    - _NormalsSensitivity: 3
     - _OutlineDepthSensitivity: 0.025
     - _OutlineNormalSensitivity: 2
     - _OutlineThickness: 1
+    - _Thickness: 1
     - _ToonColorOffset: 0.3
     - _ToonColorSpread: 0.96
     - _ToonColorSteps: 9
@@ -48,6 +56,9 @@ Material:
     - Color_9ff6e2c764ce4fe0aaab04986832be8a: {r: 1, g: 0.854902, b: 0.654902, a: 0}
     - Color_df38d7accba842738995e1a51c8a3a2d: {r: 0.1792453, g: 0.1792453, b: 0.1792453, a: 0}
     - Vector2_9f26ee06155b43e58e680fc62413822e: {r: 0.44, g: 14.38, b: 0, a: 0}
+    - _Color: {r: 0.18039216, g: 0.18039216, b: 0.18039216, a: 0}
+    - _HorizonColor: {r: 1, g: 0.85490197, b: 0.654902, a: 0}
+    - _OutlineColor: {r: 0.18039216, g: 0.18039216, b: 0.18039216, a: 0}
     - _ToonLitColor: {r: 0.9245283, g: 0.6391348, b: 0.2921858, a: 1}
     - _ToonShadedColor: {r: 0.5019608, g: 0.3019608, b: 0.05882353, a: 1}
     - _ToonSpecularColor: {r: 0.95283014, g: 0.95283014, b: 0.95283014, a: 0}
