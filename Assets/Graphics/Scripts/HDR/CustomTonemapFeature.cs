@@ -12,6 +12,13 @@ namespace Graphics.Scripts.HDR
 
 		public override void Create()
 		{
+#if UNITY_EDITOR
+			if (customTonemapMaterial != null)
+			{
+				DestroyImmediate(customTonemapMaterial);
+			}
+#endif
+			
 			customTonemapMaterial = CoreUtils.CreateEngineMaterial("MyRP/HDR/CustomTonemap");
 			customTonemapPass = new CustomTonemapPass(customTonemapMaterial);
 			customTonemapPass.renderPassEvent =

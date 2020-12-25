@@ -17,6 +17,9 @@ namespace Graphics.Editor.CartoonWater
 			public static GUIContent callback = new GUIContent("Event",
 				"Choose at which point this render pass is executed in the frame.");
 
+			public static GUIContent enableSceneView = new GUIContent("EnableSceneView",
+				"Enable Scene View.");
+
 			//Headers
 			public static GUIContent filtersHeader =
 				new GUIContent("Filters", "Settings that control which objects should be rendered.");
@@ -89,6 +92,7 @@ namespace Graphics.Editor.CartoonWater
 
 		// Serialized Properties
 		private SerializedProperty m_Callback;
+		private SerializedProperty m_enableSceneView;
 
 		private SerializedProperty m_PassTag;
 
@@ -132,6 +136,7 @@ namespace Graphics.Editor.CartoonWater
 
 
 			m_Callback = property.FindPropertyRelative("renderPassEvent");
+			m_enableSceneView = property.FindPropertyRelative("enableSceneView");
 			m_PassTag = property.FindPropertyRelative("passTag");
 
 			//Filter props
@@ -185,6 +190,9 @@ namespace Graphics.Editor.CartoonWater
 			EditorGUI.PropertyField(rect, m_Callback, Styles.callback);
 			rect.y += Styles.defaultLineSpace;
 
+			EditorGUI.PropertyField(rect, m_enableSceneView, Styles.enableSceneView);
+			rect.y += Styles.defaultLineSpace;
+
 			DoFilters(ref rect);
 
 			m_RenderFoldout.value = EditorGUI.Foldout(rect, m_RenderFoldout.value, Styles.renderHeader, true);
@@ -233,8 +241,11 @@ namespace Graphics.Editor.CartoonWater
 				EditorGUI.PropertyField(rect, m_RenderingLayerMask, Styles.renderingLayerMask);
 				rect.y += Styles.defaultLineSpace;
 				//Shader pass list
+				EditorGUI.indentLevel++;
 				EditorGUI.PropertyField(rect, m_ShaderPasses, Styles.shaderPassFilter, true);
 				rect.y += EditorGUI.GetPropertyHeight(m_ShaderPasses);
+				EditorGUI.indentLevel--;
+				
 				EditorGUI.indentLevel--;
 			}
 		}
@@ -299,7 +310,7 @@ namespace Graphics.Editor.CartoonWater
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			float height = Styles.defaultLineSpace;
+			float height = 2 * Styles.defaultLineSpace;
 
 			Init(property);
 			height += Styles.defaultLineSpace * (m_FiltersFoldout.value ? m_FilterLines : 1);

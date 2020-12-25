@@ -16,6 +16,7 @@ MonoBehaviour:
   settings:
     passTag: Outlines Background
     renderPassEvent: 550
+    enableSceneView: 0
     filterSettings:
       renderQueueType: 0
       layerMask:
@@ -40,6 +41,21 @@ MonoBehaviour:
       restoreCamera: 1
       offset: {x: 0, y: 0, z: 0, w: 0}
       cameraFieldOfView: 60
+--- !u!114 &-4124578925556697661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7651bb8fde338ab4f897cf2c214c6cfe, type: 3}
+  m_Name: MyBlitFeature
+  m_EditorClassIdentifier: 
+  m_Active: 0
+  renderPassEvent: 1000
+  rtName: _CameraDepthTexture
 --- !u!114 &-2652773551408404863
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56,6 +72,7 @@ MonoBehaviour:
   settings:
     passTag: Outlines
     renderPassEvent: 550
+    enableSceneView: 0
     filterSettings:
       renderQueueType: 0
       layerMask:
@@ -119,7 +136,8 @@ MonoBehaviour:
   - {fileID: -2652773551408404863}
   - {fileID: -7602480270313803938}
   - {fileID: -403516614997162962}
-  m_RendererFeatureMap: 9dfb9e282ba68b798126c08e82742fdb5eaf074c79907e962e4420cec66b66fa
+  - {fileID: -4124578925556697661}
+  m_RendererFeatureMap: 9dfb9e282ba68b798126c08e82742fdb5eaf074c79907e962e4420cec66b66fac37521f6518dc2c6
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
   shaders:

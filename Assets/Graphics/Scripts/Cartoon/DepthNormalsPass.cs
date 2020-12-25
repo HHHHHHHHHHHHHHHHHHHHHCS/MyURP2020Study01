@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using Object = UnityEngine.Object;
 
 namespace Graphics.Scripts.Cartoon
 {
@@ -18,6 +19,11 @@ namespace Graphics.Scripts.Cartoon
 
 		public DepthNormalsPass(RenderQueueRange range, LayerMask layerMask, Material _depthNormalsMaterial)
 		{
+			if (depthNormalsMaterial != null)
+			{
+				Object.DestroyImmediate(depthNormalsMaterial);
+			}
+			
 			profilingSampler =  new ProfilingSampler(k_tag);
 			filteringSettings = new FilteringSettings(range, layerMask);
 			depthNormalsMaterial = _depthNormalsMaterial;

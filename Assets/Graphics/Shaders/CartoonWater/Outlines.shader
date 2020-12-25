@@ -127,7 +127,6 @@ Shader "MyRP/CartoonWater/Outlines"
 				float alphaDetail;
 				OutlineObject_float(screenUV, _Thickness, _DepthSensitivity, _NormalsSensitivity, outline, sceneDepth, originalColor, alphaDetail);
 				
-				
 				//Detail Noise
 				//随机 noise outline
 				//outline alphaDetail 这些基本都是0或者1

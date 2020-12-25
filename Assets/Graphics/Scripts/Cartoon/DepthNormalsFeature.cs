@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using Object = System.Object;
 
 namespace Graphics.Scripts.Cartoon
 {
@@ -16,6 +17,13 @@ namespace Graphics.Scripts.Cartoon
 
 		public override void Create()
 		{
+#if UNITY_EDITOR
+			if (depthNormalsMaterial != null)
+			{
+				DestroyImmediate(depthNormalsMaterial);
+			}
+#endif
+
 			//其实这里也可以自己写depth normals 加密
 			//但是替换材质球 可以一次性全部替换成自己想要的
 			depthNormalsMaterial = CoreUtils.CreateEngineMaterial("MyRP/Cartoon/DepthNormals");

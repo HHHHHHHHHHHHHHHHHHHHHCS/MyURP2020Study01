@@ -55,6 +55,8 @@ namespace Graphics.Scripts.CartoonWater
 
 			public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
 
+			public bool enableSceneView = true;
+
 			public FilterSettings filterSettings = new FilterSettings();
 
 			public Material overrideMaterial = null;
@@ -71,6 +73,8 @@ namespace Graphics.Scripts.CartoonWater
 
 			public CustomCameraSettings cameraSettings = new CustomCameraSettings();
 		}
+
+		public static bool globalEnable = true;
 
 		public RenderObjectsSettings settings = new RenderObjectsSettings();
 
@@ -98,7 +102,16 @@ namespace Graphics.Scripts.CartoonWater
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
-			renderer.EnqueuePass(renderObjectsPass);
+			if (!globalEnable)
+			{
+				return;
+			}
+			
+			if (!renderingData.cameraData.isSceneViewCamera ||
+			    (renderingData.cameraData.isSceneViewCamera && settings.enableSceneView))
+			{
+				renderer.EnqueuePass(renderObjectsPass);
+			}
 		}
 	}
 }

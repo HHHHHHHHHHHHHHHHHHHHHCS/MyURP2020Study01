@@ -101,11 +101,14 @@ namespace Graphics.Scripts.CartoonWater
 			var oldFog = RenderSettings.fog;
 			var oldMax = QualitySettings.maximumLODLevel;
 			var oldBias = QualitySettings.lodBias;
+			var oldGlobalEnable = MyRenderObjectsFeature.globalEnable;
+
 			//剔除时针改变  显示背面  因为水可能要背面
 			GL.invertCulling = false;
 			RenderSettings.fog = false;
 			QualitySettings.maximumLODLevel = 1;
 			QualitySettings.lodBias = oldBias * 0.5f;
+			MyRenderObjectsFeature.globalEnable = false;
 
 			UpdateReflectionCamera(camera);
 
@@ -130,6 +133,7 @@ namespace Graphics.Scripts.CartoonWater
 			RenderSettings.fog = oldFog;
 			QualitySettings.maximumLODLevel = oldMax;
 			QualitySettings.lodBias = oldBias;
+			MyRenderObjectsFeature.globalEnable = oldGlobalEnable;
 			Shader.SetGlobalTexture(planarReflectionTexture_PTID, reflectionTexture);
 		}
 
