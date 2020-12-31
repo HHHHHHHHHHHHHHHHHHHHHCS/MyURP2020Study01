@@ -39,6 +39,7 @@ namespace Graphics.Scripts.FastPostProcessing
 
 			//ToneMapper
 			[Header("ToneMapper"), SerializeField] public ToneMapperType toneMapper = ToneMapperType.ACES;
+
 			// [HideInInspector] public bool userLutEnabled = true;
 			// [HideInInspector] public Vector4 userLutParams;
 			[SerializeField] public Texture2D userLutTexture = null;
@@ -54,12 +55,31 @@ namespace Graphics.Scripts.FastPostProcessing
 
 		#region KeyID
 
+		private const string Sharpen_ID = "_SHARPEN";
+		private readonly int SharpenSize_ID = Shader.PropertyToID("_SharpenSize");
+		private readonly int SharpenIntensity_ID = Shader.PropertyToID("_SharpenIntensity");
+
+		private const string Bloom_ID = "Bloom";
+		private readonly int BloomSize_ID = Shader.PropertyToID("_BloomSize");
+		private readonly int BloomAmount_ID = Shader.PropertyToID("_BloomAmount");
+		private readonly int BloomPower_ID = Shader.PropertyToID("_BloomPower");
+
+
+		private const string ACES_ID = "_TONEMAPPER_ACES";
+		private const string DAWSON_ID = "_TONEMAPPER_DAWSON";
+		private const string HABLE_ID = "_TONEMAPPER_HABLE";
+		private const string PHOTOGRAPHIC_ID = "_TONEMAPPER_PHOTOGRAPHIC";
+		private const string REINHART_ID = "_TONEMAPPER_REINHART";
+		private readonly int Exposure_ID = Shader.PropertyToID("_Exposure");
+		private const string Dithering_ID = "_DITHERING";
 		private const string UserLutEnable_ID = "_USERLUT_ENABLE";
 		private readonly int UserLutTex_ID = Shader.PropertyToID("_UserLutTex");
 		private readonly int UserLutParams_ID = Shader.PropertyToID("_UserLutParams");
 
+		private const string GammaCorrection_ID = "_GAMMA_CORRECTION";
+
 		#endregion
-		
+
 		#region Properties
 
 		private MyFastPostProcessingSettings settings;
@@ -90,7 +110,7 @@ namespace Graphics.Scripts.FastPostProcessing
 			{
 				shader = Shader.Find("MyRP/FastPostProcessing/FastPostProcessing");
 			}
-			
+
 			SafeDestroy(postProcessMaterial);
 			if (postProcessMaterial == null && shader != null)
 			{
@@ -108,29 +128,104 @@ namespace Graphics.Scripts.FastPostProcessing
 
 			MyFastPostProcessingSettings vs = volume.settings;
 
-			//TODO:
-			//
-			// if (m_Sharpen)
-			// {
-			// 	m_PostProcessMaterial.SetFloat("_SharpenSize", m_SharpenSize);
-			// 	m_PostProcessMaterial.SetFloat("_SharpenIntensity", m_SharpenIntensity);
-			// }
-			//
-			// if (m_Bloom)
-			// {
-			// 	m_PostProcessMaterial.SetFloat("_BloomSize", m_BloomSize);
-			// 	m_PostProcessMaterial.SetFloat("_BloomAmount", m_BloomAmount);
-			// 	m_PostProcessMaterial.SetFloat("_BloomPower", m_BloomPower);
-			// }
-			//
-			// if (m_ToneMapper != ToneMapper.None)
-			// 	m_PostProcessMaterial.SetFloat("_Exposure", m_Exposure);
-			//
-			// if (m_UserLutEnabled)
-			// {
-			// 	m_PostProcessMaterial.SetVector("_UserLutParams", m_UserLutParams);
-			// 	m_PostProcessMaterial.SetTexture("_UserLutTex", m_UserLutTexture);
-			// }
+			//Sharpen
+			if (isForce || settings.sharpen != vs.sharpen)
+			{
+				settings.sharpen = vs.sharpen;
+				SetKeyword(Sharpen_ID, settings.sharpen);
+			}
+
+			if (settings.sharpen)
+			{
+				if (isForce || settings.sharpenSize != vs.sharpenSize)
+				{
+					settings.sharpenSize = vs.sharpenSize;
+					SetFloat(SharpenSize_ID, settings.sharpenSize);
+				}
+
+				if (isForce || settings.sharpenIntensity != vs.sharpenIntensity)
+				{
+					settings.sharpenIntensity = vs.sharpenIntensity;
+					SetFloat(SharpenIntensity_ID, settings.sharpenIntensity);
+				}
+			}
+
+
+			//Bloom
+			if (isForce || settings.bloom != vs.bloom)
+			{
+				settings.bloom = vs.bloom;
+				SetKeyword(Bloom_ID, settings.bloom);
+			}
+
+			if (settings.bloom)
+			{
+				if (isForce || settings.bloomSize != vs.bloomSize)
+				{
+					settings.bloomSize = vs.bloomSize;
+					SetFloat(BloomSize_ID, settings.bloomSize);
+				}
+
+				if (isForce || settings.bloomAmount != vs.bloomAmount)
+				{
+					settings.bloomAmount = vs.bloomAmount;
+					SetFloat(BloomAmount_ID, settings.bloomAmount);
+				}
+
+				if (isForce || settings.bloomPower != vs.bloomPower)
+				{
+					settings.bloomPower = vs.bloomPower;
+					SetFloat(BloomPower_ID, settings.bloomPower);
+				}
+			}
+
+
+			//ToneMapper
+			if (isForce || settings.toneMapper != vs.toneMapper)
+			{
+				settings.toneMapper = vs.toneMapper;
+				switch (settings.toneMapper)
+				{
+					case ToneMapperType.None:
+						SetKeyword(ACES_ID, false);
+						SetKeyword(DAWSON_ID, false);
+						SetKeyword(HABLE_ID, false);
+						SetKeyword(PHOTOGRAPHIC_ID, false);
+						SetKeyword(REINHART_ID, false);
+						break;
+					case ToneMapperType.ACES:
+						SetKeyword(ACES_ID, true);
+						break;
+					case ToneMapperType.Dawson:
+						SetKeyword(DAWSON_ID, true);
+						break;
+					case ToneMapperType.Hable:
+						SetKeyword(HABLE_ID, true);
+						break;
+					case ToneMapperType.Photographic:
+						SetKeyword(PHOTOGRAPHIC_ID, true);
+						break;
+					case ToneMapperType.Reinhart:
+						SetKeyword(REINHART_ID, true);
+						break;
+				}
+			}
+
+			if (settings.toneMapper != ToneMapperType.None)
+			{
+				if (isForce || settings.exposure != vs.exposure)
+				{
+					settings.exposure = vs.exposure;
+					SetFloat(Exposure_ID, settings.exposure);
+				}
+
+				if (isForce || settings.dithering != vs.dithering)
+				{
+					settings.dithering = vs.dithering;
+					SetKeyword(Dithering_ID, settings.dithering);
+				}
+			}
+
 
 			if (isForce || settings.userLutTexture != vs.userLutTexture)
 			{
@@ -145,69 +240,15 @@ namespace Graphics.Scripts.FastPostProcessing
 					var userLutParams = new Vector4(1f / settings.userLutTexture.width,
 						1f / settings.userLutTexture.height,
 						settings.userLutTexture.height - 1, settings.lutContribution);
-					
+
 					SetVector(UserLutParams_ID, userLutParams);
 				}
-			}
-
-			if (isForce || settings.sharpen != vs.sharpen)
-			{
-				settings.sharpen = vs.sharpen;
-				SetKeyword("_SHARPEN", settings.sharpen);
-			}
-
-			if (isForce || settings.bloom != vs.bloom)
-			{
-				settings.bloom = vs.bloom;
-				SetKeyword("_BLOOM", settings.bloom);
-			}
-
-			if (isForce || settings.bloom != vs.bloom)
-			{
-				settings.bloom = vs.bloom;
-				SetKeyword("_BLOOM", settings.bloom);
-			}
-
-			if (isForce || settings.dithering != vs.dithering)
-			{
-				settings.dithering = vs.dithering;
-				SetKeyword("_DITHERING", settings.dithering);
 			}
 
 			if (isForce || settings.gammaCorrection != vs.gammaCorrection)
 			{
 				settings.gammaCorrection = vs.gammaCorrection;
-				SetKeyword("_GAMMA_CORRECTION", settings.gammaCorrection);
-			}
-
-			if (isForce || settings.toneMapper != vs.toneMapper)
-			{
-				settings.toneMapper = vs.toneMapper;
-				switch (settings.toneMapper)
-				{
-					case ToneMapperType.None:
-						SetKeyword("_ACES", false);
-						SetKeyword("_DAWSON", false);
-						SetKeyword("_HABLE", false);
-						SetKeyword("_PHOTOGRAPHIC", false);
-						SetKeyword("_REINHART", false);
-						break;
-					case ToneMapperType.ACES:
-						SetKeyword("_ACES", true);
-						break;
-					case ToneMapperType.Dawson:
-						SetKeyword("_DAWSON", true);
-						break;
-					case ToneMapperType.Hable:
-						SetKeyword("_HABLE", true);
-						break;
-					case ToneMapperType.Photographic:
-						SetKeyword("_PHOTOGRAPHIC", true);
-						break;
-					case ToneMapperType.Reinhart:
-						SetKeyword("_REINHART", true);
-						break;
-				}
+				SetKeyword(GammaCorrection_ID, settings.gammaCorrection);
 			}
 		}
 
@@ -250,7 +291,7 @@ namespace Graphics.Scripts.FastPostProcessing
 
 			postProcessMaterial.SetFloat(keywordID, value);
 		}
-		
+
 		private void SetVector(int keywordID, Vector4 value)
 		{
 			if (postProcessMaterial == null)
