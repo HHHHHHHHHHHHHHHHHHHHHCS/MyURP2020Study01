@@ -1,4 +1,4 @@
-Shader "LitSamples/01/UnlitTextureShadows"
+Shader "MyRP/LitSamples/02_UnlitTextureShadows"
 {
 	Properties
 	{
@@ -50,24 +50,26 @@ Shader "LitSamples/01/UnlitTextureShadows"
 				float3 positionWS: TEXCOORD1;
 			};
 			
+			//texture 可以不在 cbuffer里面  因为在Properties定义里是算 UnityPerMaterial
+			//但是XX_ST需要在里面
 			TEXTURE2D(_BaseMap);
 			SAMPLER(sampler_BaseMap);
 			
-			v2f vert(a2v i)
+			v2f vert(a2v v)
 			{
 				v2f o;
-				VertexPositionInputs positionInputs = GetVertexPositionInputs(i.positionOS.xyz);
+				VertexPositionInputs positionInputs = GetVertexPositionInputs(v.positionOS.xyz);
 				o.positionHCS = positionInputs.positionCS;
 				o.positionWS = positionInputs.positionWS;
-				o.uv = TRANSFORM_TEX(i.uv, _BaseMap);
+				o.uv = TRANSFORM_TEX(v.uv, _BaseMap);
 				return o;
 			}
 			
-			half4 frag(v2f v): SV_Target
+			half4 frag(v2f i): SV_Target
 			{
-				float4 shadowsCoord = TransformWorldToShadowCoord(v.positionWS);
+				float4 shadowsCoord = TransformWorldToShadowCoord(i.positionWS);
 				Light mainLight = GetMainLight(shadowsCoord);
-				half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, v.uv) * _BaseColor;
+				half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, i.uv) * _BaseColor;
 				color *= mainLight.shadowAttenuation;
 				return color;
 			}
@@ -80,7 +82,6 @@ Shader "LitSamples/01/UnlitTextureShadows"
 		//但是存在问题就是 ShadowCaster 的 UnityPerMaterial CBUFFER 不一致 不能 进行SRP Batcher
 		//要么就是 重写我们的UnityPerMaterial   要么就是自己写个ShadowCaster
 		//UsePass "Universal Render Pipeline/Lit/ShadowCaster"
-		//TODO:抽出来自己写
 		Pass
 		{
 			
@@ -91,12 +92,52 @@ Shader "LitSamples/01/UnlitTextureShadows"
 			
 			HLSLPROGRAM
 			
-			//ShadowPassVertex->是ShadowCasterPass.hlsl里面的
-			#pragma vertex ShadowPassVertex
+			#pragma vertex vert
 			#pragma fragment frag
 			
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+			
+			struct a2v
+			{
+				float4 positionOS: POSITION;
+				float3 normalOS: NORMAL;
+				float2 texcoord: TEXCOORD0;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+			
+			struct v2f
+			{
+				float4 positionHCS: SV_POSITION;
+			};
+			
+			float3 _LightDirection;
+			
+			
+			float4 GetShadowPositionHClip(a2v input)
+			{
+				float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+				float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+				
+				float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+				
+				#if UNITY_REVERSED_Z
+					positionCS.z = min(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
+				#else
+					positionCS.z = max(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
+				#endif
+				
+				return positionCS;
+			}
+			
+			v2f vert(a2v v)
+			{
+				v2f o;
+				UNITY_SETUP_INSTANCE_ID(v);
+				o.positionHCS = GetShadowPositionHClip(v);
+				return o;
+			}
 			
 			
 			half4 frag(v2f v): SV_Target
