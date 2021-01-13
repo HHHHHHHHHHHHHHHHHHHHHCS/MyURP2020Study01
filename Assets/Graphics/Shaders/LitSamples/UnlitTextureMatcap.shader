@@ -78,6 +78,7 @@ Shader "MyRP/LitSamples/03_UnlitTextureMatcap"
 				o.positionHCS = positionInputs.positionCS;
 				o.positionWS = positionInputs.positionWS;
 				o.normalVS = TransformWorldToViewDir(normalInputs.normalWS);
+				//其实也可以在顶点阶段用VertexNormalInputs传入 binormalVS
 				o.tangentVS = half4(TransformWorldToViewDir(normalInputs.tangentWS), v.tangentOS.w * GetOddNegativeScale());
 				o.uv = TRANSFORM_TEX(v.uv, _BaseMap);
 				

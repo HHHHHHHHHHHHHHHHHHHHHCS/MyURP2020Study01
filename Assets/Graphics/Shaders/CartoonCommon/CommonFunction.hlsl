@@ -1,5 +1,5 @@
-#ifndef __COMMONFUNCTION_INCLUDE__
-	#define __COMMONFUNCTION_INCLUDE__
+#ifndef __COMMON_FUNCTION_INCLUDE__
+	#define __COMMON_FUNCTION_INCLUDE__
 	
 	float4 ComputeScreenPos(float4 pos, float projectionSign)
 	{

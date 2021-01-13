@@ -1,5 +1,5 @@
-#ifndef __MYCARTOONPBR_INCLUDE__
-	#define __MYCARTOONPBR_INCLUDE__
+#ifndef __MY_CARTOON_PBR_INCLUDE__
+	#define __MY_CARTOON_PBR_INCLUDE__
 	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"

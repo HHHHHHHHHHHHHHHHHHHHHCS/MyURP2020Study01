@@ -1,5 +1,5 @@
-#ifndef __MAINLIGHT_INCLUDE__
-	#define __MAINLIGHT_INCLUDE__
+#ifndef __MAIN_LIGHT_INCLUDE__
+	#define __MAIN_LIGHT_INCLUDE__
 	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	//Lighting 要在Shadows上面 不然会出现丢失function

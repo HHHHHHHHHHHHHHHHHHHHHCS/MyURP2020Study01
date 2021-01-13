@@ -1,5 +1,5 @@
-#ifndef __MYCARTOONWATERPBR_INCLUDE__
-	#define __MYCARTOONWATERPBR_INCLUDE__
+#ifndef __MY_CARTOON_WATER_PBR_INCLUDE__
+	#define __MY_CARTOON_WATER_PBR_INCLUDE__
 	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 	#include "../CartoonCommon/CommonFunction.hlsl"

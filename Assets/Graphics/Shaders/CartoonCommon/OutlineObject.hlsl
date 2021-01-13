@@ -1,5 +1,5 @@
-#ifndef __OUTLINEOBJECT_INCLUDE__
-	#define __OUTLINEOBJECT_INCLUDE__
+#ifndef __OUTLINE_OBJECT_INCLUDE__
+	#define __OUTLINE_OBJECT_INCLUDE__
 	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	

@@ -1,5 +1,5 @@
-#ifndef __AREALIGHTING__INCLUDE__
-	#define __AREALIGHTING__INCLUDE__
+#ifndef __AREA_LIGHTING__INCLUDE__
+	#define __AREA_LIGHTING__INCLUDE__
 	
 	#if AREA_LIGHT_ENABLE_DIFFUSE
 		TEXTURE2D_X(_TransformInv_Diffuse);

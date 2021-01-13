@@ -1,5 +1,5 @@
-#ifndef __CUSTOMSTANDARDBRDF_INCLUDED__
-	#define __CUSTOMSTANDARDBRDF_INCLUDED__
+#ifndef __CUSTOM_STANDARD_BRDF_INCLUDED__
+	#define __CUSTOM_STANDARD_BRDF_INCLUDED__
 	
 	//其实URP 也有 DecodeHDREnvironment
 	inline half3 DecodeHDR(half4 data, half4 decodeInstructions)

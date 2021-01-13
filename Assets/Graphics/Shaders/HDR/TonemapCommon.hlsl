@@ -1,5 +1,5 @@
-#ifndef __TONEMAPCOMMON_INCLUDED__
-	#define __TONEMAPCOMMON_INCLUDED__
+#ifndef __TONEMAP_COMMON_INCLUDED__
+	#define __TONEMAP_COMMON_INCLUDED__
 	
 	
 	// Converts color to luminance (grayscale)
