@@ -32,6 +32,7 @@
 		#ifdef _NORMALMAP
 			half4 tangentWS: TEXCOORD4;
 		#endif
+		UNITY_VERTEX_INPUT_INSTANCE_ID
 	};
 	
 	// User defined surface data.
@@ -155,6 +156,8 @@
 	Varyings SurfaceVertex(Attributes IN)
 	{
 		Varyings OUT;
+		UNITY_SETUP_INSTANCE_ID(IN);
+		UNITY_TRANSFER_INSTANCE_ID(IN, OUT);
 		
 		VertexPositionInputs vertexInput = GetVertexPositionInputs(IN.positionOS.xyz);
 		
@@ -182,6 +185,8 @@
 	
 	half4 SurfaceFragment(Varyings IN): SV_Target
 	{
+		UNITY_SETUP_INSTANCE_ID(IN);
+		
 		CustomSurfaceData surfaceData;
 		SurfaceFunction(IN, surfaceData);
 		
