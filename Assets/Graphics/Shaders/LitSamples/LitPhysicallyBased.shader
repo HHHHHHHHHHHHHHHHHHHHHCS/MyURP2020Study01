@@ -75,7 +75,10 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 			TEXTURE2D(_NormalMap);
 			SAMPLER(sampler_NormalMap);
 			TEXTURE2D(_MetallicSmoothnessMap);
+			SAMPLER(sampler_MetallicSmoothnessMap);
 			TEXTURE2D(_AmbientOcclusionMap);
+			SAMPLER(sampler_AmbientOcclusionMap);
+
 			
 			void SurfaceFunction(Varyings IN, out CustomSurfaceData surfaceData)
 			{
@@ -325,7 +328,9 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 			TEXTURE2D(_NormalMap);
 			SAMPLER(sampler_NormalMap);
 			TEXTURE2D(_MetallicSmoothnessMap);
+			SAMPLER(sampler_MetallicSmoothnessMap);
 			TEXTURE2D(_AmbientOcclusionMap);
+			SAMPLER(sampler_AmbientOcclusionMap);
 			
 			v2f vert(a2v v)
 			{
@@ -382,7 +387,7 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 				#endif
 				*/
 				
-				specGloss = SAMPLE_TEXTURE2D(_MetallicSmoothnessMap, sampler_BaseMap, uv);
+				specGloss = SAMPLE_TEXTURE2D(_MetallicSmoothnessMap, sampler_MetallicSmoothnessMap, uv);
 				specGloss.a *= _Smoothness;
 				
 				return specGloss;
@@ -455,7 +460,7 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 				
 				outSurfaceData.smoothness = specGloss.a;
 				outSurfaceData.normalTS = SampleNormal(uv, TEXTURE2D_ARGS(_NormalMap, sampler_NormalMap), _NormalMapScale);
-				outSurfaceData.occlusion = SAMPLE_TEXTURE2D(_AmbientOcclusionMap, sampler_BaseMap, uv).g * _AmbientOcclusion;
+				outSurfaceData.occlusion = SAMPLE_TEXTURE2D(_AmbientOcclusionMap, sampler_AmbientOcclusionMap, uv).g * _AmbientOcclusion;
 				outSurfaceData.emission = _Emission.rgb;
 				
 				outSurfaceData.clearCoatMask = 0.0h;
