@@ -1,4 +1,4 @@
-Shader "MyRP/LitSamples/06_LitPhysicallyBased"
+Shader "MyRP/LitSamples/07_ClearCoat"
 {
 	//这个可能需要自己写editor gui
 	Properties
@@ -13,6 +13,8 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 		[NoScaleOffset]_AmbientOcclusionMap ("AmbientOcclusionMap", 2D) = "white" { }
 		_Reflectance ("Reflectance for dieletrics", Range(0.0, 1.0)) = 0.5
 		_Smoothness ("Smoothness", Range(0.0, 1.0)) = 0.5
+		_ClearCoatStrength ("Clear Coat Strength", Range(0.0, 1.0)) = 0.5
+		_ClearCoatSmoothness ("Clear Coat Smoothness", Range(0.0, 1.0)) = 0.5
 		
 		[Toggle(_NORMALMAP)] _EnableNormalMap ("Enable Normal Map", Float) = 0.0
 		[Normal][NoScaleOffset]_NormalMap ("Normal Map", 2D) = "bump" { }
@@ -26,6 +28,7 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 	{
 		Tags { "RenderType" = "Opaque" /*"RenderPipeline" = "UniversalRenderPipeline"*/ }
 		
+		
 		HLSLINCLUDE
 		
 		#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -38,6 +41,8 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 		half _Reflectance;
 		half _Smoothness;
 		half4 _Emission;
+		half _ClearCoatSmoothness;
+		half _ClearCoatStrength;
 		half _NormalMapScale;
 		CBUFFER_END
 		
@@ -52,23 +57,18 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 			
 			#pragma vertex SurfaceVertex
 			#pragma fragment SurfaceFragment
+			#define CUSTOM_LIGHTING_FUNCTION ClearCoatLightingFunction
 			
-			// Material Keywords
 			#pragma shader_feature_local _NORMALMAP
 			
-			// Universal Render Pipeline keywords
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ DIRLIGHTMAP_COMBINED
 			#pragma multi_compile _ LIGHTMAP_ON
 			
-			// GPU Instancing
-			#pragma multi_compile_instancing
-			#pragma multi_compile _ DOTS_INSTANCING_ON
-			
-			
 			#include "CustomShading.hlsl"
+			
 			
 			TEXTURE2D(_BaseMap);
 			SAMPLER(sampler_BaseMap);
@@ -83,8 +83,9 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 				float2 uv = TRANSFORM_TEX(IN.uv, _BaseMap);
 				
 				half3 baseColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv).rgb * _BaseColor.rgb;
-				half4 metallicSmoothness = SAMPLE_TEXTURE2D(_MetallicSmoothnessMap, sampler_BaseMap, uv);
-				half metallic = _Metallic * metallicSmoothness.r;
+				half4 metaliicSmoothness = SAMPLE_TEXTURE2D(_MetallicSmoothnessMap, sampler_BaseMap, uv);
+				half metallic = _Metallic * metaliicSmoothness.r;
+				
 				// diffuse color is black for metals and baseColor for dieletrics
 				surfaceData.diffuse = ComputeDiffuseColor(baseColor.rgb, metallic);
 				
@@ -94,8 +95,7 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 				// https://google.github.io/filament/Filament.html#materialsystem/parameterization/standardparameters
 				surfaceData.reflectance = ComputeFresnel0(baseColor.rgb, metallic, _Reflectance * _Reflectance * 0.16);
 				surfaceData.ao = SAMPLE_TEXTURE2D(_AmbientOcclusionMap, sampler_BaseMap, uv).g * _AmbientOcclusion;
-				surfaceData.perceptualRoughness = 1.0 - (_Smoothness * metallicSmoothness.a);
-				
+				surfaceData.perceptualRoughness = 1.0 - (_Smoothness * metaliicSmoothness.a);
 				#ifdef _NORMALMAP
 					surfaceData.normalWS = GetPerPixelNormalScaled(TEXTURE2D_ARGS(_NormalMap, sampler_NormalMap), uv, IN.normalWS, IN.tangentWS, _NormalMapScale);
 				#else
@@ -105,177 +105,83 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 				surfaceData.alpha = 1.0;
 			}
 			
-			
-			ENDHLSL
-			
-		}
-		
-		Pass
-		{
-			
-			Name "ShadowCaster"
-			Tags { "LightMode" = "ShadowCaster" }
-			
-			ColorMask 0
-			
-			HLSLPROGRAM
-			
-			#pragma vertex vert
-			#pragma fragment frag
-			
-			// GPU Instancing
-			#pragma multi_compile_instancing
-			#pragma multi_compile _ DOTS_INSTANCING_ON
-			
-			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
-			
-			struct a2v
+			half4 ClearCoatLightingFunction(CustomSurfaceData surfaceData, LightingData lightingData)
 			{
-				float4 positionOS: POSITION;
-				float3 normalOS: NORMAL;
-				float2 texcoord: TEXCOORD0;
-				UNITY_VERTEX_INPUT_INSTANCE_ID
-			};
-			
-			struct v2f
-			{
-				float4 positionHCS: SV_POSITION;
-			};
-			
-			float3 _LightDirection;
-			
-			
-			float4 GetShadowPositionHClip(a2v input)
-			{
-				float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
-				float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+				///////////////////////////////////////////////////////////////
+				// Parametrization                                            /
+				///////////////////////////////////////////////////////////////
+				// 0.089 perceptual roughness is the min value we can represent in fp16
+				// to avoid denorm/division by zero as we need to do 1 / (pow(perceptualRoughness, 4)) in GGX
+				half perceptualCoatRoughness = max(1.0 - _ClearCoatSmoothness, 0.089);
+				half coatRoughness = PerceptualRoughnessToRoughness(perceptualCoatRoughness);
+				half coatStrength = _ClearCoatStrength;
 				
-				float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+				half perceptualRoughness = max(surfaceData.perceptualRoughness, 0.089);
+				half baseRoughness = PerceptualRoughnessToRoughness(perceptualRoughness);
 				
-				#if UNITY_REVERSED_Z
-					positionCS.z = min(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
-				#else
-					positionCS.z = max(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
-				#endif
+				// We recompute reflectance for base layer as we are not considering air as interface
+				// ConvertF0ForAirInterfaceToF0ForClearCoat15 converts reflectance considering IOR of clear coat instead of air.
+				half3 baseReflectance = lerp(surfaceData.reflectance, ConvertF0ForAirInterfaceToF0ForClearCoat15(surfaceData.reflectance), coatStrength);
 				
-				return positionCS;
-			}
-			
-			v2f vert(a2v v)
-			{
-				v2f o;
-				UNITY_SETUP_INSTANCE_ID(v);
-				o.positionHCS = GetShadowPositionHClip(v);
-				return o;
-			}
-			
-			
-			half4 frag(v2f v): SV_Target
-			{
-				return 0;
+				///////////////////////////////////////////////////////////////
+				// Environment                                                /
+				///////////////////////////////////////////////////////////////
+				// pre-integrated diffuse is stored in either SH or lightmap
+				half3 environmentLighting = lightingData.environmentLighting * surfaceData.diffuse;
+				
+				// split sum approaximation.
+				// pre-integrated specular D stored in cubemap, roughness store in different mips
+				// DG term is analytical
+				half3 baseEnvironmentReflection = lightingData.environmentReflections;
+				baseEnvironmentReflection *= EnvironmentBRDF(baseReflectance, baseRoughness, lightingData.NdotV);
+				
+				// split sum approximation with F0 = CLEAR_COAT_F0
+				half3 coatEnvironmentReflection = GlossyEnvironmentReflection(lightingData.reflectionDirectionWS, perceptualCoatRoughness, surfaceData.ao);
+				coatEnvironmentReflection *= EnvironmentBRDF(CLEAR_COAT_F0, coatRoughness, lightingData.NdotV);
+				
+				
+				///////////////////////////////////////////////////////////////
+				// Direct Light Contribution                                  /
+				///////////////////////////////////////////////////////////////
+				half3 baseDiffuse = surfaceData.diffuse * Lambert();
+				
+				// Base Specular BDRF
+				// inline D_GGX + V_SmithJoingGGX for better code generations
+				half baseDV = DV_SmithJointGGX(lightingData.NdotH, lightingData.NdotL, lightingData.NdotV, baseRoughness);
+				half3 baseF = F_Schlick(baseReflectance, lightingData.LdotH);
+				half3 baseSpecular = (baseDV * baseF);
+				
+				// Clear Specular Coat BRDF - We assume coat to be dieletric, this allows for a simpler visibility term
+				// We use V_Kelemen instead of V_SmithJoingGGX
+				half coatD = D_GGX(lightingData.NdotH, coatRoughness);
+				half coatV = V_Kelemen(lightingData.LdotH);
+				half3 coatF = F_Schlick(CLEAR_COAT_F0, lightingData.LdotH);
+				half3 coatSpecular = (coatD * coatV * coatF);
+				
+				///////////////////////////////////////////////////////////////
+				// Irradiance and layer blending                              /
+				///////////////////////////////////////////////////////////////
+				half3 irradiance = lightingData.light.color * lightingData.NdotL;
+				baseDiffuse = baseDiffuse * irradiance + environmentLighting;
+				baseSpecular = baseSpecular * irradiance + baseEnvironmentReflection;
+				coatSpecular = coatSpecular * irradiance + coatEnvironmentReflection;
+				
+				// Coat Blending from glTF
+				// https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_clearcoat
+				half3 emission = surfaceData.emission;
+				half3 finalColor = (emission + baseDiffuse + baseSpecular) * (1.0 - coatF * coatStrength) + coatSpecular * coatStrength;
+				return half4(finalColor, surfaceData.alpha);
 			}
 			
 			ENDHLSL
 			
 		}
 		
-		Pass
-		{
-			Name "DepthOnly"
-			Tags { "LightMode" = "DepthOnly" }
-			
-			ColorMask 0
-			
-			HLSLPROGRAM
-			
-			#pragma vertex vert
-			#pragma fragment frag
-			
-			// GPU Instancing
-			#pragma multi_compile_instancing
-			#pragma multi_compile _ DOTS_INSTANCING_ON
-			
-			struct a2v
-			{
-				float4 positionOS: POSITION;
-				UNITY_VERTEX_INPUT_INSTANCE_ID
-			};
-			
-			struct v2f
-			{
-				float4 positionHCS: SV_POSITION;
-			};
-			
-			v2f vert(a2v v)
-			{
-				v2f o;
-				UNITY_SETUP_INSTANCE_ID(v);
-				o.positionHCS = TransformObjectToHClip(v.positionOS.xyz);
-				return o;
-			}
-			
-			half4 frag(v2f i): SV_TARGET
-			{
-				return 0;
-			}
-			
-			ENDHLSL
-			
-		}
+		UsePass "MyRP/LitSamples/06_LitPhysicallyBased/ShadowCaster"
 		
-		Pass
-		{
-			//不用normalMap参计算
-			Name "DepthNormals"
-			Tags { "LightMode" = "DepthNormals" }
-			
-			HLSLPROGRAM
-			
-			#pragma vertex vert
-			#pragma fragment frag
-			
-			// GPU Instancing
-			#pragma multi_compile_instancing
-			#pragma multi_compile _ DOTS_INSTANCING_ON
-			
-			struct a2v
-			{
-				float4 positionOS: POSITION;
-				float4 tangentOS: TANGENT;
-				float3 normalOS: NORMAL;
-				
-				UNITY_VERTEX_INPUT_INSTANCE_ID
-			};
-			
-			struct v2f
-			{
-				float4 positionHCS: SV_POSITION;
-				float3 normalWS: TEXCOORD0;
-			};
-			
-			v2f vert(a2v v)
-			{
-				v2f o;
-				
-				UNITY_SETUP_INSTANCE_ID(v);
-				
-				o.positionHCS = TransformObjectToHClip(v.positionOS.xyz);
-				VertexNormalInputs normalInput = GetVertexNormalInputs(v.normalOS, v.tangentOS);
-				o.normalWS = NormalizeNormalPerVertex(normalInput.normalWS);
-				
-				return o;
-			}
-			
-			half4 frag(v2f i): SV_TARGET
-			{
-				return float4(PackNormalOctRectEncode(TransformWorldToViewDir(i.normalWS, true)), 0.0, 0.0);
-			}
-			
-			ENDHLSL
-			
-		}
+		UsePass "MyRP/LitSamples/06_LitPhysicallyBased/DepthOnly"
+		
+		UsePass "MyRP/LitSamples/06_LitPhysicallyBased/DepthNormals"
 		
 		Pass
 		{
@@ -388,6 +294,24 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 				return specGloss;
 			}
 			
+			half2 SampleClearCoat(float2 uv)
+			{
+				// #if defined(_CLEARCOAT) || defined(_CLEARCOATMAP)
+				// 	half2 clearCoatMaskSmoothness = half2(_ClearCoatMask, _ClearCoatSmoothness);
+				
+				// 	#if defined(_CLEARCOATMAP)
+				// 		clearCoatMaskSmoothness *= SAMPLE_TEXTURE2D(_ClearCoatMap, sampler_ClearCoatMap, uv).rg;
+				// 	#endif
+				
+				// 	return clearCoatMaskSmoothness;
+				// #else
+				// 	return half2(0.0, 1.0);
+				// #endif  // _CLEARCOAT
+				
+				half2 clearCoatMaskSmoothness = half2(0, _ClearCoatSmoothness);
+				return clearCoatMaskSmoothness;
+			}
+			
 			half3 SampleNormal(float2 uv, TEXTURE2D_PARAM(normalMap, sampler_normalMap), half scale = 1.0h)
 			{
 				#ifdef _NORMALMAP
@@ -458,8 +382,9 @@ Shader "MyRP/LitSamples/06_LitPhysicallyBased"
 				outSurfaceData.occlusion = SAMPLE_TEXTURE2D(_AmbientOcclusionMap, sampler_BaseMap, uv).g * _AmbientOcclusion;
 				outSurfaceData.emission = _Emission.rgb;
 				
-				outSurfaceData.clearCoatMask = 0.0h;
-				outSurfaceData.clearCoatSmoothness = 0.0h;
+				half2 clearCoat = SampleClearCoat(uv);
+				outSurfaceData.clearCoatMask = clearCoat.r;
+				outSurfaceData.clearCoatSmoothness = clearCoat.g;
 			}
 			
 			half4 frag(v2f i): SV_TARGET
