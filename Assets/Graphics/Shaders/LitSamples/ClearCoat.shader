@@ -75,7 +75,9 @@ Shader "MyRP/LitSamples/07_ClearCoat"
 			TEXTURE2D(_NormalMap);
 			SAMPLER(sampler_NormalMap);
 			TEXTURE2D(_MetallicSmoothnessMap);
+			SAMPLER(sampler_MetallicSmoothnessMap);
 			TEXTURE2D(_AmbientOcclusionMap);
+			SAMPLER(sampler_AmbientOcclusionMap);
 			
 			void SurfaceFunction(Varyings IN, out CustomSurfaceData surfaceData)
 			{
@@ -94,7 +96,7 @@ Shader "MyRP/LitSamples/07_ClearCoat"
 				// Remap reflectance to range [0, 1] - 0.5 maps to 4%, 1.0 maps to 16% (gemstone)
 				// https://google.github.io/filament/Filament.html#materialsystem/parameterization/standardparameters
 				surfaceData.reflectance = ComputeFresnel0(baseColor.rgb, metallic, _Reflectance * _Reflectance * 0.16);
-				surfaceData.ao = SAMPLE_TEXTURE2D(_AmbientOcclusionMap, sampler_BaseMap, uv).g * _AmbientOcclusion;
+				surfaceData.ao = SAMPLE_TEXTURE2D(_AmbientOcclusionMap, sampler_AmbientOcclusionMap, uv).g * _AmbientOcclusion;
 				surfaceData.perceptualRoughness = 1.0 - (_Smoothness * metaliicSmoothness.a);
 				#ifdef _NORMALMAP
 					surfaceData.normalWS = GetPerPixelNormalScaled(TEXTURE2D_ARGS(_NormalMap, sampler_NormalMap), uv, IN.normalWS, IN.tangentWS, _NormalMapScale);
@@ -135,7 +137,7 @@ Shader "MyRP/LitSamples/07_ClearCoat"
 				half3 baseEnvironmentReflection = lightingData.environmentReflections;
 				baseEnvironmentReflection *= EnvironmentBRDF(baseReflectance, baseRoughness, lightingData.NdotV);
 				
-				// split sum approximation with F0 = CLEAR_COAT_F0
+				// split sum approximation with F0 = CLEAR_COAT_F0   0.04
 				half3 coatEnvironmentReflection = GlossyEnvironmentReflection(lightingData.reflectionDirectionWS, perceptualCoatRoughness, surfaceData.ao);
 				coatEnvironmentReflection *= EnvironmentBRDF(CLEAR_COAT_F0, coatRoughness, lightingData.NdotV);
 				
@@ -231,7 +233,9 @@ Shader "MyRP/LitSamples/07_ClearCoat"
 			TEXTURE2D(_NormalMap);
 			SAMPLER(sampler_NormalMap);
 			TEXTURE2D(_MetallicSmoothnessMap);
+			SAMPLER(sampler_MetallicSmoothnessMap);
 			TEXTURE2D(_AmbientOcclusionMap);
+			SAMPLER(sampler_AmbientOcclusionMap);
 			
 			v2f vert(a2v v)
 			{
@@ -379,7 +383,7 @@ Shader "MyRP/LitSamples/07_ClearCoat"
 				
 				outSurfaceData.smoothness = specGloss.a;
 				outSurfaceData.normalTS = SampleNormal(uv, TEXTURE2D_ARGS(_NormalMap, sampler_NormalMap), _NormalMapScale);
-				outSurfaceData.occlusion = SAMPLE_TEXTURE2D(_AmbientOcclusionMap, sampler_BaseMap, uv).g * _AmbientOcclusion;
+				outSurfaceData.occlusion = SAMPLE_TEXTURE2D(_AmbientOcclusionMap, sampler_AmbientOcclusionMap, uv).g * _AmbientOcclusion;
 				outSurfaceData.emission = _Emission.rgb;
 				
 				half2 clearCoat = SampleClearCoat(uv);
