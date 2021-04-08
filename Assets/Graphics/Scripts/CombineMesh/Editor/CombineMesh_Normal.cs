@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Profiling;
@@ -22,7 +23,7 @@ namespace Graphics.Scripts.CombineMesh.Editor
 
 
 		//New API  2020.1
-		[MenuItem("Mesh API Test/Create Mesh From Scene - New API %G")]
+		[MenuItem("Mesh API Test/Create Mesh From Scene - New API")]// %G
 		public static void CreateMesh_MeshDataApi()
 		{
 			var sw = Stopwatch.StartNew();
@@ -31,7 +32,7 @@ namespace Graphics.Scripts.CombineMesh.Editor
 			var meshFilters = Object.FindObjectsOfType<MeshFilter>();
 			smp1.End();
 
-			
+
 			Material tempMat = null;
 
 			smp2.Begin();
@@ -85,13 +86,13 @@ namespace Graphics.Scripts.CombineMesh.Editor
 
 			var handle = jobs.Schedule(meshCount, 4);
 
-			
+
 			smp3.Begin();
 			var newMesh = new Mesh();
-			newMesh.name = "CombineMesh";
+			newMesh.name = "CombinedMesh";
 			var sm = new SubMeshDescriptor(0, indexStart, MeshTopology.Triangles)
 			{
-				firstVertex = 0, 
+				firstVertex = 0,
 				vertexCount = vertexStart,
 			};
 
@@ -108,7 +109,8 @@ namespace Graphics.Scripts.CombineMesh.Editor
 			sm.bounds = new Bounds((bounds.c0 + bounds.c1) * 0.5f, (bounds.c1 - bounds.c0));
 			//mesh.RecalculateBounds(); //这个也可以生成bounds  不过我们这边用自己的
 			jobs.outputMesh.subMeshCount = 1;
-			//设置mesh 属性
+			
+			//设置mesh 属性  这里jobs.outputMesh <=> outputMeshData
 			//DontRecalculateBounds 不自动生成bounds
 			//DontValidateIndices 指示在使用 Mesh.SetIndexBufferData 修改网格数据时，Unity 不应检查索引
 			//DontNotifyMeshUsers 修改网格的时候不通知修改mesh改变了
@@ -121,12 +123,12 @@ namespace Graphics.Scripts.CombineMesh.Editor
 			newMesh.bounds = sm.bounds;
 			smp3.End();
 
-			
+
 			smp4.Begin();
 			jobs.meshData.Dispose();
 			jobs.bounds.Dispose();
 			smp4.End();
-			
+
 			// Create new GameObject with the new mesh
 			var newGo = new GameObject("CombinedMesh");
 			newGo.tag = "EditorOnly";
@@ -135,12 +137,13 @@ namespace Graphics.Scripts.CombineMesh.Editor
 			newMr.material = tempMat;
 			newMf.sharedMesh = newMesh;
 			//newMesh.RecalculateNormals(); // faster to do normal xform in the job
-        
+
 			var dur = sw.ElapsedMilliseconds;
-			Debug.Log($"Took {dur/1000.0:F2}sec for {meshCount} objects, total {vertexStart} verts");
-        
+			Debug.Log($"Took {dur / 1000.0:F2}sec for {meshCount} objects, total {vertexStart} verts");
+
 			Selection.activeObject = newGo;
 		}
+
 
 		[BurstCompile]
 		private struct CombineMeshJob : IJobParallelFor
@@ -148,10 +151,15 @@ namespace Graphics.Scripts.CombineMesh.Editor
 			[ReadOnly] public Mesh.MeshDataArray meshData;
 			public Mesh.MeshData outputMesh;
 
+			//DeallocateOnJobCompletion 给tempjob使用   用完自动回收
 			[DeallocateOnJobCompletion, ReadOnly] public NativeArray<int> vertexStart;
 			[DeallocateOnJobCompletion, ReadOnly] public NativeArray<int> indexStart;
 			[DeallocateOnJobCompletion, ReadOnly] public NativeArray<float4x4> xform;
 			public NativeArray<float3x2> bounds;
+
+			//NativeDisableContainerSafetyRestriction unsafe容器  虽然可能会奔溃
+			[NativeDisableContainerSafetyRestriction] private NativeArray<float3> tempVertices;
+			[NativeDisableContainerSafetyRestriction] private NativeArray<float3> tempNormals;
 
 			public void CreateInputArrays(int meshCount)
 			{
@@ -165,11 +173,80 @@ namespace Graphics.Scripts.CombineMesh.Editor
 
 			public void Execute(int index)
 			{
+				var data = meshData[index];
+				var vCount = data.vertexCount;
+				var mat = xform[index];
+				var vStart = vertexStart[index];
+
+				if (!tempVertices.IsCreated || tempVertices.Length < vCount)
+				{
+					if (tempVertices.IsCreated)
+					{
+						tempVertices.Dispose();
+					}
+
+					tempVertices =
+						new NativeArray<float3>(vCount, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+				}
+				
+				if (!tempNormals.IsCreated || tempNormals.Length < vCount)
+				{
+					if (tempNormals.IsCreated)
+					{
+						tempNormals.Dispose();
+					}
+
+					tempNormals =
+						new NativeArray<float3>(vCount, Allocator.Temp, NativeArrayOptions.UninitializedMemory);
+				}
+				
+				//Reinterpret 无关类型的格式转换 类似 reinterpret_cast
+				//这里进行初始化
+				data.GetVertices(tempVertices.Reinterpret<Vector3>());
+				data.GetNormals(tempNormals.Reinterpret<Vector3>());
+
+				var outputVerts = outputMesh.GetVertexData<Vector3>(0);
+				var outputNormals = outputMesh.GetVertexData<Vector3>(1);
+
+				var b = bounds[index];
+				for (var i = 0; i < vCount; i++)
+				{
+					var pos = tempVertices[i];
+					pos = math.mul(mat, new float4(pos, 1)).xyz;
+					outputVerts[i + vStart] = pos;
+					var nor = tempNormals[i];
+					nor = math.normalize(math.mul(mat, new float4(nor, 0)).xyz);
+					outputNormals[i + vStart] = nor;
+					b.c0 = math.min(b.c0, pos);
+					b.c1 = math.max(b.c1, pos);
+				}
+
+				bounds[index] = b;
+
+				var tStart = indexStart[index];
+				var tCount = data.GetSubMesh(0).indexCount;
+				var outputTris = outputMesh.GetIndexData<int>();
+				if (data.indexFormat == IndexFormat.UInt16)
+				{
+					var tris = data.GetIndexData<ushort>();
+					for (var i = 0; i < tCount; i++)
+					{
+						outputTris[i + tStart] = vStart + tris[i];
+					}
+				}
+				else
+				{
+					var tris = data.GetIndexData<int>();
+					for (var i = 0; i < tCount; i++)
+					{
+						outputTris[i + tStart] = vStart + tris[i];
+					}
+				}
 			}
 		}
 
 		//Old API
-		[MenuItem("Mesh API Test/Create Mesh From Scene - Old API %J")]
+		[MenuItem("Mesh API Test/Create Mesh From Scene - Old API")]//  %J
 		public static void CreateMesh_OldAPI()
 		{
 			var sw = Stopwatch.StartNew();
