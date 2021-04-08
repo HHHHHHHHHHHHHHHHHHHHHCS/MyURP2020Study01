@@ -14,7 +14,7 @@ using Debug = UnityEngine.Debug;
 namespace Graphics.Scripts.CombineMesh.Editor
 {
 	//https://github.com/Unity-Technologies/MeshApiExamples
-	public class CombineMesh_Normal
+	public static class CombineMesh_Normal
 	{
 		private static readonly ProfilerMarker smp1 = new ProfilerMarker("Find Meshes");
 		private static readonly ProfilerMarker smp2 = new ProfilerMarker("Prepare");
