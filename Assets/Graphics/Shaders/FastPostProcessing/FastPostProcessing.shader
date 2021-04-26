@@ -2,13 +2,11 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 {
 	Properties
 	{
-		_MainTex ("Base (RGBA)", 2D) = "white" { }
 	}
-	
+
 	HLSLINCLUDE
-	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-	
+
 	#pragma multi_compile_local _ _SHARPEN
 	#pragma multi_compile_local _ _BLOOM
 	#pragma multi_compile_local _ _TONEMAPPER_ACES _TONEMAPPER_DAWSON _TONEMAPPER_HABLE _TONEMAPPER_PHOTOGRAPHIC _TONEMAPPER_REINHART
@@ -18,57 +16,53 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 	TEXTURE2D(_MainTex);
 	SAMPLER(sampler_MainTex);
 	float4 _MainTex_TexelSize;
-	
+
 	#ifdef _SHARPEN
 		float _SharpenSize;
 		float _SharpenIntensity;
 	#endif
-	
+
 	#ifdef _BLOOM
 		float _BloomSize;
 		float _BloomAmount;
 		float _BloomPower;
 	#endif
-	
+
 	#if defined(_TONEMAPPER_ACES) || defined(_TONEMAPPER_DAWSON) || defined(_TONEMAPPER_HABLE) || defined(_TONEMAPPER_PHOTOGRAPHIC) || defined(_TONEMAPPER_REINHART)
 		float _Exposure;
 	#endif
-	
+
 	#ifdef _USERLUT_ENABLE
 		TEXTURE2D(_UserLutTex);
 		SAMPLER(sampler_UserLutTex);
 		float4 _UserLutParams;
 	#endif
-	
-	
+
+
 	struct a2v
 	{
-		float4 pos: POSITION;
-		float2 uv: TEXCOORD0;
+		uint vertexID : SV_VertexID;
 	};
-	
+
 	struct v2f
 	{
 		float4 pos: SV_POSITION;
 		float2 uv: TEXCOORD0;
 	};
-	
+
 	v2f vert(a2v v)
 	{
 		v2f o;
-		o.pos = v.pos;
-		o.uv = v.uv;
-		#if UNITY_UV_STARTS_AT_TOP
-			o.uv.y = 1.0 - o.uv.y;
-		#endif
+		o.pos = GetFullScreenTriangleVertexPosition(v.vertexID);
+		o.uv = GetFullScreenTriangleTexCoord(v.vertexID);
 		return o;
 	}
-	
+
 	half4 TexMainTex2D(float2 uv)
 	{
 		return SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv);
 	}
-	
+
 	#ifdef _TONEMAPPER_ACES
 		half3 TonemapACES(half3 color)
 		{
@@ -81,7 +75,7 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 			return saturate((color * (a * color + b)) / (color * (c * color + d) + e));
 		}
 	#endif
-	
+
 	#ifdef _TONEMAPPER_DAWSON
 		half3 TonemapDAWSON(half3 color)
 		{
@@ -96,7 +90,7 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 			return color * color;
 		}
 	#endif
-	
+
 	#ifdef _TONEMAPPER_HABLE
 		half3 TonemapHable(half3 color)
 		{
@@ -115,7 +109,7 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 			return curr * whiteScale;
 		}
 	#endif
-	
+
 	#ifdef _TONEMAPPER_PHOTOGRAPHIC
 		half3 TonemapPhotographic(half3 color)
 		{
@@ -123,7 +117,7 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 			return 1.0 - exp2(-color);
 		}
 	#endif
-	
+
 	#ifdef _TONEMAPPER_REINHART
 		half3 TonemapReinhard(half3 color)
 		{
@@ -133,7 +127,7 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 			return color * scale / lum;
 		}
 	#endif
-	
+
 	#ifdef _USERLUT_ENABLE
 		half3 ApplyLUT(float3 col, float3 scaleOffset)
 		{
@@ -148,20 +142,20 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 			return lerp(col0, col1, col.z - shift);
 		}
 	#endif
-	
+
 	half4 frag(v2f i): SV_TARGET
 	{
 		half2 uv = i.uv;
-		
+
 		half4 colAlpha = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv);
-		
+
 		half3 col = colAlpha.rgb;
-		
+
 		#if _SHARPEN
 			col -= TexMainTex2D(uv + _SharpenSize).rgb * 7.0 * _SharpenIntensity;
 			col += TexMainTex2D(uv + _SharpenSize).rgb * 7.0 * _SharpenIntensity;
 		#endif
-		
+
 		#if _BLOOM
 			float size = 1 / _BloomSize;
 			float4 sum = 0;
@@ -181,8 +175,8 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 			col = lerp(col, bloom, _BloomPower);
 			
 		#endif
-		
-		
+
+
 		#if TONEMAPPER_ACES
 			col = tonemapACES(col);
 		#elif TONEMAPPER_DAWSON
@@ -194,39 +188,41 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 		#elif TONEMAPPER_REINHART
 			col = tonemapReinhard(col);
 		#endif
-		
+
 		#if _DITHERING
 			// Interleaved Gradient Noise from http://www.iryoku.com/next-generation-post-processing-in-call-of-duty-advanced-warfare (slide 122)
 			half3 magic = float3(0.06711056, 0.00583715, 52.9829189);
 			half gradient = frac(magic.z * frac(dot(uv / _MainTex_TexelSize.xy, magic.xy))) / 255.0;
 			col.rgb -= gradient.xxx;
 		#endif
-		
-		#if USERLUT_TEXTURE
+
+		#if _USERLUT_ENABLE
 			half3 lc = ApplyLUT(saturate(col.rgb), _UserLutParams.xyz);
 			col = lerp(col, lc, _UserLutParams.w);
 		#endif
-		
+
+		#if _GAMMA_CORRECTION
+			col = pow(col, 2.2);
+		#endif
+
+
 		return half4(col, colAlpha.a);
 	}
-	
 	ENDHLSL
-	
+
 	SubShader
 	{
 		Cull Off
 		ZWrite Off
 		ZTest Always
-		
+
 		Pass
 		{
 			HLSLPROGRAM
-			
 			#pragma vertex vert
 			#pragma fragment frag
-			
 			ENDHLSL
-			
+
 		}
 	}
 }

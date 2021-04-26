@@ -15,7 +15,7 @@ namespace Graphics.Scripts.Cartoon
 		private Material depthNormalsMaterial;
 		private FilteringSettings filteringSettings;
 		private ShaderTagId shaderTagId;
-		private ProfilingSampler profilingSampler ;
+		private ProfilingSampler profilingSampler;
 
 		public DepthNormalsPass(RenderQueueRange range, LayerMask layerMask, Material _depthNormalsMaterial)
 		{
@@ -23,8 +23,8 @@ namespace Graphics.Scripts.Cartoon
 			{
 				Object.DestroyImmediate(depthNormalsMaterial);
 			}
-			
-			profilingSampler =  new ProfilingSampler(k_tag);
+
+			profilingSampler = new ProfilingSampler(k_tag);
 			filteringSettings = new FilteringSettings(range, layerMask);
 			depthNormalsMaterial = _depthNormalsMaterial;
 			shaderTagId = new ShaderTagId("DepthNormals");
@@ -54,7 +54,7 @@ namespace Graphics.Scripts.Cartoon
 			}
 
 			CoreUtils.SetKeyword(cmd, c_My_Depth_Normal_ID, false);
-			
+
 			if (destination != RenderTargetHandle.CameraTarget)
 			{
 				cmd.ReleaseTemporaryRT(destination.id);

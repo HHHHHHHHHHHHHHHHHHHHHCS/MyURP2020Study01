@@ -83,6 +83,7 @@ namespace Graphics.Scripts.FastPostProcessing
 		#region Properties
 
 		private MyFastPostProcessingSettings settings;
+		private FastPostProcessingPass fastPostProcessingPass;
 
 		private Shader shader;
 		private Material postProcessMaterial;
@@ -96,11 +97,29 @@ namespace Graphics.Scripts.FastPostProcessing
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
+			if (fastPostProcessingPass == null || renderingData.postProcessingEnabled == false ||
+			    renderingData.cameraData.cameraType != CameraType.Game)
+			{
+				return;
+			}
+
 			var volume = renderingData.cameraData.camera.GetComponent<FastPostProcessingVolume>();
 			if (volume == null || !volume.IsActive)
 			{
 				return;
 			}
+
+			if (settings == null)
+			{
+				settings = new MyFastPostProcessingSettings();
+				UpdateMaterialProperties(volume, true);
+			}
+			else
+			{
+				UpdateMaterialProperties(volume, false);
+			}
+
+			renderer.EnqueuePass(fastPostProcessingPass);
 		}
 
 
@@ -116,13 +135,19 @@ namespace Graphics.Scripts.FastPostProcessing
 			{
 				postProcessMaterial = new Material(shader);
 			}
+
+			fastPostProcessingPass = new FastPostProcessingPass()
+			{
+				renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing
+			};
+			fastPostProcessingPass.Init(postProcessMaterial);
 		}
 
 		private void UpdateMaterialProperties(FastPostProcessingVolume volume, bool isForce = false)
 		{
 			if (postProcessMaterial == null)
 			{
-				Debug.LogError("Material Or Shader NULL");
+				Debug.LogError("Material Or Shader is null");
 				return;
 			}
 
