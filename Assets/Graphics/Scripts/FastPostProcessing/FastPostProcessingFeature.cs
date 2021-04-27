@@ -59,7 +59,7 @@ namespace Graphics.Scripts.FastPostProcessing
 		private readonly int SharpenSize_ID = Shader.PropertyToID("_SharpenSize");
 		private readonly int SharpenIntensity_ID = Shader.PropertyToID("_SharpenIntensity");
 
-		private const string Bloom_ID = "Bloom";
+		private const string Bloom_ID = "_BLOOM";
 		private readonly int BloomSize_ID = Shader.PropertyToID("_BloomSize");
 		private readonly int BloomAmount_ID = Shader.PropertyToID("_BloomAmount");
 		private readonly int BloomPower_ID = Shader.PropertyToID("_BloomPower");
@@ -143,6 +143,7 @@ namespace Graphics.Scripts.FastPostProcessing
 			fastPostProcessingPass.Init(postProcessMaterial);
 		}
 
+		//本来这些材质更新应该要写到Pass里面的 这里偷懒就不改了
 		private void UpdateMaterialProperties(FastPostProcessingVolume volume, bool isForce = false)
 		{
 			if (postProcessMaterial == null)

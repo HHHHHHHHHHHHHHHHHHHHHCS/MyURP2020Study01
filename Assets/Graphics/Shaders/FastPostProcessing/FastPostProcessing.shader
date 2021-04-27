@@ -6,6 +6,7 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 
 	HLSLINCLUDE
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+	#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 
 	#pragma multi_compile_local _ _SHARPEN
 	#pragma multi_compile_local _ _BLOOM
@@ -173,7 +174,6 @@ Shader "MyRP/FastPostProcessing/FastPostProcessing"
 			float luminnace = Luminance(col);
 			bloom = sum.rgb * sum.rgb * lerp(0.0075, 0.012, luminnace) + col;
 			col = lerp(col, bloom, _BloomPower);
-			
 		#endif
 
 
