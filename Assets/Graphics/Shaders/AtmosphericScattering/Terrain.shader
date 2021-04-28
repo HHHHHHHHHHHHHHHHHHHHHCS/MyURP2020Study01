@@ -144,15 +144,59 @@ Shader "MyRP/AtmosphericScattering/Terrain"
 					shadowCoords = TransformWorldToShadowCoord(worldPosition);
 				#endif
 
-				//#if SHADER_HINT_NICE_QUALITY
+				#if SHADER_HINT_NICE_QUALITY
 				worldViewDirection = SafeNormalize(worldViewDirection);
-				//#endif
+				#endif
 
 				float2 uv = IN.uv.xy;
 
 				half3 albedo = SAMPLE_TEXTURE2D(_MainTex, sampler_linear_clamp, uv).rgb;
+				real3 normalA = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_linear_clamp, uv), _Bump1Scale);
+				real3 normalB = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap2, sampler_linear_clamp, uv), _Bump2Scale);
+				float3 normal = BlendNormal(normalA, normalB);
+				float3 emission = 0;
+				float3 specular = 0.5;
+				float metallic = 0;
+				float smoothness = 0.5;
+				float occlusion = SAMPLE_TEXTURE2D(_Occlusion, sampler_linear_clamp, uv).r;
+				float alpha = 1;
 
-				return half4(albedo, 1.0);
+				InputData inputData;
+				inputData.positionWS = worldPosition;
+				inputData.viewDirectionWS = worldViewDirection;
+				inputData.shadowCoord = shadowCoords;
+
+				#ifdef _NORMALMAP
+				inputData.normalWS = normalize(
+					TransformTangentToWorld(normal, half3x3(worldTangent, worldBitangent, worldNormal)));
+				#else
+				#if !SHADER_HINT_NICE_QUALITY
+					inputData.normalWS = WorldNormal;
+				#else
+					inputData.normalWS = normalize( WorldNormal );
+				#endif
+				#endif
+
+				inputData.vertexLighting = IN.fogFactorAndVertexLight.yzw;
+				inputData.bakedGI = SAMPLE_GI(IN.lightmapUVOrVertexSH.xy, IN.lightmapUVOrVertexSH.xyz,
+				                              inputData.normalWS);
+				half4 color = UniversalFragmentPBR(
+					inputData,
+					albedo,
+					metallic,
+					specular,
+					smoothness,
+					occlusion,
+					emission,
+					alpha);
+
+				#ifdef LOD_FADE_CROSSFADE
+					LODDitheringTransition(IN.clipPos.xyz, unity_LODFade.x);
+				#endif
+
+				//todo:ApplyScattering
+				
+				return half4(color);
 			}
 			ENDHLSL
 		}
