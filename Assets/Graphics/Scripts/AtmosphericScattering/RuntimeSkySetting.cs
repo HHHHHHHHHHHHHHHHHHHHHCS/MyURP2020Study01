@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Graphics.Scripts.AtmosphericScattering
 {
+	//https://zhuanlan.zhihu.com/p/127026136
+	//https://github.com/PZZZB/Atmospheric-Scattering-URP
 	public class RuntimeSkySetting : MonoBehaviour
 	{
 		// Look up table update mode, it's better to use everyframe mode when you're in edit mode, need change params frequently.

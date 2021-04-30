@@ -1,4 +1,3 @@
-//https://github.com/PZZZB/Atmospheric-Scattering-URP
 Shader "MyRP/AtmosphericScattering/Terrain"
 {
 	Properties
