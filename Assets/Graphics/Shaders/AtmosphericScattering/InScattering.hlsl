@@ -11,6 +11,9 @@
 TEXTURE2D(_IntegralCPDensityLUT);
 SAMPLER(sampler_IntegralCPDensityLUT);
 
+TEXTURE2D(_LightShaft);
+SAMPLER(sampler_LightShaft);
+
 float2 _DensityScaleHeight;
 float _PlanetRadius;
 float _AtmosphereHeight;
@@ -23,8 +26,11 @@ float3 _ExtinctionR;
 float3 _ExtinctionM;
 float _DistanceScale;
 
-TEXTURE2D(_LightShaft);
-SAMPLER(sampler_LightShaft);
+half3 _LightFromOuterSpace;
+float _SunIntensity;
+float _SunMieG;
+
+
 
 float3 IntegrateInScattering(float3 rayStart, float3 rayDir, float rayLength, float3 planetCenter, float distanceScale,
                              float3 lightDir, float sampleCount, out float3 extinction)
@@ -54,7 +60,33 @@ float3 IntegrateInScattering(float3 rayStart, float3 rayDir, float rayLength, fl
 
         GetAtmosphereDensity(p, planetCenter, lightDir, densityAtP, particleDensityCP);
         particleDensityAP += (densityAtP + preDensityAtP) * (stepSize / 2.0);
+
+        preDensityAtP = densityAtP;
+
+        float3 localInScatterR, localInScatterM;
+        ComputeLocalInScattering(densityAtP, particleDensityCP, particleDensityAP, localInScatterR, localInScatterM);
+
+        scatterR += (localInScatterR + preLocalInScatterR) * (stepSize / 2.0);
+        scatterM += (localInScatterM + preLocalInScatterM) * (stepSize / 2.0);
+
+
+        preLocalInScatterR = localInScatterR;
+        preLocalInScatterM = localInScatterM;
     }
+
+    float3 m = scatterR;
+    float cosAngle = dot(rayDir, lightDir.xyz);
+
+    ApplyPhaseFunction(scatterR, scatterM, cosAngle);
+
+    float3 lightInScatter = (scatterR * _ScatteringR + scatterM * _ScatteringM) * _LightFromOuterSpace.xyz;
+    #if defined(_RENDERSUN)
+    lightInScatter += RenderSun(m, cosAngle) * _SunIntensity;
+    #endif
+
+    extinction = exp(-(particleDensityAP.x * _ExtinctionR + particleDensityAP.y * _ExtinctionM));
+
+    return lightInScatter.xyz;
 }
 
 half4 CalcInScattering(float3 positionOS)
@@ -75,7 +107,7 @@ half4 CalcInScattering(float3 positionOS)
 
     float3 extinction;
 
-    float3 inscattering = IntegrateInscattering(rayStart, rayDir, rayLength, planetCenter, 1, lightDir,
+    float3 inscattering = IntegrateInScattering(rayStart, rayDir, rayLength, planetCenter, 1, lightDir,
                                                 SAMPLECOUNT_SKYBOX, extinction);
     return float4(inscattering, 1);
 }
