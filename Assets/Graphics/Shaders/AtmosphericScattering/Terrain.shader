@@ -377,7 +377,7 @@ Shader "MyRP/AtmosphericScattering/Terrain"
 				o.clipPos = MetaVertexPosition(IN.vertex, IN.uv1.xy, IN.uv2.xy, unity_LightmapST,
 				                               unity_DynamicLightmapST);
 				o.uv0 = IN.uv0;
-				
+
 				return o;
 			}
 

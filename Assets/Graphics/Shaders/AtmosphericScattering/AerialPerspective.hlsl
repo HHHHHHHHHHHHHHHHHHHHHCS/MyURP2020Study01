@@ -30,7 +30,7 @@ void ApplyScattering(inout half4 color, float3 positionWS, float2 screenPos)
     float3 inscattering = _MainLightColor.rgb * (1 - extinction) * scatAngularCoef / scatCoef;
 
     #ifdef _LIGHT_SHAFT
-        half occlusion = SAMPLE_TEXTURE2D(_LightShaft,sampler_LightShaft,screenPos.xy)matrix;
+        half occlusion = SAMPLE_TEXTURE2D(_LightShaft,sampler_LightShaft,screenPos.xy).r;
         //occlusion = occlusion * occlusion * occlusion;
         inscattering.rgb *= occlusion;
     #endif

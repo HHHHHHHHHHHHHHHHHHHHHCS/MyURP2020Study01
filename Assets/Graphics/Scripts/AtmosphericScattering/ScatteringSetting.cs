@@ -43,6 +43,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 			Shader.SetGlobalVector(IDKeys.ScatteringM_ID, _mCoef * mScatterStrength);
 			Shader.SetGlobalVector(IDKeys.ExtinctionR_ID, _rCoef * rExtinctionStrength);
 			Shader.SetGlobalVector(IDKeys.ExtinctionM_ID, _mCoef * mExtinctionStrength);
+			Shader.SetGlobalFloat(IDKeys.MieG_ID, mieG);
 
 			SetKeyword(IDKeys.kLightShaft, lightShaft);
 		}
