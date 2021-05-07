@@ -211,26 +211,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 
 			Utils.Dispatch(computerShader, index, size);
 		}
-
-		private void UpdateAmbient()
-		{
-			if (m_AmbientLUTReadToCPU == null)
-			{
-				m_AmbientLUTReadToCPU = new Texture2D(ambientLUTSize, 1, TextureFormat.RGB24, false, true);
-			}
-
-			Utils.ReadRTPixelsBackToCPU(m_AmbientLUT, m_AmbientLUTReadToCPU);
-
-			var lightDir = -mainLight.transform.forward;
-			var cosAngle01 = Vector3.Dot(Vector3.up, lightDir) * 0.5 + 0.5;
-
-			var ambient = m_AmbientLUTReadToCPU.GetPixel((int) (cosAngle01 * m_AmbientLUTReadToCPU.width), 0);
-
-			//为什么这里是gamma?  因为 0.5 存进去linear是 0.21 取出来要反算一下
-			RenderSettings.ambientLight = ambient.gamma;
-			m_AmbientColor = ambient;
-		}
-
+		
 		private void UpdateMainLight()
 		{
 			if (mainLight == null)
@@ -260,5 +241,26 @@ namespace Graphics.Scripts.AtmosphericScattering
 			mainLight.intensity = intensity;
 			m_MainLightColor = col;
 		}
+
+		private void UpdateAmbient()
+		{
+			if (m_AmbientLUTReadToCPU == null)
+			{
+				m_AmbientLUTReadToCPU = new Texture2D(ambientLUTSize, 1, TextureFormat.RGB24, false, true);
+			}
+
+			Utils.ReadRTPixelsBackToCPU(m_AmbientLUT, m_AmbientLUTReadToCPU);
+
+			var lightDir = -mainLight.transform.forward;
+			var cosAngle01 = Vector3.Dot(Vector3.up, lightDir) * 0.5 + 0.5;
+
+			var ambient = m_AmbientLUTReadToCPU.GetPixel((int) (cosAngle01 * m_AmbientLUTReadToCPU.width), 0);
+
+			//为什么这里是gamma?  因为 0.5 存进去linear是 0.21 取出来要反算一下
+			RenderSettings.ambientLight = ambient.gamma;
+			m_AmbientColor = ambient;
+		}
+
+		
 	}
 }

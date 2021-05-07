@@ -24,7 +24,7 @@ void ApplyScattering(inout half4 color, float3 positionWS, float2 screenPos)
     float cosAngle = dot(viewDir, _MainLightPosition.xyz);
 
     float3 scatCoef = _ScatteringR + _ScatteringM;
-    float3 scatAngularCoef = _ScatteringR * RayleignPhase(cosAngle) + _ScatteringM * MiePhaseHG(cosAngle, _MieG);
+    float3 scatAngularCoef = _ScatteringR * RayleighPhase(cosAngle) + _ScatteringM * MiePhaseHG(cosAngle, _MieG);
 
     float3 extinction = exp(-(_ExtinctionR + _ExtinctionM) * distance * _DistanceScale);
     float3 inscattering = _MainLightColor.rgb * (1 - extinction) * scatAngularCoef / scatCoef;

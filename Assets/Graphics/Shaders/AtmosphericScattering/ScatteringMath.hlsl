@@ -36,7 +36,7 @@ float2 RaySphereIntersection(float3 rayOrigin, float3 rayDir, float3 sphereCente
 //-----------------------------------------------------------------------------------------
 //From PragueCUNI-Elek-Oskar09
 //原本的Rayleigh Phase在0度和180度的地方一样，这个可以让其在180度的地方小一些
-float RayleignPhase(float cosAngle)
+float RayleighPhase(float cosAngle)
 {
     return (3.0 / (16.0 * PI)) * (1 + (cosAngle * cosAngle));
 }
@@ -71,7 +71,7 @@ float ParticleDensity(float height, float scaleHeight)
     return exp(-height / scaleHeight);
 }
 
-float2 particleDensity(float height, float2 scaleHeight)
+float2 ParticleDensity(float height, float2 scaleHeight)
 {
     return exp(-height.xx / scaleHeight.xy);
 }
