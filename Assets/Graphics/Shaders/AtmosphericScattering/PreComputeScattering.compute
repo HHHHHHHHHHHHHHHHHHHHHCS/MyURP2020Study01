@@ -1,0 +1,81 @@
+#pragma kernel CSIntergalCPDensity
+#pragma kernel CSSunOnSurface
+#pragma kernel CSAmbient
+#pragma kernel CSInScattering
+
+#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+#include "InScattering.hlsl"
+
+#define SAMPLECOUNT_DENSITY 256
+#define SAMPLECOUNT_INSCATTERING 512
+
+// CP Particle Density
+RWTexture2D<float2> _RWIntegralCPDensityLUT;
+
+// Sun On Surface
+RWTexture2D<float3> _RWSunOnSurfaceLUT;
+
+// InScattering
+RWTexture2D<float3> _RWInScatteringLUT;
+Texture2D<float3> _InScatteringLUT;
+
+// Ambient
+RWTexture2D<float3> _RWAmbientLUT;
+Texture2D<float3> _RWHemiSphereRandomNormlizedVecLUT;
+
+SamplerState _Sampler_Trilinear_Clamp;
+SamplerState _Sampler_Point_Clamp;
+
+
+float2 ComputeDensity(float3 rayStart, float3 rayDir)
+{
+    float3 planetCenter = float3(0, -_PlanetRadius, 0);
+
+
+    float2 intersection = RaySphereIntersection(rayStart, rayDir, planetCenter, _PlanetRadius);
+    if (intersection.x > 0)
+    {
+        // 与planet相交  写入最高的强度
+        return 1e+20;
+    }
+
+    intersection = RaySphereIntersection(rayStart, rayDir, planetCenter, _PlanetRadius + _AtmosphereHeight);
+    float3 rayEnd = rayStart + rayDir * intersection.y;
+
+    //计算单独的射线
+    float stepCount = SAMPLECOUNT_DENSITY;
+    float3 step = (rayEnd - rayStart) / stepCount;
+    float stepSize = length(step);
+    float2 density = 0;
+
+    for (float s = 0.5; s < stepCount; s += 1.0)
+    {
+        float3 position = rayStart + step * s;
+        float height = abs(length(position - planetCenter) - _PlanetRadius);
+        float2 localDensity = ParticleDensity(height, _DensityScaleHeight);
+
+        density += localDensity * stepSize;
+    }
+
+    return density;
+}
+
+[numthreads(8, 8, 1)]
+void CSIntergalCPDensity(uint3 id:SV_DispatchThreadID)
+{
+    //GetDimensions  得到图片尺寸
+    int w, h;
+    _RWIntegralCPDensityLUT.GetDimensions(w, h);
+
+    float cosAngle01 = (float)id.x / w;
+    float height01 = (float)id.y / h;
+
+    float cosAngle = cosAngle01 * 2 - 1;
+    float sinAngle = sqrt(1 - saturate(cosAngle * cosAngle));
+    float height = lerp(0, _AtmosphereHeight, height01);
+
+    float3 rayStart = float3(0, height, 0);
+    float3 rayDir = float3(sinAngle, cosAngle, 0);
+
+    _RWIntegralCPDensityLUT[id.xy] = ComputeDensity(rayStart, rayDir);
+}

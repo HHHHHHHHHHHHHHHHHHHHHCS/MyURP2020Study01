@@ -28,7 +28,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 		public const string kAerialPerspective = "_AERIAL_PERSPECTIVE";//TODO:
 		public const string kLightShaft = "_LIGHT_SHAFT";
 
-		public static readonly int RWintergalCPDensityLUT_ID = Shader.PropertyToID("_RWintegralCPDensityLUT");
+		public static readonly int RWIntergalCPDensityLUT_ID = Shader.PropertyToID("_RWIntegralCPDensityLUT");
 		public static readonly int IntergalCPDensityLUT_ID = Shader.PropertyToID("_IntegralCPDensityLUT");
 
 		public static readonly int RWHemiSphereRandomNormlizedVecLUT_ID =

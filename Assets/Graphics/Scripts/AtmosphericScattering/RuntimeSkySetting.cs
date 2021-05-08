@@ -147,7 +147,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 			Utils.CheckOrCreateLUT(ref m_IntergalCPDensityLUT, integrateCPDensityLUTSize, RenderTextureFormat.RGFloat);
 
 			int index = computerShader.FindKernel(IDKeys.csIntegrateCPDensity);
-			computerShader.SetTexture(index, IDKeys.RWintergalCPDensityLUT_ID, m_IntergalCPDensityLUT);
+			computerShader.SetTexture(index, IDKeys.RWIntergalCPDensityLUT_ID, m_IntergalCPDensityLUT);
 
 			Utils.Dispatch(computerShader, index, integrateCPDensityLUTSize);
 		}
@@ -160,7 +160,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 			int index = computerShader.FindKernel(IDKeys.CSSunOnSurface);
 
 			computerShader.SetTexture(index, IDKeys.RWSunOnSurfaceLUT_ID, m_SunOnSurfaceLUT);
-			computerShader.SetTexture(index, IDKeys.RWintergalCPDensityLUT_ID, m_IntergalCPDensityLUT);
+			computerShader.SetTexture(index, IDKeys.RWIntergalCPDensityLUT_ID, m_IntergalCPDensityLUT);
 
 			Utils.Dispatch(computerShader, index, inScatteringLUTSize);
 		}

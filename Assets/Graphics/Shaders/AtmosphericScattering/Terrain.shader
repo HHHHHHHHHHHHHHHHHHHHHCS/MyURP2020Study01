@@ -47,7 +47,8 @@ Shader "MyRP/AtmosphericScattering/Terrain"
 			#pragma multi_compile _ DIRLIGHTMAP_COMBINED
 			#pragma multi_compile _ LIGHTMAP_ON
 
-			#pragma multi_compile _ _AERIAL_PERSPECTIVE
+			// #pragma multi_compile _ _AERIAL_PERSPECTIVE
+			#define _AERIAL_PERSPECTIVE 1
 			#pragma multi_compile _ _LIGHT_SHAFT
 
 

@@ -108,14 +108,13 @@ float3 IntegrateInScattering(float3 rayStart, float3 rayDir, float rayLength, fl
         preLocalInScatterM = localInScatterM;
     }
 
-    float3 m = scatterR;
     float cosAngle = dot(rayDir, lightDir.xyz);
 
     ApplyPhaseFunction(scatterR, scatterM, cosAngle);
 
     float3 lightInScatter = (scatterR * _ScatteringR + scatterM * _ScatteringM) * _LightFromOuterSpace.xyz;
     #if defined(_RENDERSUN)
-    lightInScatter += RenderSun(m, cosAngle) * _SunIntensity;
+    lightInScatter += RenderSun(scatterR, cosAngle) * _SunIntensity;
     #endif
 
     extinction = exp(-(particleDensityAP.x * _ExtinctionR + particleDensityAP.y * _ExtinctionM));
