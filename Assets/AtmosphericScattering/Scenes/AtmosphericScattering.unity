@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0.22973508, g: 0.3177795, b: 0.38929677, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731749, g: 0.13414757, b: 0.1210787, a: 1}
+  m_IndirectSpecularColor: {r: 0.16143364, g: 0.18753055, b: 0.2086602, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -153,17 +153,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd348a7d192103841a6a40528c933f3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lutUpdateMode: 0
-  mainLight: {fileID: 0}
-  lightFromOuterSpace: {r: 1, g: 1, b: 1, a: 1}
+  lutUpdateMode: 1
+  mainLight: {fileID: 1019391320}
+  lightFromOuterSpace: {r: 3.4351554, g: 3.4351554, b: 3.4351554, a: 1}
   planetRadius: 6357000
-  atmosphereHeight: 12000
-  surfaceHeight: 0
+  atmosphereHeight: 100000
+  surfaceHeight: 3000
   rDensityScale: 7994
   mDensityScale: 1200
-  sunIntensity: 0.75
-  sunMieG: 0.98
-  computerShader: {fileID: 0}
+  sunIntensity: 0.2
+  sunMieG: 0.995
+  computerShader: {fileID: 7200000, guid: 5683fb295340fdf448f789d480e7b41f, type: 3}
   integrateCPDensityLUTSize: {x: 512, y: 512}
   sunOnSurfaceLUTSize: {x: 512, y: 512}
   ambientLUTSize: 512
@@ -180,9 +180,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26b4e1acd8b2b7d4f92310878e8987e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  distanceScale: 1
+  distanceScale: 30
   rCoef: {x: 5.8, y: 13.5, z: 33.1}
-  rScatterStrength: 1
+  rScatterStrength: 1.4
   rExtinctionStrength: 1
   mCoef: {x: 2, y: 2, z: 2}
   mScatterStrength: 1
@@ -409,8 +409,8 @@ Light:
   serializedVersion: 10
   m_Type: 1
   m_Shape: 0
-  m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1
+  m_Color: {r: 0.9225046, g: 0.77491206, b: 0.49235284, a: 0.8326823}
+  m_Intensity: 3
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -467,13 +467,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1019391319}
-  m_LocalRotation: {x: 0, y: 0, z: 0.9914449, w: 0.13052624}
+  m_LocalRotation: {x: -0.011121705, y: -0.054248754, z: 0.99013126, w: 0.12873836}
   m_LocalPosition: {x: -200, y: 108, z: 1600}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 339384170}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 180, y: -180, z: -15}
+  m_LocalEulerAnglesHint: {x: 173.998, y: -182.074, z: -14.92499}
 --- !u!1001 &1304818240
 PrefabInstance:
   m_ObjectHideFlags: 0

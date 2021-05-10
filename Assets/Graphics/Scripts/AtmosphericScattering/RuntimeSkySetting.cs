@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Graphics.Scripts.AtmosphericScattering
 {
@@ -66,10 +67,6 @@ namespace Graphics.Scripts.AtmosphericScattering
 		private void Awake()
 		{
 			m_Camera = Camera.main;
-			Debug.Log(new Color(0.5f,0.5f,0.5f,1).gamma);
-			Debug.Log(new Color(0.5f,0.5f,0.5f,1).linear);
-			Debug.Log(new Color(0.5f,0.5f,0.5f,1));
-
 		}
 
 		private void Start()
@@ -160,7 +157,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 			int index = computerShader.FindKernel(IDKeys.CSSunOnSurface);
 
 			computerShader.SetTexture(index, IDKeys.RWSunOnSurfaceLUT_ID, m_SunOnSurfaceLUT);
-			computerShader.SetTexture(index, IDKeys.RWIntergalCPDensityLUT_ID, m_IntergalCPDensityLUT);
+			computerShader.SetTexture(index, IDKeys.IntergalCPDensityLUT_ID, m_IntergalCPDensityLUT);
 
 			Utils.Dispatch(computerShader, index, inScatteringLUTSize);
 		}
@@ -237,6 +234,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 			float intensity;
 			Utils.HDRToColorIntensity(col, out lightColor, out intensity);
 
+			//为什么这里是gamma?  因为 0.5 存进去linear是 0.21 取出来要反算一下
 			mainLight.color = lightColor.gamma;
 			mainLight.intensity = intensity;
 			m_MainLightColor = col;
@@ -244,6 +242,11 @@ namespace Graphics.Scripts.AtmosphericScattering
 
 		private void UpdateAmbient()
 		{
+			if (RenderSettings.ambientMode != AmbientMode.Flat)
+			{
+				return;
+			}
+			
 			if (m_AmbientLUTReadToCPU == null)
 			{
 				m_AmbientLUTReadToCPU = new Texture2D(ambientLUTSize, 1, TextureFormat.RGB24, false, true);
@@ -256,7 +259,6 @@ namespace Graphics.Scripts.AtmosphericScattering
 
 			var ambient = m_AmbientLUTReadToCPU.GetPixel((int) (cosAngle01 * m_AmbientLUTReadToCPU.width), 0);
 
-			//为什么这里是gamma?  因为 0.5 存进去linear是 0.21 取出来要反算一下
 			RenderSettings.ambientLight = ambient.gamma;
 			m_AmbientColor = ambient;
 		}

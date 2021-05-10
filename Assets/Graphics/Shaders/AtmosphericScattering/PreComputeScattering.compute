@@ -1,7 +1,7 @@
-#pragma kernel CSIntergalCPDensity
+#pragma kernel CSIntegrateCPDensity
 #pragma kernel CSSunOnSurface
-#pragma kernel CSAmbient
 #pragma kernel CSInScattering
+#pragma kernel CSAmbient
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "InScattering.hlsl"
@@ -61,10 +61,11 @@ float2 ComputeDensity(float3 rayStart, float3 rayDir)
 }
 
 //PreComputeDensity
+//计算高度产生的系数
 //----------------------------------
 
 [numthreads(8, 8, 1)]
-void CSIntergalCPDensity(uint3 id:SV_DispatchThreadID)
+void CSIntegrateCPDensity(uint3 id:SV_DispatchThreadID)
 {
     //GetDimensions  得到图片尺寸
     int w, h;
@@ -84,6 +85,7 @@ void CSIntergalCPDensity(uint3 id:SV_DispatchThreadID)
 }
 
 //PrecomputeSunOnSurface
+//计算太阳产生的系数 跟高度系数相关
 //----------------------------------
 
 float3 Transmittance(float cosAngle01, float height01)
@@ -112,41 +114,8 @@ void CSSunOnSurface(uint3 id:SV_DispatchThreadID)
     _RWSunOnSurfaceLUT[id.xy] = ComputeSunOnSurface(cosAngle01, height01);
 }
 
-//Precompute Ambient
-//----------------------------------
-float3 ComputeAmbient(float cosSunAngle01, int count)
-{
-    float3 total = float3(0, 0, 0);
-    for (int i = 0; i < count; i++)
-    {
-        float3 viewDir = _RWHemiSphereRandomNormlizedVecLUT.SampleLevel(_Sampler_Trilinear_Clamp,
-                                                                        float2((float)i / count, 0.5), 0.0).xyz;
-        float cosViewAngle = dot(viewDir, float3(0, 1, 0));
-
-        float3 inScattering = _InScatteringLUT.SampleLevel(_Sampler_Trilinear_Clamp,
-                                                           float2(cosViewAngle * 0.5 + 0.5, cosSunAngle01), 0).xyz;
-
-        total += cosViewAngle * inScattering;
-    }
-
-    total = TWO_PI * total / count;
-    return total;
-}
-
-[numthreads(8,1,1)]
-void CSAmbient(uint3 id:SV_DispatchThreadID)
-{
-    int w, h;
-    _RWAmbientLUT.GetDimensions(w, h);
-
-    float cosAngle01 = (float)id.x / w;
-
-    _RWHemiSphereRandomNormlizedVecLUT.GetDimensions(w, h);
-    int count = w;
-    _RWAmbientLUT[int2(id.x, 0)] = ComputeAmbient(cosAngle01, count);
-}
-
 //PreCompute InScattering
+//在半空点 计算大气散射
 //----------------------------------
 [numthreads(8,1,1)]
 void CSInScattering(uint3 id:SV_DispatchThreadID)
@@ -179,4 +148,41 @@ void CSInScattering(uint3 id:SV_DispatchThreadID)
     float3 extinction;
     _RWInScatteringLUT[id.xy] = IntegrateInScattering(rayStart, rayDir, rayLength, planetCenter, 1, lightDir,
                                                       SAMPLECOUNT_INSCATTERING, extinction);
+}
+
+
+
+//Precompute Ambient
+//利用随机角度 和 半空点的大气散射  生成ambient
+//----------------------------------
+float3 ComputeAmbient(float cosSunAngle01, int count)
+{
+    float3 total = float3(0, 0, 0);
+    for (int i = 0; i < count; i++)
+    {
+        float3 viewDir = _RWHemiSphereRandomNormlizedVecLUT.SampleLevel(_Sampler_Trilinear_Clamp,
+                                                                        float2((float)i / count, 0.5), 0.0).xyz;
+        float cosViewAngle = dot(viewDir, float3(0, 1, 0));
+
+        float3 inScattering = _InScatteringLUT.SampleLevel(_Sampler_Trilinear_Clamp,
+                                                           float2(cosViewAngle * 0.5 + 0.5, cosSunAngle01), 0).xyz;
+
+        total += cosViewAngle * inScattering;
+    }
+
+    total = TWO_PI * total / count;
+    return total;
+}
+
+[numthreads(8,1,1)]
+void CSAmbient(uint3 id:SV_DispatchThreadID)
+{
+    int w, h;
+    _RWAmbientLUT.GetDimensions(w, h);
+
+    float cosAngle01 = (float)id.x / w;
+
+    _RWHemiSphereRandomNormlizedVecLUT.GetDimensions(w, h);
+    int count = w;
+    _RWAmbientLUT[int2(id.x, 0)] = ComputeAmbient(cosAngle01, count);
 }
