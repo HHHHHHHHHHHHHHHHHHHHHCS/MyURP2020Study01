@@ -60,6 +60,9 @@ float2 ComputeDensity(float3 rayStart, float3 rayDir)
     return density;
 }
 
+//PreComputeDensity
+//----------------------------------
+
 [numthreads(8, 8, 1)]
 void CSIntergalCPDensity(uint3 id:SV_DispatchThreadID)
 {
@@ -78,4 +81,102 @@ void CSIntergalCPDensity(uint3 id:SV_DispatchThreadID)
     float3 rayDir = float3(sinAngle, cosAngle, 0);
 
     _RWIntegralCPDensityLUT[id.xy] = ComputeDensity(rayStart, rayDir);
+}
+
+//PrecomputeSunOnSurface
+//----------------------------------
+
+float3 Transmittance(float cosAngle01, float height01)
+{
+    float2 particleDensityCP = _IntegralCPDensityLUT.SampleLevel(_Sampler_Trilinear_Clamp
+                                                                 , float2(cosAngle01, height01), 0.0).xy;
+    float3 trCP = particleDensityCP.x * _ExtinctionR;
+    float3 tmCP = particleDensityCP.y * _ExtinctionM;
+    return exp(-(trCP + tmCP));
+}
+
+float3 ComputeSunOnSurface(float cosAngle01, float height01)
+{
+    return _LightFromOuterSpace * Transmittance(cosAngle01, height01);
+}
+
+[numthreads(8, 8, 1)]
+void CSSunOnSurface(uint3 id:SV_DispatchThreadID)
+{
+    int w, h;
+    _RWSunOnSurfaceLUT.GetDimensions(w, h);
+
+    float cosAngle01 = (float)id.x / w;
+    float height01 = (float)id.y / h;
+
+    _RWSunOnSurfaceLUT[id.xy] = ComputeSunOnSurface(cosAngle01, height01);
+}
+
+//Precompute Ambient
+//----------------------------------
+float3 ComputeAmbient(float cosSunAngle01, int count)
+{
+    float3 total = float3(0, 0, 0);
+    for (int i = 0; i < count; i++)
+    {
+        float3 viewDir = _RWHemiSphereRandomNormlizedVecLUT.SampleLevel(_Sampler_Trilinear_Clamp,
+                                                                        float2((float)i / count, 0.5), 0.0).xyz;
+        float cosViewAngle = dot(viewDir, float3(0, 1, 0));
+
+        float3 inScattering = _InScatteringLUT.SampleLevel(_Sampler_Trilinear_Clamp,
+                                                           float2(cosViewAngle * 0.5 + 0.5, cosSunAngle01), 0).xyz;
+
+        total += cosViewAngle * inScattering;
+    }
+
+    total = TWO_PI * total / count;
+    return total;
+}
+
+[numthreads(8,1,1)]
+void CSAmbient(uint3 id:SV_DispatchThreadID)
+{
+    int w, h;
+    _RWAmbientLUT.GetDimensions(w, h);
+
+    float cosAngle01 = (float)id.x / w;
+
+    _RWHemiSphereRandomNormlizedVecLUT.GetDimensions(w, h);
+    int count = w;
+    _RWAmbientLUT[int2(id.x, 0)] = ComputeAmbient(cosAngle01, count);
+}
+
+//PreCompute InScattering
+//----------------------------------
+[numthreads(8,1,1)]
+void CSInScattering(uint3 id:SV_DispatchThreadID)
+{
+    int w, h;
+    _RWInScatteringLUT.GetDimensions(w, h);
+    float cosViewAngle01 = (float)id.x / h;
+    float cosSunAngle01 = (float)id.y / w;
+
+    float3 planetCenter = float3(0, -_PlanetRadius, 0);
+
+    float3 rayStart = float3(0, _SurfaceHeight, 0);
+    float cosSunAngle = cosSunAngle01 * 2 - 1;
+    float sinSunAngle = 1 - sqrt(cosSunAngle * cosSunAngle);
+    float3 lightDir = float3(sinSunAngle, cosSunAngle, 0);
+
+    float cosViewAngle = cosViewAngle01 * 2 - 1;
+    float sinViewAngle = 1 - sqrt(cosViewAngle * cosViewAngle);
+    float3 rayDir = float3(sinViewAngle, cosViewAngle, 0);
+
+    float2 intersection = RaySphereIntersection(rayStart, rayDir, planetCenter, _PlanetRadius + _AtmosphereHeight);
+    float rayLength = intersection.y;
+
+    intersection = RaySphereIntersection(rayStart, rayDir, planetCenter, _PlanetRadius);
+    if (intersection.x >= 0)
+    {
+        rayLength = min(rayLength, intersection.x);
+    }
+
+    float3 extinction;
+    _RWInScatteringLUT[id.xy] = IntegrateInScattering(rayStart, rayDir, rayLength, planetCenter, 1, lightDir,
+                                                      SAMPLECOUNT_INSCATTERING, extinction);
 }
