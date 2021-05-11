@@ -35,20 +35,22 @@ void ApplyPhaseFunction(inout float3 scatterR, inout float3 scatterM, float cosA
     scatterR *= RayleighPhase(cosAngle);
     scatterM *= MiePhaseHGCS(cosAngle, _MieG);
 }
-    
+
 float3 RenderSun(float3 scatterM, float cosAngle)
 {
     return scatterM * MiePhaseHG(cosAngle, _SunMieG) * 0.003;
 }
 
-void GetAtmosphereDensity(float3 position, float3 planetCenter, float3 lightDir, out float2 densityAtP, out float2 particleDensityCP)
+void GetAtmosphereDensity(float3 position, float3 planetCenter, float3 lightDir, out float2 densityAtP,
+                          out float2 particleDensityCP)
 {
     float height = length(position - planetCenter) - _PlanetRadius;
     densityAtP = ParticleDensity(height, _DensityScaleHeight.xy);
-        
+
     float cosAngle = dot(normalize(position - planetCenter), lightDir.xyz);
-        
-    particleDensityCP = SAMPLE_TEXTURE2D_LOD(_IntegralCPDensityLUT, sampler_IntegralCPDensityLUT, float2(cosAngle * 0.5 + 0.5, (height / _AtmosphereHeight)), 0).xy;
+
+    particleDensityCP = SAMPLE_TEXTURE2D_LOD(_IntegralCPDensityLUT, sampler_IntegralCPDensityLUT,
+                                             float2(cosAngle * 0.5 + 0.5, (height / _AtmosphereHeight)), 0).xy;
 }
 
 void ComputeLocalInScattering(float2 densityAtP, float2 particleDensityCP, float2 particleDensityAP,
@@ -108,13 +110,14 @@ float3 IntegrateInScattering(float3 rayStart, float3 rayDir, float rayLength, fl
         preLocalInScatterM = localInScatterM;
     }
 
+    float3 m = scatterR;
     float cosAngle = dot(rayDir, lightDir.xyz);
 
     ApplyPhaseFunction(scatterR, scatterM, cosAngle);
 
     float3 lightInScatter = (scatterR * _ScatteringR + scatterM * _ScatteringM) * _LightFromOuterSpace.xyz;
     #if defined(_RENDERSUN)
-    lightInScatter += RenderSun(scatterR, cosAngle) * _SunIntensity;
+    lightInScatter += RenderSun(m, cosAngle) * _SunIntensity;
     #endif
 
     extinction = exp(-(particleDensityAP.x * _ExtinctionR + particleDensityAP.y * _ExtinctionM));
