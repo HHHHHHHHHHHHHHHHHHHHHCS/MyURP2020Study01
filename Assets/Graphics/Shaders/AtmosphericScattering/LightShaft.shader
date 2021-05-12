@@ -13,6 +13,11 @@ Shader "MyRP/AtmosphericScattering//LightShaft"
 
 		Pass
 		{
+			Name "Light Shaft"
+			ZTest Always
+			ZWrite Off
+			Cull Off
+
 			HLSLPROGRAM
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
@@ -48,8 +53,9 @@ Shader "MyRP/AtmosphericScattering//LightShaft"
 			{
 				v2f o;
 				o.positionCS = TransformObjectToHClip(IN.vertex);
-				o.frustumCornerDirWS = _FrustumCorners[IN.vertexID];
 				o.uv = IN.uv;
+				o.frustumCornerDirWS = _FrustumCorners[IN.vertexID];
+
 				return o;
 			}
 

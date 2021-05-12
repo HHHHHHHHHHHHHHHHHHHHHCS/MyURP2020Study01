@@ -93,7 +93,7 @@ namespace Graphics.Scripts.Cartoon
 			}
 
 			context.ExecuteCommandBuffer(cmd);
-			cmd.Clear();
+			CommandBufferPool.Release(cmd);
 		}
 	}
 }

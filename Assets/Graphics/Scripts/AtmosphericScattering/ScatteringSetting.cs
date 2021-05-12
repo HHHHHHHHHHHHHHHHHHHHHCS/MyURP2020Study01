@@ -21,7 +21,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 
 		[Header("Debug")] public DebugMode debugMode;
 
-		public bool lightShaft = true;
+		// public bool lightShaft = true;
 
 		private void Update()
 		{
@@ -45,7 +45,7 @@ namespace Graphics.Scripts.AtmosphericScattering
 			Shader.SetGlobalVector(IDKeys.ExtinctionM_ID, _mCoef * mExtinctionStrength);
 			Shader.SetGlobalFloat(IDKeys.MieG_ID, mieG);
 
-			SetKeyword(IDKeys.kLightShaft, lightShaft);
+			// SetKeyword(IDKeys.kLightShaft, lightShaft);
 		}
 
 		private void SetKeyword(string idKey, bool bl)

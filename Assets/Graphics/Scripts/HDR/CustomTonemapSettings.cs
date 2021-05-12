@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace Graphics.Scripts.HDR
 {
-	[Serializable, VolumeComponentMenu("MyPost-processing/CustomTonemap")]
+	[Serializable, VolumeComponentMenu("My/CustomTonemap")]
 	public class CustomTonemapSettings : VolumeComponent, IPostProcessComponent
 	{
 		[Range(-2f, 2f)] public BoolParameter enable = new BoolParameter(false);

@@ -189,7 +189,6 @@ MonoBehaviour:
   mExtinctionStrength: 1
   mieG: 0.625
   debugMode: 0
-  lightShaft: 0
 --- !u!4 &272582001
 Transform:
   m_ObjectHideFlags: 0
