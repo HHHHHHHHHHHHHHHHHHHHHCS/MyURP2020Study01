@@ -31,6 +31,9 @@ MonoBehaviour:
   enableEffect:
     m_OverrideState: 1
     m_Value: 1
-  noiseTex:
+  renderPassEvent:
     m_OverrideState: 1
-    m_Value: {fileID: 2800000, guid: 44a19727c767e494db1cd3604f98d576, type: 3}
+    m_Value: 550
+  effectMat:
+    m_OverrideState: 1
+    m_Value: {fileID: 2100000, guid: be91804a986ba7742ae1b31a1b950b00, type: 2}
