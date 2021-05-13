@@ -2,6 +2,16 @@
 {
 	Properties
 	{
+		_NoiseTex("Noise Texture",2D)="grey"{}
+		_Opacity("Opacity",Range(0, 1)) = 0.5
+		_Interval("Interval",Range(0.1, 5.0)) = 1.25
+		_Blur_Width("Blur Width",Range(0, 2.0)) = 1.35
+		_Blur_Freq("Blur Freq",Range(0.0, 1.0)) = 0.5
+		_Edge_Contrast("Edge Contrast",Range(0.01, 4.0)) = 1.2
+		_Hue_Shift("Hue Shift",Range(0.0, 0.3)) = 0.1
+		_EdgeColor("Edge Color", Color) = (0.15,0.05,0.05)
+		_FillColor("Fill Color", Color) = (0.8,0.7,0.6)
+		_Iteration("Iteration", Range(4,32)) = 20
 	}
 	SubShader
 	{
@@ -46,19 +56,16 @@
 			SAMPLER(s_linear_clamp_sampler);
 			SAMPLER(s_linear_repeat_sampler);
 
-
-			float4 _EffectParams1;
-			float2 _EffectParams2;
+			float _Opacity;
+			float _Interval;
+			float _Blur_Width;
+			float _Blur_Freq;
+			float _Edge_Contrast;
+			float _Hue_Shift;
 			float4 _EdgeColor;
 			float4 _FillColor;
 			uint _Iteration;
 
-			#define OPACITY         _EffectParams1.x
-			#define INTERVAL        _EffectParams1.y
-			#define BLUR_WIDTH      _EffectParams1.z
-			#define BLUR_FREQ       _EffectParams1.w
-			#define EDGE_CONTRAST   _EffectParams2.x
-			#define HUE_SHIFT       _EffectParams2.y
 
 			float2 Rotate90(float2 v)
 			{
@@ -97,7 +104,7 @@
 
 			float2 GetGradient(float2 p, float freq)
 			{
-				const float2 dx = float2(INTERVAL / 200, 0);
+				const float2 dx = float2(_Interval / 200, 0);
 				float ldx = SampleLuminance(p + dx.xy) - SampleLuminance(p - dx.xy);
 				float ldy = SampleLuminance(p + dx.yx) - SampleLuminance(p - dx.yx);
 				float2 n = (SampleNoise(p * 0.4 * freq).gb - 0.5);
@@ -115,10 +122,10 @@
 
 			float3 ProcessFill(inout float2 p, float stride)
 			{
-				float2 grad = GetGradient(p, BLUR_FREQ);
+				float2 grad = GetGradient(p, _Blur_Freq);
 				p += normalize(grad) * stride;
 				float shift = SampleNoise(p * 0.1).r * 2;
-				return SampleColor(p) * HsvToRgb(float3(shift, HUE_SHIFT, 1));
+				return SampleColor(p) * HsvToRgb(float3(shift, _Hue_Shift, 1));
 			}
 
 
@@ -154,8 +161,8 @@
 					sum_e += w_e * 2;
 
 					float w_c = 0.2 + (float)i / _Iteration;
-					acc_c += ProcessFill(p_c_n, -Stride * BLUR_WIDTH) * w_c;
-					acc_c += ProcessFill(p_c_p, +Stride * BLUR_WIDTH) * w_c * 0.3;
+					acc_c += ProcessFill(p_c_n, -Stride * _Blur_Width) * w_c;
+					acc_c += ProcessFill(p_c_p, +Stride * _Blur_Width) * w_c * 0.3;
 					sum_c += w_c * 1.3;
 				}
 
@@ -163,17 +170,18 @@
 				acc_e /= sum_e;
 				acc_c /= sum_c;
 
-				acc_e = saturate((acc_e - 0.5) * EDGE_CONTRAST + 0.5);;
+				acc_e = saturate((acc_e - 0.5) * _Edge_Contrast + 0.5);
 
 				//color blending
 
 				float3 rgb_e = lerp(1, _EdgeColor.rgb, _EdgeColor.a * acc_e);
 				float3 rgb_f = lerp(1, acc_c, _FillColor.a) * _FillColor.rgb;
 
-				uint2 positionSS = IN.uv * _ScreenSize.xy;
+				//_ScreenSize is in deferred
+				uint2 positionSS = IN.uv * _ScreenParams.xy;
 				half4 src = LOAD_TEXTURE2D_X(_SrcTex, positionSS);
 
-				return half4(lerp(src.rgb, rgb_e * rgb_f,OPACITY), src.a);
+				return half4(lerp(src.rgb, rgb_e * rgb_f, _Opacity), src.a);
 			}
 			ENDHLSL
 		}
