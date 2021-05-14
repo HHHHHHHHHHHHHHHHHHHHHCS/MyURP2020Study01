@@ -9,9 +9,9 @@
 		_Blur_Freq("Blur Freq",Range(0.0, 1.0)) = 0.5
 		_Edge_Contrast("Edge Contrast",Range(0.01, 4.0)) = 1.2
 		_Hue_Shift("Hue Shift",Range(0.0, 0.3)) = 0.1
-		_EdgeColor("Edge Color", Color) = (0.15,0.05,0.05)
-		_FillColor("Fill Color", Color) = (0.8,0.7,0.6)
-		_Iteration("Iteration", Range(4,32)) = 20
+		_EdgeColor("Edge Color", Color) = (0.15, 0.05, 0.05, 1)
+		_FillColor("Fill Color", Color) = (0.8, 0.7, 0.6, 1)
+		_Iteration("Iteration", Range(4, 32)) = 20
 	}
 	SubShader
 	{
@@ -147,6 +147,7 @@
 				float2 p_c_p = p;
 
 				const float Stride = 0.04 / _Iteration;
+				const float InvIter = 1 / _Iteration;
 
 				float acc_e = 0;
 				float3 acc_c = 0;
@@ -155,12 +156,13 @@
 
 				for (uint i = 0; i < _Iteration; i++)
 				{
-					float w_e = 1.5 - (float)i / _Iteration;
+					float a = (float)i * InvIter;
+					float w_e = 1.5 - a;
 					acc_e += ProcessEdge(p_e_n, -Stride) * w_e;
 					acc_e += ProcessEdge(p_e_p, +Stride) * w_e;
 					sum_e += w_e * 2;
 
-					float w_c = 0.2 + (float)i / _Iteration;
+					float w_c = 0.2 + a;
 					acc_c += ProcessFill(p_c_n, -Stride * _Blur_Width) * w_c;
 					acc_c += ProcessFill(p_c_p, +Stride * _Blur_Width) * w_c * 0.3;
 					sum_c += w_c * 1.3;
