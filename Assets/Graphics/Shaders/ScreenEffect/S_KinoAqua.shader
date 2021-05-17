@@ -1,4 +1,4 @@
-﻿Shader "ScreenEffect/S_KinoAqua"
+﻿Shader "MyRP/ScreenEffect/S_KinoAqua"
 {
 	Properties
 	{
