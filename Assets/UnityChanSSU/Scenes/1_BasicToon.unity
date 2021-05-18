@@ -97,7 +97,7 @@ LightmapSettings:
     m_ExportTrainingData: 0
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
-  m_LightingDataAsset: {fileID: 0}
+  m_LightingDataAsset: {fileID: 112000000, guid: a41eb7cc0c70f8d4bae252c76cbd3182, type: 2}
   m_LightingSettings: {fileID: 0}
 --- !u!196 &4
 NavMeshSettings:
@@ -315,7 +315,7 @@ PlayableDirector:
   - key: {fileID: -258717699375716566, guid: e623df1495e8c044aa234c1c48cf32da, type: 2}
     value: {fileID: 4828365524914837207}
   - key: {fileID: -428015917866590148, guid: e623df1495e8c044aa234c1c48cf32da, type: 2}
-    value: {fileID: 0}
+    value: {fileID: 4828365524914837207}
   m_ExposedReferences:
     m_References: []
 --- !u!4 &1568336780
@@ -652,6 +652,78 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2079115467431335823, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.x
+      value: -46.36013
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115467431335823, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.y
+      value: 0.420133
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115467431335823, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.z
+      value: 91.314514
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468018060722, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.x
+      value: 29.689402
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468018060722, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.y
+      value: 114.08442
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468018060722, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.z
+      value: -85.67078
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468436397897, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.x
+      value: -29.689432
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468436397897, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.y
+      value: 65.91552
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468436397897, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.z
+      value: 94.32927
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468805595233, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.x
+      value: -42.036976
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468805595233, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.y
+      value: -61.197758
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115468805595233, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.z
+      value: 78.4365
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115469374766414, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.x
+      value: 46.36009
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115469374766414, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.y
+      value: 179.57986
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115469374766414, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.z
+      value: -88.68554
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115469521280824, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.x
+      value: 42.03707
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115469521280824, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.y
+      value: -118.80226
+      objectReference: {fileID: 0}
+    - target: {fileID: 2079115469521280824, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
+      propertyPath: m_RotationOffset.z
+      value: -101.563484
+      objectReference: {fileID: 0}
     - target: {fileID: 2081182623713556308, guid: c09f3ef2a73bc28439e342d1c692a573, type: 3}
       propertyPath: m_RootOrder
       value: 4
