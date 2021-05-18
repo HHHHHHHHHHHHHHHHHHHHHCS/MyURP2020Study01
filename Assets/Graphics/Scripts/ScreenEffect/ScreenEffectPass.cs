@@ -21,6 +21,7 @@ namespace Graphics.Scripts.ScreenEffect
 
 		public void Setup(ScreenEffectPostProcess _settings)
 		{
+			profilingSampler = new ProfilingSampler(k_tag);
 			settings = _settings;
 		}
 

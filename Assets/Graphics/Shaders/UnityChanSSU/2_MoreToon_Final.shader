@@ -25,7 +25,7 @@ Shader "MyRP/UnityChanSSU/2_MoreToon_Final"
 	{
 		Tags
 		{
-			"RenderType" = "Opaque" /*"RenderPipeline" = "UniversalRenderPipeline"*/
+			"RenderType" = "Opaque" "Queue" = "Geometry" /*"RenderPipeline" = "UniversalRenderPipeline"*/
 		}
 
 		HLSLINCLUDE

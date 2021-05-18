@@ -202,7 +202,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 299358696}
-  m_LocalRotation: {x: 0.016948158, y: 0.98546857, z: -0.09774106, w: 0.13788095}
+  m_LocalRotation: {x: 0.01694824, y: 0.9854686, z: -0.09774096, w: 0.13788097}
   m_LocalPosition: {x: -0.4587364, y: 1.499511, z: 1.422796}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06c0317e0632e6c47bb855ee99f95544, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  renderPipelineAsset: {fileID: 11400000, guid: 81bfb77a7315f3841b9d00bce2fc4fe4, type: 2}
+  renderPipelineAsset: {fileID: 11400000, guid: c266af009b6c9a840ad7692b0d7d4bb4, type: 2}
 --- !u!114 &299358701
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -263,8 +263,8 @@ AimConstraint:
   m_GameObject: {fileID: 299358696}
   m_Enabled: 1
   m_Weight: 1
-  m_RotationAtRest: {x: 0, y: 0, z: 0}
-  m_RotationOffset: {x: 0, y: 0, z: 0}
+  m_RotationAtRest: {x: 11.380001, y: 164.108, z: 0.37701124}
+  m_RotationOffset: {x: -10.873298, y: 1.9928755, z: -0.3931197}
   m_AimVector: {x: 0, y: 0, z: 1}
   m_UpVector: {x: 0, y: 1, z: 0}
   m_WorldUpVector: {x: 0, y: 1, z: 0}
@@ -273,7 +273,7 @@ AimConstraint:
   m_AffectRotationX: 1
   m_AffectRotationY: 1
   m_AffectRotationZ: 1
-  m_IsContraintActive: 0
+  m_IsContraintActive: 1
   m_IsLocked: 0
   m_Sources:
   - sourceTransform: {fileID: 3063662135651620662}

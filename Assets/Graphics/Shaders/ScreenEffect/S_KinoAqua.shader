@@ -31,6 +31,10 @@
 			#pragma vertex vert
 			#pragma fragment frag
 
+			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			
 			struct a2v
 			{
 				uint vertexID :SV_VertexID;
@@ -41,11 +45,6 @@
 				float4 vertex : SV_POSITION;
 				float2 uv : TEXCOORD0;
 			};
-
-			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
-			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
 
 			TEXTURE2D_X(_SrcTex);
 			TEXTURE2D(_NoiseTex);
