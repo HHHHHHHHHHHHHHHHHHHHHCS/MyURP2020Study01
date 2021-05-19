@@ -54,6 +54,24 @@ MonoBehaviour:
       restoreCamera: 1
       offset: {x: 0, y: 0, z: 0, w: 0}
       cameraFieldOfView: 60
+--- !u!114 &-3850558615198438906
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e8c76c38cf33dd4c80828955104f5cd, type: 3}
+  m_Name: MyCustomPostProcessFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shaders:
+    bloomShader: {fileID: 0}
+    uberShader: {fileID: 0}
+    stylizedTonemapShader: {fileID: 0}
+    finalShader: {fileID: 0}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -71,7 +89,8 @@ MonoBehaviour:
   - {fileID: -3908125644241047683}
   - {fileID: 2196130076017224361}
   - {fileID: -8424765123683767715}
-  m_RendererFeatureMap: 55fa4a41301ee4777def6ac56e8cc3c9a9ea8e25ab387a1e5daaba9ec138158b
+  - {fileID: -3850558615198438906}
+  m_RendererFeatureMap: 55fa4a41301ee4777def6ac56e8cc3c9a9ea8e25ab387a1e5daaba9ec138158b06ea4632571190ca
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
   shaders:
