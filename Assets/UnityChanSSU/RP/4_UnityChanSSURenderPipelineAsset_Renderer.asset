@@ -67,6 +67,7 @@ MonoBehaviour:
   m_Name: MyCustomPostProcessFeature
   m_EditorClassIdentifier: 
   m_Active: 1
+  enableEffect: 1
   shaders:
     bloomShader: {fileID: 0}
     uberShader: {fileID: 0}

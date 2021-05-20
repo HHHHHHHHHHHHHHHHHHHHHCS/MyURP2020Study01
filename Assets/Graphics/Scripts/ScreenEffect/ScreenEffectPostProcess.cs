@@ -33,7 +33,7 @@ namespace Graphics.Scripts.ScreenEffect
 			new RenderPassEventParameter(RenderPassEvent.BeforeRenderingPostProcessing);
 
 		public BoolParameter inputMainTex = new BoolParameter(false);
-		
+
 		public MaterialParameter effectMat = new MaterialParameter(null);
 
 		public bool IsActive() => enableEffect.value;
