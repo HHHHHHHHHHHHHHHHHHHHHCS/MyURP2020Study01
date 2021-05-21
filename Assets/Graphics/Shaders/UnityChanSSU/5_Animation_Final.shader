@@ -1,4 +1,4 @@
-Shader "MyRP/UnityChanSSU/5_AnimationF_Final"
+Shader "MyRP/UnityChanSSU/5_Animation_Final"
 {
 	Properties
 	{

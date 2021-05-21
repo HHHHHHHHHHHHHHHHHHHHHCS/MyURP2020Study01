@@ -12,6 +12,7 @@ namespace Graphics.Scripts.UnityChanSSU
 		[SerializeField] private Shader bloomShader;
 		[SerializeField] private Shader uberShader;
 		[SerializeField] private Shader stylizedTonemapShader;
+		[SerializeField] private Shader msaaShader;
 		[SerializeField] private Shader finalShader;
 
 		// public Shader BloomShader => bloomShader;
@@ -22,6 +23,7 @@ namespace Graphics.Scripts.UnityChanSSU
 		private Material _bloomMaterial;
 		private Material _uberMaterial;
 		private Material _stylizedTonemapMaterial;
+		private Material _msaaMaterial;
 		private Material _finalMaterial;
 
 		public Material BloomMaterial
@@ -53,6 +55,17 @@ namespace Graphics.Scripts.UnityChanSSU
 				return _stylizedTonemapMaterial;
 			}
 		}
+		
+		public Material MSAAMaterial
+		{
+			get
+			{
+				GetMaterial(ref _msaaMaterial, ref msaaShader);
+
+				return _msaaMaterial;
+			}
+		}
+
 
 		public Material FinalMaterial
 		{
@@ -98,7 +111,11 @@ namespace Graphics.Scripts.UnityChanSSU
 			SafeDestroyMaterial(ref _bloomMaterial);
 			SafeDestroyMaterial(ref _uberMaterial);
 			SafeDestroyMaterial(ref _stylizedTonemapMaterial);
+			SafeDestroyMaterial(ref _msaaMaterial);
 			SafeDestroyMaterial(ref _finalMaterial);
+#if UNITY_EDITOR
+			Debug.Log("MyCustomPostProcessShaders.DestroyMaterials");
+#endif
 		}
 	}
 

@@ -69,10 +69,11 @@ MonoBehaviour:
   m_Active: 1
   enableEffect: 1
   shaders:
-    bloomShader: {fileID: 0}
-    uberShader: {fileID: 0}
-    stylizedTonemapShader: {fileID: 0}
-    finalShader: {fileID: 0}
+    bloomShader: {fileID: 4800000, guid: 0cc4ee282935480488dd4324bdd8f0d4, type: 3}
+    uberShader: {fileID: 4800000, guid: cc2fc2261204c8b4a816c845f6dd042c, type: 3}
+    stylizedTonemapShader: {fileID: 4800000, guid: aa13121dfccafcc4ab4b62a842c9ea06, type: 3}
+    msaaShader: {fileID: 4800000, guid: ede9752104e61214885702312d2cdd77, type: 3}
+    finalShader: {fileID: 4800000, guid: a6c98176a161b9340a326f1a54eff799, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
