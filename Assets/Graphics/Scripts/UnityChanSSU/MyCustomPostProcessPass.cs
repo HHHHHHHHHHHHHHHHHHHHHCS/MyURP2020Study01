@@ -53,8 +53,8 @@ namespace Graphics.Scripts.UnityChanSSU
 			else
 			{
 				defaultHDRFormat = QualitySettings.activeColorSpace == ColorSpace.Linear
-					? GraphicsFormat.R8G8B8A8_SRGB
-					: GraphicsFormat.R8G8B8A8_UNorm;
+					? GraphicsFormat.R16G16B16_SFloat
+					: GraphicsFormat.R16G16B16_SNorm;
 			}
 
 			InitBloom();
@@ -91,7 +91,7 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		#region HelpUtils
 
-		private static readonly int MainTex_ID = Shader.PropertyToID("_MainTex");
+		private static readonly int SrcTex_ID = Shader.PropertyToID("_SrcTex");
 
 
 		private RenderTextureDescriptor GetRenderDescriptor(int _width, int _height, GraphicsFormat _format)
@@ -108,7 +108,7 @@ namespace Graphics.Scripts.UnityChanSSU
 		private static void DrawFullScreen(CommandBuffer cmd, RenderTargetIdentifier src, RenderTargetIdentifier dest,
 			Material mat, int pass)
 		{
-			cmd.SetGlobalTexture(MainTex_ID, src);
+			cmd.SetGlobalTexture(SrcTex_ID, src);
 			cmd.SetRenderTarget(dest, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
 			CoreUtils.DrawFullScreen(cmd, mat, null, pass);
 		}
@@ -195,7 +195,8 @@ namespace Graphics.Scripts.UnityChanSSU
 			{
 				//我们这套是没有autoExposureTexture的  原来的PPSV2是有的
 				//但是默认的图片是white  所以直接忽略了
-				
+				//我们不支持xr
+
 				// Negative anamorphic ratio values distort vertically - positive is horizontal
 				float ratio = Mathf.Clamp(settings.anamorphicRatio.value, -1, 1);
 				float rw = ratio < 0 ? -ratio : 0f;
@@ -240,7 +241,7 @@ namespace Graphics.Scripts.UnityChanSSU
 						? (int) Pass.Prefilter13 + qualityOffset
 						: (int) Pass.Downsample13 + qualityOffset;
 
-					var desc = GetRenderDescriptor(tw, th, defaultHDRFormat);
+					var desc = GetRenderDescriptor(tw_stereo, th, defaultHDRFormat);
 					cmd.GetTemporaryRT(mipDown, desc, FilterMode.Bilinear);
 					cmd.GetTemporaryRT(mipUp, desc, FilterMode.Bilinear);
 

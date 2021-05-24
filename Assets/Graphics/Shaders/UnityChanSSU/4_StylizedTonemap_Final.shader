@@ -1,11 +1,9 @@
 Shader "MyRP/UnityChanSSU/4_StylizedTonemapFinal"
 {
-	Properties
-	{
-	}
 	HLSLINCLUDE
-	#include "4_PostProcessCommon_Final.hlsl"
+		#include "4_PostProcessCommon_Final.hlsl"
 	ENDHLSL
+	
 	SubShader
 	{
 		Cull Off
@@ -18,13 +16,11 @@ Shader "MyRP/UnityChanSSU/4_StylizedTonemapFinal"
 			Name "StylizedTonemapFinal"
 
 			HLSLPROGRAM
-			#pragma vertex vert
+			#pragma vertex VertDefault
 			#pragma fragment frag
 
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 
-			TEXTURE2D(_SrcTex);
-			SAMPLER(sampler_SrcTex);
 			float _Exposure;
 			float _Saturation;
 			float _Contrast;
@@ -67,11 +63,11 @@ Shader "MyRP/UnityChanSSU/4_StylizedTonemapFinal"
 			Name "Blit"
 
 			HLSLPROGRAM
-			#pragma vertex vert
+			#pragma vertex VertDefault
 			#pragma fragment frag
 
-			TEXTURE2D(_SrcTex);
 			SAMPLER(sampler_Point_Clamp);
+
 
 			half4 frag(v2f IN):SV_Target
 			{
