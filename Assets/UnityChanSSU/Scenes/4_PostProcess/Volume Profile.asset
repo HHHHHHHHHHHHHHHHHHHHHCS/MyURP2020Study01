@@ -64,7 +64,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97beda1ee323a3b45885f8791afb2fdb, type: 3}
   m_Name: StylizedTonemapFinalPostProcess
   m_EditorClassIdentifier: 
-  active: 0
+  active: 1
   m_AdvancedMode: 0
   enableEffect:
     m_OverrideState: 1

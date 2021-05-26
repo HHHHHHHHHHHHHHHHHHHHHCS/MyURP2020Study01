@@ -20,7 +20,7 @@ namespace Graphics.Scripts.UnityChanSSU
 			    stylizedTonemapFinalMaterial.shader != stylizedTonemapFinalShader)
 			{
 				DestroyImmediate(stylizedTonemapFinalMaterial);
-				// stylizedTonemapFinalMaterial = null;
+				stylizedTonemapFinalMaterial = null;
 			}
 #endif
 

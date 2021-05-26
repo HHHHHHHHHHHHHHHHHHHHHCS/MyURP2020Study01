@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f5fc84b66e15dc4c98582ef97ac529d, type: 3}
   m_Name: StylizedTonemapFinalFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   stylizedTonemapFinalShader: {fileID: 4800000, guid: aa13121dfccafcc4ab4b62a842c9ea06, type: 3}
 --- !u!114 &-3908125644241047683
 MonoBehaviour:

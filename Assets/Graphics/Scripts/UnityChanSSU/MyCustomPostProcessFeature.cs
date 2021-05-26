@@ -144,6 +144,7 @@ namespace Graphics.Scripts.UnityChanSSU
 		protected override void Dispose(bool disposing)
 		{
 			shaders?.DestroyMaterials();
+			myCustomPostProcessPass?.OnDestroy();
 		}
 
 

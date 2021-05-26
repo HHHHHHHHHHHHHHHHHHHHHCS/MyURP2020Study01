@@ -1,9 +1,11 @@
 using System;
+using System.CodeDom;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using Object = UnityEngine.Object;
 
 namespace Graphics.Scripts.UnityChanSSU
 {
@@ -11,19 +13,12 @@ namespace Graphics.Scripts.UnityChanSSU
 	{
 		private const string k_tag = "MyCustomPostProcess";
 
-		private const string k_bloomTag = "MyBloom";
-		private const string k_uberTag = "MyUber";
-		private const string k_stylizedTonemapTag = "StylizedTonemap";
 		private const string k_finalTag = "MyFianl";
 
-		private static readonly RenderTargetIdentifier cameraColorTex_RTI =
-			new RenderTargetIdentifier("_CameraColorTexture");
 
 		private MyCustomPostProcessShaders shaders;
 
-		private ProfilingSampler bloomProfilingSampler;
-		private ProfilingSampler uberProfilingSampler;
-		private ProfilingSampler stylizedTonemapProfilingSampler;
+
 		private ProfilingSampler finalProfilingSampler;
 
 		private GraphicsFormat defaultHDRFormat;
@@ -39,9 +34,6 @@ namespace Graphics.Scripts.UnityChanSSU
 			profilingSampler = new ProfilingSampler(k_tag);
 			shaders = _shaders;
 
-			bloomProfilingSampler = new ProfilingSampler(k_bloomTag);
-			uberProfilingSampler = new ProfilingSampler(k_uberTag);
-			stylizedTonemapProfilingSampler = new ProfilingSampler(k_stylizedTonemapTag);
 			finalProfilingSampler = new ProfilingSampler(k_finalTag);
 
 			// Texture format pre-lookup
@@ -58,6 +50,8 @@ namespace Graphics.Scripts.UnityChanSSU
 			}
 
 			InitBloom();
+			InitUber();
+			InitStylizedTonemapFinal();
 		}
 
 		public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -67,6 +61,16 @@ namespace Graphics.Scripts.UnityChanSSU
 			height = cameraTextureDescriptor.height;
 		}
 
+		public override void OnCameraCleanup(CommandBuffer cmd)
+		{
+			ReleaseBloomTex(cmd);
+			ReleaseTempRT(cmd);
+		}
+
+		public void OnDestroy()
+		{
+			DestroyChromaticAberration();
+		}
 
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
@@ -77,11 +81,67 @@ namespace Graphics.Scripts.UnityChanSSU
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
+				SetupTempRT();
+
 				var stack = VolumeManager.instance.stack;
+
+				bool enableUber = false;
+
+
 				var bloomSettings = stack.GetComponent<MyBloomPostProcess>();
 				if (bloomSettings != null && bloomSettings.IsActive())
 				{
+					enableUber = true;
 					DoBloom(context, cmd, bloomSettings);
+				}
+				else
+				{
+					DisableBloom();
+				}
+
+				var myVignetteSettings = stack.GetComponent<MyVignettePostProcess>();
+				if (myVignetteSettings != null && myVignetteSettings.IsActive())
+				{
+					enableUber = true;
+					DoVignette(context, cmd, myVignetteSettings);
+				}
+				else
+				{
+					DisableVignette();
+				}
+
+				var myChromaticAberrationSettings = stack.GetComponent<MyChromaticAberrationPostProcess>();
+				if (myChromaticAberrationSettings != null && myChromaticAberrationSettings.IsActive())
+				{
+					enableUber = true;
+					DoChromaticAberration(context, cmd, myChromaticAberrationSettings);
+				}
+				else
+				{
+					DisableChromaticAberration();
+				}
+
+
+				var stylizedTonemapSettings = stack.GetComponent<StylizedTonemapFinalPostProcess>();
+				bool haveStylized = stylizedTonemapSettings != null && bloomSettings.IsActive();
+				
+				bool isTemp = haveStylized;
+
+				if (enableUber)
+				{
+					DoUber(context, cmd, isTemp);
+				}
+
+				if (haveStylized)
+				{
+					DoStylizedTonemapFinal(context, cmd, stylizedTonemapSettings);
+				}
+				
+				//msaa
+				
+				if (enableUber)
+				{
+					DoUber(context, cmd, isTemp);
 				}
 			}
 
@@ -89,10 +149,79 @@ namespace Graphics.Scripts.UnityChanSSU
 			CommandBufferPool.Release(cmd);
 		}
 
+
 		#region HelpUtils
+
+		private static readonly RenderTargetIdentifier cameraColorTex_RTI =
+			new RenderTargetIdentifier("_CameraColorTexture");
 
 		private static readonly int SrcTex_ID = Shader.PropertyToID("_SrcTex");
 
+		private static readonly int TempRT0_ID = Shader.PropertyToID("_TempRT0");
+
+		private static readonly int TempRT1_ID = Shader.PropertyToID("_TempRT1");
+
+		private static readonly RenderTargetIdentifier TempRT0_RTI = new RenderTargetIdentifier(TempRT0_ID);
+
+		private static readonly RenderTargetIdentifier TempRT1_RTI = new RenderTargetIdentifier(TempRT1_ID);
+
+		private int src, dest;
+
+		private void SetupTempRT()
+		{
+			src = -1;
+			dest = -1;
+		}
+
+		private void ReleaseTempRT(CommandBuffer cmd)
+		{
+			if (src != -1)
+			{
+				cmd.ReleaseTemporaryRT(src);
+			}
+
+			if (dest != -1)
+			{
+				cmd.ReleaseTemporaryRT(dest);
+			}
+		}
+
+		private RenderTargetIdentifier GetSrc(CommandBuffer cmd)
+		{
+			if (src == -1)
+			{
+				return cameraColorTex_RTI;
+			}
+
+			return src == TempRT0_ID ? TempRT0_RTI : TempRT1_RTI;
+		}
+
+		private RenderTargetIdentifier GetDest(CommandBuffer cmd)
+		{
+			// return BuiltinRenderTextureType.CameraTarget;
+			if (dest == -1)
+			{
+				var desc = GetRenderDescriptor(width, height, defaultHDRFormat);
+
+				if (src == TempRT1_ID || src == -1)
+				{
+					cmd.GetTemporaryRT(TempRT0_ID, desc);
+					dest = TempRT0_ID;
+				}
+				else if (src == TempRT0_ID)
+				{
+					cmd.GetTemporaryRT(TempRT1_ID, desc);
+					dest = TempRT1_ID;
+				}
+			}
+
+			return dest == TempRT0_ID ? TempRT0_RTI : TempRT1_RTI;
+		}
+
+		private void SwapRT()
+		{
+			CoreUtils.Swap(ref src, ref dest);
+		}
 
 		private RenderTextureDescriptor GetRenderDescriptor(int _width, int _height, GraphicsFormat _format)
 		{
@@ -105,12 +234,18 @@ namespace Graphics.Scripts.UnityChanSSU
 			return desc;
 		}
 
+		private static void DrawFullScreen(CommandBuffer cmd, RenderTargetIdentifier dest,
+			Material mat, int pass = 0)
+		{
+			cmd.SetRenderTarget(dest, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+			CoreUtils.DrawFullScreen(cmd, mat, null, pass);
+		}
+
 		private static void DrawFullScreen(CommandBuffer cmd, RenderTargetIdentifier src, RenderTargetIdentifier dest,
 			Material mat, int pass)
 		{
 			cmd.SetGlobalTexture(SrcTex_ID, src);
-			cmd.SetRenderTarget(dest, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
-			CoreUtils.DrawFullScreen(cmd, mat, null, pass);
+			DrawFullScreen(cmd, dest, mat, pass);
 		}
 
 		//2^x
@@ -142,11 +277,12 @@ namespace Graphics.Scripts.UnityChanSSU
 			public RenderTargetIdentifier up_rti;
 		}
 
+		private const string k_bloomTag = "MyBloom";
+
 		private const int k_MaxPyramidSize = 16; // Just to make sure we handle 64k screens... Future-proof!
 
 		private const string k_BLOOM_LOW = "BLOOM_LOW";
 		private const string k_BLOOM = "BLOOM";
-
 
 		private static readonly int SampleScale_ID = Shader.PropertyToID("_SampleScale");
 		private static readonly int Threshold_ID = Shader.PropertyToID("_Threshold");
@@ -158,6 +294,8 @@ namespace Graphics.Scripts.UnityChanSSU
 		private static readonly int Bloom_Color_ID = Shader.PropertyToID("_Bloom_Color");
 		private static readonly int Bloom_DirtTex_ID = Shader.PropertyToID("_Bloom_DirtTex");
 
+		private ProfilingSampler bloomProfilingSampler;
+
 		private int bloomBufferTex_ID;
 
 		private Level[] pyramid;
@@ -165,6 +303,8 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		public void InitBloom()
 		{
+			bloomProfilingSampler = new ProfilingSampler(k_bloomTag);
+
 			pyramid = new Level[k_MaxPyramidSize];
 
 			for (int i = 0; i < k_MaxPyramidSize; i++)
@@ -195,7 +335,6 @@ namespace Graphics.Scripts.UnityChanSSU
 			{
 				//我们这套是没有autoExposureTexture的  原来的PPSV2是有的
 				//但是默认的图片是white  所以直接忽略了
-				//我们不支持xr
 
 				// Negative anamorphic ratio values distort vertically - positive is horizontal
 				float ratio = Mathf.Clamp(settings.anamorphicRatio.value, -1, 1);
@@ -230,7 +369,7 @@ namespace Graphics.Scripts.UnityChanSSU
 				int qualityOffset = settings.fastMode.value ? 1 : 0;
 
 				// Downsample
-				var lastDown = cameraColorTex_RTI;
+				var lastDown = GetSrc(cmd);
 				for (int i = 0; i < iterations; i++)
 				{
 					int mipDown = pyramid[i].down_id;
@@ -323,6 +462,17 @@ namespace Graphics.Scripts.UnityChanSSU
 			cmd.Clear();
 		}
 
+		private void DisableBloom()
+		{
+			var uberMat = shaders.UberMaterial;
+
+			if (uberMat)
+			{
+				uberMat.DisableKeyword(k_BLOOM_LOW);
+				uberMat.DisableKeyword(k_BLOOM);
+			}
+		}
+
 		private void ReleaseBloomTex(CommandBuffer cmd)
 		{
 			//-1 0  基本都是unity target rt 而不是 我们自己getTemp的
@@ -331,6 +481,194 @@ namespace Graphics.Scripts.UnityChanSSU
 				cmd.ReleaseTemporaryRT(bloomBufferTex_ID);
 				bloomBufferTex_ID = 0;
 			}
+		}
+
+		#endregion
+
+		#region MyVignette
+
+		private const string k_VIGNETTE = "VIGNETTE";
+
+		private static readonly int VignetteColor_ID = Shader.PropertyToID("_Vignette_Color");
+		private static readonly int VignetteCenter_ID = Shader.PropertyToID("_Vignette_Center");
+		private static readonly int VignetteSettings_ID = Shader.PropertyToID("_Vignette_Settings");
+		private static readonly int VignetteMask_ID = Shader.PropertyToID("_Vignette_Mask");
+		private static readonly int VignetteOpacity_ID = Shader.PropertyToID("_Vignette_Opacity");
+		private static readonly int VignetteMode_ID = Shader.PropertyToID("_Vignette_Mode");
+
+		private void DoVignette(ScriptableRenderContext context, CommandBuffer cmd,
+			MyVignettePostProcess settings)
+		{
+			var uberMat = shaders.UberMaterial;
+
+			Assert.IsNotNull(uberMat);
+
+			uberMat.EnableKeyword(k_VIGNETTE);
+
+			//因为这里是单纯的材质设置  所以不需要怎么ProfilingScope
+			uberMat.SetColor(VignetteColor_ID, settings.color.value);
+
+			if (settings.mode.value == VignetteMode.Classic)
+			{
+				uberMat.SetFloat(VignetteMode_ID, 0f);
+				uberMat.SetVector(VignetteCenter_ID, settings.center.value);
+				float roundness = (1f - settings.roundness.value) * 6f + settings.roundness.value;
+				uberMat.SetVector(VignetteSettings_ID,
+					new Vector4(settings.intensity.value * 3f, settings.smoothness.value * 5f, roundness,
+						settings.rounded.value ? 1f : 0f));
+			}
+			else // Masked
+			{
+				uberMat.SetFloat(VignetteMode_ID, 1f);
+				uberMat.SetTexture(VignetteMask_ID, settings.mask.value);
+				uberMat.SetFloat(VignetteOpacity_ID, Mathf.Clamp01(settings.opacity.value));
+			}
+		}
+
+		private void DisableVignette()
+		{
+			var uberMat = shaders.UberMaterial;
+
+			if (uberMat)
+			{
+				uberMat.DisableKeyword(k_VIGNETTE);
+			}
+		}
+
+		#endregion
+
+		#region MyChromaticAberration
+
+		private const string k_CHROMATIC_ABERRATION_LOW = "CHROMATIC_ABERRATION_LOW";
+		private const string k_CHROMATIC_ABERRATION = "CHROMATIC_ABERRATION";
+
+		private static readonly int ChromaticAberrationAmount_ID = Shader.PropertyToID("_ChromaticAberration_Amount");
+
+		private static readonly int ChromaticAberrationSpectralLut_ID =
+			Shader.PropertyToID("_ChromaticAberration_SpectralLut");
+
+		private Texture2D internalSpectralLut;
+
+		private void DoChromaticAberration(ScriptableRenderContext context, CommandBuffer cmd,
+			MyChromaticAberrationPostProcess settings)
+		{
+			var uberMat = shaders.UberMaterial;
+
+			Assert.IsNotNull(uberMat);
+
+			var spectralLut = settings.spectralLut.value;
+
+			if (spectralLut == null)
+			{
+				if (internalSpectralLut == null)
+				{
+					internalSpectralLut = new Texture2D(3, 1, TextureFormat.RGB24, false)
+					{
+						name = "Chromatic Aberration Spectrum Lookup",
+						filterMode = FilterMode.Bilinear,
+						wrapMode = TextureWrapMode.Clamp,
+						anisoLevel = 0,
+						hideFlags = HideFlags.DontSave
+					};
+
+					internalSpectralLut.SetPixels(new[]
+					{
+						new Color(1f, 0f, 0f),
+						new Color(0f, 1f, 0f),
+						new Color(0f, 0f, 1f)
+					});
+
+					internalSpectralLut.Apply();
+				}
+
+				spectralLut = internalSpectralLut;
+			}
+
+			bool fastMode = settings.fastMode.value;
+
+			uberMat.EnableKeyword(fastMode
+				? k_CHROMATIC_ABERRATION_LOW
+				: k_CHROMATIC_ABERRATION);
+
+			uberMat.SetFloat(ChromaticAberrationAmount_ID, settings.intensity.value * 0.05f);
+			uberMat.SetTexture(ChromaticAberrationSpectralLut_ID, spectralLut);
+		}
+
+		private void DisableChromaticAberration()
+		{
+			var uberMat = shaders.UberMaterial;
+
+			if (uberMat)
+			{
+				uberMat.DisableKeyword(k_CHROMATIC_ABERRATION_LOW);
+				uberMat.DisableKeyword(k_CHROMATIC_ABERRATION);
+			}
+		}
+
+		private void DestroyChromaticAberration()
+		{
+			if (internalSpectralLut != null)
+			{
+				Object.DestroyImmediate(internalSpectralLut);
+				internalSpectralLut = null;
+			}
+		}
+
+		#endregion
+
+		#region MyUber
+
+		private const string k_uberTag = "MyUber";
+
+		private ProfilingSampler uberProfilingSampler;
+
+		private void InitUber()
+		{
+			uberProfilingSampler = new ProfilingSampler(k_uberTag);
+		}
+
+		private void DoUber(ScriptableRenderContext context, CommandBuffer cmd, bool isTemp)
+		{
+			var uberMat = shaders.UberMaterial;
+
+			Assert.IsNotNull(uberMat);
+
+			using (new ProfilingScope(cmd, uberProfilingSampler))
+			{
+				DrawFullScreen(cmd, GetSrc(cmd), isTemp ? GetDest(cmd) : cameraColorTex_RTI, uberMat, 0);
+			}
+
+			context.ExecuteCommandBuffer(cmd);
+			cmd.Clear();
+		}
+
+		#endregion
+
+		#region StylizedTonemapFinal
+
+		private const string k_stylizedTonemapTag = "StylizedTonemap";
+
+		private ProfilingSampler stylizedTonemapProfilingSampler;
+
+		private void InitStylizedTonemapFinal()
+		{
+			stylizedTonemapProfilingSampler = new ProfilingSampler(k_stylizedTonemapTag);
+		}
+
+
+		private void DoStylizedTonemapFinal(ScriptableRenderContext context, CommandBuffer cmd,
+			StylizedTonemapFinalPostProcess settings)
+		{
+			var stylizedTonemapMat = shaders.StylizedTonemapMaterial;
+
+			Assert.IsNotNull(stylizedTonemapMat);
+
+			using (new ProfilingScope(cmd, stylizedTonemapProfilingSampler))
+			{
+			}
+
+			context.ExecuteCommandBuffer(cmd);
+			cmd.Clear();
 		}
 
 		#endregion

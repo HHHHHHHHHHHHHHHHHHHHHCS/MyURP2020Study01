@@ -1,4 +1,4 @@
-Shader "MyRP/UnityChanSSU/4_MyUber_Final"
+Shader "MyRP/UnityChanSSU/4_MyBlit_Final"
 {
 	HLSLINCLUDE
 		#include "4_PostProcessCommon_Final.hlsl"
@@ -23,7 +23,7 @@ Shader "MyRP/UnityChanSSU/4_MyUber_Final"
 
 			half4 frag(v2f IN):SV_Target
 			{
-				return 0.5*SAMPLE_TEXTURE2D(_SrcTex, sampler_Point_Clamp, IN.uv);
+				return SAMPLE_TEXTURE2D(_SrcTex, sampler_Point_Clamp, IN.uv);
 			}
 			ENDHLSL
 		}
