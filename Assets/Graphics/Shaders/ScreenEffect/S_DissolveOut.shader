@@ -78,9 +78,9 @@
 
 				//Distort
 				//-----------
-				float2 DistortUV = (uv - 0.5) / _DistortCtrl + 0.5;
-				half4 DistortCol = SAMPLE_TEXTURE2D(_DistortTex, s_linear_clamp_sampler, DistortUV);
-				DistortUV = (DistortCol.rg - 0.5) * ctrl * 0.04;
+				float2 distortUV = (uv - 0.5) / _DistortCtrl + 0.5;
+				half2 distortCol = SAMPLE_TEXTURE2D(_DistortTex, s_linear_clamp_sampler, distortUV).rg;
+				distortUV = (distortCol - 0.5) * ctrl * 0.04;
 
 
 				//mask
@@ -91,7 +91,7 @@
 				float maskScale = lerp(maskA, maskB, maskC);
 
 				float2 maskUV = (uv - 0.5) / maskScale + 0.5;
-				half mask = SAMPLE_TEXTURE2D(_MaskTex, s_linear_clamp_sampler, DistortUV + maskUV).r;
+				half mask = SAMPLE_TEXTURE2D(_MaskTex, s_linear_clamp_sampler, distortUV + maskUV).r;
 
 				//dissolve
 				//-----------
@@ -101,7 +101,7 @@
 				float dissolveScale = lerp(dissolveA, dissolveB, dissolveC);
 
 				float2 dissolveUV = (uv - 0.5) / dissolveScale + 0.5;
-				half dissolve = SAMPLE_TEXTURE2D(_DissolveTex, s_linear_clamp_sampler, DistortUV + dissolveUV).r;
+				half dissolve = SAMPLE_TEXTURE2D(_DissolveTex, s_linear_clamp_sampler, distortUV + dissolveUV).r;
 
 				//backTex
 				//-----------
