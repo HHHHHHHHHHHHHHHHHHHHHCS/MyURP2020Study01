@@ -13,13 +13,7 @@ namespace Graphics.Scripts.UnityChanSSU
 	{
 		private const string k_tag = "MyCustomPostProcess";
 
-		private const string k_finalTag = "MyFianl";
-
-
 		private MyCustomPostProcessShaders shaders;
-
-
-		private ProfilingSampler finalProfilingSampler;
 
 		private GraphicsFormat defaultHDRFormat;
 
@@ -34,7 +28,6 @@ namespace Graphics.Scripts.UnityChanSSU
 			profilingSampler = new ProfilingSampler(k_tag);
 			shaders = _shaders;
 
-			finalProfilingSampler = new ProfilingSampler(k_finalTag);
 
 			// Texture format pre-lookup
 			if (SystemInfo.IsFormatSupported(GraphicsFormat.B10G11R11_UFloatPack32,
@@ -52,6 +45,8 @@ namespace Graphics.Scripts.UnityChanSSU
 			InitBloom();
 			InitUber();
 			InitStylizedTonemapFinal();
+			InitSMAA();
+			InitFinal();
 		}
 
 		public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
@@ -121,27 +116,43 @@ namespace Graphics.Scripts.UnityChanSSU
 					DisableChromaticAberration();
 				}
 
-
 				var stylizedTonemapSettings = stack.GetComponent<StylizedTonemapFinalPostProcess>();
-				bool haveStylized = stylizedTonemapSettings != null && bloomSettings.IsActive();
-				
-				bool isTemp = haveStylized;
+				bool haveStylized = stylizedTonemapSettings != null && stylizedTonemapSettings.IsActive();
+
+				bool haveMSAA =
+					renderingData.cameraData.antialiasing == AntialiasingMode.SubpixelMorphologicalAntiAliasing &&
+					SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES2;
+
+				bool uberIsTemp = haveStylized || haveMSAA;
+
+				if (SrcIsFinal(cmd))
+				{
+					uberIsTemp = true;
+				}
+
 
 				if (enableUber)
 				{
-					DoUber(context, cmd, isTemp);
+					DoUber(context, cmd, uberIsTemp);
+					SwapRT();
 				}
+
 
 				if (haveStylized)
 				{
 					DoStylizedTonemapFinal(context, cmd, stylizedTonemapSettings);
 				}
-				
-				//msaa
-				
-				if (enableUber)
+
+
+				// SM Anti-aliasing
+				if (haveMSAA)
 				{
-					DoUber(context, cmd, isTemp);
+					DoSMAA(context, cmd);
+				}
+
+				if (uberIsTemp)
+				{
+					DoFinal(context, cmd);
 				}
 			}
 
@@ -166,6 +177,7 @@ namespace Graphics.Scripts.UnityChanSSU
 		private static readonly RenderTargetIdentifier TempRT1_RTI = new RenderTargetIdentifier(TempRT1_ID);
 
 		private int src, dest;
+
 
 		private void SetupTempRT()
 		{
@@ -218,10 +230,14 @@ namespace Graphics.Scripts.UnityChanSSU
 			return dest == TempRT0_ID ? TempRT0_RTI : TempRT1_RTI;
 		}
 
+
 		private void SwapRT()
 		{
 			CoreUtils.Swap(ref src, ref dest);
 		}
+
+		private bool SrcIsFinal(CommandBuffer cmd) => GetSrc(cmd) == cameraColorTex_RTI;
+
 
 		private RenderTextureDescriptor GetRenderDescriptor(int _width, int _height, GraphicsFormat _format)
 		{
@@ -627,7 +643,7 @@ namespace Graphics.Scripts.UnityChanSSU
 			uberProfilingSampler = new ProfilingSampler(k_uberTag);
 		}
 
-		private void DoUber(ScriptableRenderContext context, CommandBuffer cmd, bool isTemp)
+		private void DoUber(ScriptableRenderContext context, CommandBuffer cmd, bool uberIsTemp)
 		{
 			var uberMat = shaders.UberMaterial;
 
@@ -635,7 +651,7 @@ namespace Graphics.Scripts.UnityChanSSU
 
 			using (new ProfilingScope(cmd, uberProfilingSampler))
 			{
-				DrawFullScreen(cmd, GetSrc(cmd), isTemp ? GetDest(cmd) : cameraColorTex_RTI, uberMat, 0);
+				DrawFullScreen(cmd, GetSrc(cmd), uberIsTemp ? GetDest(cmd) : cameraColorTex_RTI, uberMat, 0);
 			}
 
 			context.ExecuteCommandBuffer(cmd);
@@ -665,6 +681,62 @@ namespace Graphics.Scripts.UnityChanSSU
 
 			using (new ProfilingScope(cmd, stylizedTonemapProfilingSampler))
 			{
+			}
+
+			context.ExecuteCommandBuffer(cmd);
+			cmd.Clear();
+		}
+
+		#endregion
+
+		#region MySMAA
+
+		private const string k_smaaTag = "MySMAA";
+
+		private ProfilingSampler smaaProfilingSampler;
+
+		private void InitSMAA()
+		{
+			smaaProfilingSampler = new ProfilingSampler(k_smaaTag);
+		}
+
+		private void DoSMAA(ScriptableRenderContext context, CommandBuffer cmd)
+		{
+			var smaaMat = shaders.SMAAMaterial;
+
+			Assert.IsNotNull(smaaMat);
+
+			using (new ProfilingScope(cmd, finalProfilingSampler))
+			{
+				// DrawFullScreen(cmd, GetSrc(cmd), cameraColorTex_RTI, smaaMat, 0);
+			}
+
+			context.ExecuteCommandBuffer(cmd);
+			cmd.Clear();
+		}
+
+		#endregion
+
+		#region MyFinal
+
+		private const string k_finalTag = "MyFianl";
+
+		private ProfilingSampler finalProfilingSampler;
+
+		private void InitFinal()
+		{
+			finalProfilingSampler = new ProfilingSampler(k_finalTag);
+		}
+
+		private void DoFinal(ScriptableRenderContext context, CommandBuffer cmd)
+		{
+			var finalMat = shaders.FinalMaterial;
+
+			Assert.IsNotNull(finalMat);
+
+			using (new ProfilingScope(cmd, finalProfilingSampler))
+			{
+				DrawFullScreen(cmd, GetSrc(cmd), cameraColorTex_RTI, finalMat, 0);
 			}
 
 			context.ExecuteCommandBuffer(cmd);

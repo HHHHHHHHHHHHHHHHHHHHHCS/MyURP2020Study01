@@ -1,4 +1,4 @@
-Shader "MyRP/UnityChanSSU/4_MyFinal_Final"
+Shader "MyRP/UnityChanSSU/4_MySMAA_Final"
 {
 	HLSLINCLUDE
 		#include "4_PostProcessCommon_Final.hlsl"
@@ -12,7 +12,7 @@ Shader "MyRP/UnityChanSSU/4_MyFinal_Final"
 
 		Pass
 		{
-			Name "MyFinal"
+			Name "MySMAA"
 
 			HLSLPROGRAM
 			#pragma vertex VertDefault
