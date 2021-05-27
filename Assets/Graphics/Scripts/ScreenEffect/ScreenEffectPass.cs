@@ -16,8 +16,9 @@ namespace Graphics.Scripts.ScreenEffect
 		private static readonly RenderTargetIdentifier cameraColorTex_RTI =
 			new RenderTargetIdentifier("_CameraColorTexture");
 
-		private int width, height;
-		private RenderTextureFormat colorFormat;
+		// private int width, height;
+		// private RenderTextureFormat colorFormat;
+		private RenderTextureDescriptor desc;
 
 		public void Setup(ScreenEffectPostProcess _settings)
 		{
@@ -27,9 +28,12 @@ namespace Graphics.Scripts.ScreenEffect
 
 		public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
 		{
-			width = cameraTextureDescriptor.width;
-			height = cameraTextureDescriptor.height;
-			colorFormat = cameraTextureDescriptor.colorFormat;
+			// width = cameraTextureDescriptor.width;
+			// height = cameraTextureDescriptor.height;
+			// colorFormat = cameraTextureDescriptor.colorFormat;
+			desc = cameraTextureDescriptor;
+			desc.depthBufferBits = 0;
+			desc.msaaSamples = 1;
 		}
 
 		public override void FrameCleanup(CommandBuffer cmd)
@@ -46,7 +50,7 @@ namespace Graphics.Scripts.ScreenEffect
 
 				if (settings.inputMainTex.value)
 				{
-					cmd.GetTemporaryRT(tempRT_ID, width, height, 0, FilterMode.Point, colorFormat);
+					cmd.GetTemporaryRT(tempRT_ID, desc);//width, height, 0, FilterMode.Point, colorFormat);
 					
 					cmd.Blit(cameraColorTex_RTI, tempRT_RTI);
 					

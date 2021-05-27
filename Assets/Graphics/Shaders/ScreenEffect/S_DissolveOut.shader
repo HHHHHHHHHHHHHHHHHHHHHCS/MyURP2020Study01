@@ -75,10 +75,11 @@
 			{
 				float2 uv = IN.uv;
 				float ctrl = _ProgressCtrl;
+				float distortCtrl = _ProgressCtrl*3+0.001;//_DistortCtrl
 
 				//Distort
 				//-----------
-				float2 distortUV = (uv - 0.5) / _DistortCtrl + 0.5;
+				float2 distortUV = (uv - 0.5) / distortCtrl + 0.5;
 				half2 distortCol = SAMPLE_TEXTURE2D(_DistortTex, s_linear_clamp_sampler, distortUV).rg;
 				distortUV = (distortCol - 0.5) * ctrl * 0.04;
 

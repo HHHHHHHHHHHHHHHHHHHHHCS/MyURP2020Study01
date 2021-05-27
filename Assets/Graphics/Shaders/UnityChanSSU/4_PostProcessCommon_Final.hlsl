@@ -21,6 +21,9 @@ TEXTURE2D(_SrcTex);
 SAMPLER(sampler_SrcTex);
 float4 _SrcTex_TexelSize;
 
+SAMPLER(sampler_Linear_Clamp);
+SAMPLER(sampler_Point_Clamp);
+
 v2f VertDefault(a2v IN)
 {
     v2f o;

@@ -8,7 +8,6 @@ Shader "MyRP/UnityChanSSU/4_MyBloom_Final"
 	#include "4_PostProcessCommon_Final.hlsl"
 
 	TEXTURE2D(_BloomTex);
-	SAMPLER(sampler_BloomTex);
 	//我们这里省略了 _AutoExposureTex
 
 	float _SampleScale;
@@ -203,7 +202,7 @@ Shader "MyRP/UnityChanSSU/4_MyBloom_Final"
 
 	half4 Combine(half4 bloom, float2 uv)
 	{
-		half4 color = SAMPLE_TEXTURE2D(_BloomTex, sampler_BloomTex, uv);
+		half4 color = SAMPLE_TEXTURE2D(_BloomTex, sampler_Linear_Clamp, uv);
 		return bloom + color;
 	}
 

@@ -22,9 +22,6 @@ Shader "MyRP/UnityChanSSU/4_MyUber_Final"
 			#pragma multi_compile _ BLOOM BLOOM_LOW
 			#pragma multi_compile _ VIGNETTE
 
-			SAMPLER(sampler_Linear_Clamp);
-			SAMPLER(sampler_Point_Clamp);
-
 			// Chromatic aberration
 			//-----------------------
 			#if CHROMATIC_ABERRATION || CHROMATIC_ABERRATION_LOW
