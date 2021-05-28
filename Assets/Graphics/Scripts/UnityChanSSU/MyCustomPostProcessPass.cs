@@ -12,10 +12,11 @@ namespace Graphics.Scripts.UnityChanSSU
 	public class MyCustomPostProcessPass : ScriptableRenderPass
 	{
 		#region RenderPipeline
-		
+
 		private const string k_tag = "MyCustomPostProcess";
 
 		private MyCustomPostProcessShaders shaders;
+		private Texture2D[] ditherBlueNoises;
 
 		private GraphicsFormat defaultHDRFormat;
 
@@ -25,11 +26,12 @@ namespace Graphics.Scripts.UnityChanSSU
 		private bool isXR;
 
 
-		public void Init(MyCustomPostProcessShaders _shaders)
+		public void Init(MyCustomPostProcessShaders _shaders, Texture2D[] _ditherBlueNoises)
 		{
 			profilingSampler = new ProfilingSampler(k_tag);
-			shaders = _shaders;
 
+			shaders = _shaders;
+			ditherBlueNoises = _ditherBlueNoises;
 
 			// Texture format pre-lookup
 			if (SystemInfo.IsFormatSupported(GraphicsFormat.B10G11R11_UFloatPack32,
@@ -51,11 +53,15 @@ namespace Graphics.Scripts.UnityChanSSU
 			InitFinal();
 		}
 
-		public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
+		public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
 		{
-			srcDesc = cameraTextureDescriptor;
-			width = cameraTextureDescriptor.width;
-			height = cameraTextureDescriptor.height;
+			srcDesc = renderingData.cameraData.cameraTargetDescriptor;
+			width = srcDesc.width;
+			height = srcDesc.height;
+
+			// camera = renderingData.cameraData.camera;
+			isXR = renderingData.cameraData.camera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Mono &&
+			       renderingData.cameraData.camera.stereoTargetEye == StereoTargetEyeMask.Both;
 		}
 
 		public override void OnCameraCleanup(CommandBuffer cmd)
@@ -71,10 +77,6 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
-			// camera = renderingData.cameraData.camera;
-			isXR = renderingData.cameraData.camera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Mono &&
-			       renderingData.cameraData.camera.stereoTargetEye == StereoTargetEyeMask.Both;
-
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
@@ -155,8 +157,12 @@ namespace Graphics.Scripts.UnityChanSSU
 					SwapRT();
 				}
 
+				//TODO:FXAA
+				
+
 				if (uberIsTemp && !SrcIsFinal(cmd))
 				{
+					DoDithering(context, cmd);
 					DoFinal(context, cmd);
 				}
 			}
@@ -673,7 +679,7 @@ namespace Graphics.Scripts.UnityChanSSU
 		private static readonly int Exposure_ID = Shader.PropertyToID("_Exposure");
 		private static readonly int Saturation_ID = Shader.PropertyToID("_Saturation");
 		private static readonly int Contrast_ID = Shader.PropertyToID("_Contrast");
-		
+
 		private ProfilingSampler stylizedTonemapProfilingSampler;
 
 		private void InitStylizedTonemapFinal()
@@ -694,8 +700,8 @@ namespace Graphics.Scripts.UnityChanSSU
 				stylizedTonemapMat.SetFloat(Exposure_ID, settings.exposure.value);
 				stylizedTonemapMat.SetFloat(Saturation_ID, settings.saturation.value);
 				stylizedTonemapMat.SetFloat(Contrast_ID, settings.contrast.value);
-				
-				DrawFullScreen(cmd,GetSrc(cmd),GetDest(cmd),stylizedTonemapMat,0);
+
+				DrawFullScreen(cmd, GetSrc(cmd), GetDest(cmd), stylizedTonemapMat, 0);
 			}
 
 			context.ExecuteCommandBuffer(cmd);
@@ -728,6 +734,45 @@ namespace Graphics.Scripts.UnityChanSSU
 
 			context.ExecuteCommandBuffer(cmd);
 			cmd.Clear();
+		}
+
+		#endregion
+
+		#region Dither
+
+		private static readonly int DitheringTex_ID = Shader.PropertyToID("_DitheringTex");
+		private static readonly int Dithering_Coords_ID = Shader.PropertyToID("_Dithering_Coords");
+
+		private int noiseTextureIndex = 0;
+		private System.Random random = new System.Random(1234);
+
+		private void DoDithering(ScriptableRenderContext context, CommandBuffer cmd)
+		{
+			//主要是为了抖动颜色  用眼睛补颜色   比如8抖10
+			
+			var finalMat = shaders.FinalMaterial;
+
+			Assert.IsNotNull(finalMat);
+
+			Assert.IsTrue(ditherBlueNoises != null && ditherBlueNoises.Length > 0);
+
+			if (++noiseTextureIndex >= ditherBlueNoises.Length)
+			{
+				noiseTextureIndex = 0;
+			}
+
+			float rndOffsetX = (float) random.NextDouble();
+			float rndOffsetY = (float) random.NextDouble();
+
+			var noiseTex = ditherBlueNoises[noiseTextureIndex];
+
+			finalMat.SetTexture(DitheringTex_ID, noiseTex);
+			finalMat.SetVector(Dithering_Coords_ID, new Vector4(
+				(float) width / noiseTex.width,
+				(float) height / noiseTex.height,
+				rndOffsetX,
+				rndOffsetY
+			));
 		}
 
 		#endregion

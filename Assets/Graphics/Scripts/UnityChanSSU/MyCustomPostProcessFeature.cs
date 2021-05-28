@@ -32,7 +32,7 @@ namespace Graphics.Scripts.UnityChanSSU
 				return _blitMaterial;
 			}
 		}
-		
+
 		public Material BloomMaterial
 		{
 			get
@@ -62,7 +62,7 @@ namespace Graphics.Scripts.UnityChanSSU
 				return _stylizedTonemapMaterial;
 			}
 		}
-		
+
 		public Material SMAAMaterial
 		{
 			get
@@ -89,7 +89,7 @@ namespace Graphics.Scripts.UnityChanSSU
 		{
 			DestroyMaterials();
 		}
-		
+
 		private void GetMaterial(ref Material mat, ref Shader shader)
 		{
 			if (mat != null && mat.shader != shader)
@@ -133,6 +133,8 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		public MyCustomPostProcessShaders shaders;
 
+		public Texture2D[] ditherBlueNoises;
+
 		private MyCustomPostProcessPass myCustomPostProcessPass;
 
 		public override void Create()
@@ -146,7 +148,7 @@ namespace Graphics.Scripts.UnityChanSSU
 			{
 				renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing,
 			};
-			myCustomPostProcessPass.Init(shaders);
+			myCustomPostProcessPass.Init(shaders, ditherBlueNoises);
 		}
 
 		protected override void Dispose(bool disposing)

@@ -2,6 +2,7 @@
 #define __4_POST_PROCESS_COMMON_FINAL__
 
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
 #define EPSILON         1.0e-4

@@ -1,9 +1,10 @@
 Shader "MyRP/UnityChanSSU/4_MyFinal_Final"
 {
 	HLSLINCLUDE
-		#include "4_PostProcessCommon_Final.hlsl"
+	#include "4_PostProcessCommon_Final.hlsl"
+	#include "4_Dither_Final.hlsl"
 	ENDHLSL
-	
+
 	SubShader
 	{
 		Cull Off
@@ -20,7 +21,11 @@ Shader "MyRP/UnityChanSSU/4_MyFinal_Final"
 
 			half4 frag(v2f IN):SV_Target
 			{
-				return SAMPLE_TEXTURE2D(_SrcTex, sampler_Point_Clamp, IN.uv);
+				half4 col = SAMPLE_TEXTURE2D(_SrcTex, sampler_Point_Clamp, IN.uv);
+
+				col.rgb = Dither(col.rgb, IN.uv);
+
+				return col;
 			}
 			ENDHLSL
 		}
