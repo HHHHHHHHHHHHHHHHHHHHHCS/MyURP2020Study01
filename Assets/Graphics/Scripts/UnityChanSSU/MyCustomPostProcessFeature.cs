@@ -9,23 +9,30 @@ namespace Graphics.Scripts.UnityChanSSU
 	[System.Serializable]
 	public class MyCustomPostProcessShaders
 	{
+		[SerializeField] private Shader blitShader;
 		[SerializeField] private Shader bloomShader;
 		[SerializeField] private Shader uberShader;
 		[SerializeField] private Shader stylizedTonemapShader;
 		[SerializeField] private Shader smaaShader;
 		[SerializeField] private Shader finalShader;
 
-		// public Shader BloomShader => bloomShader;
-		// public Shader UberShader => uberShader;
-		// public Shader StylizedTonemapShader => stylizedTonemapShader;
-		// public Shader FinalShader => finalShader;
-
+		private Material _blitMaterial;
 		private Material _bloomMaterial;
 		private Material _uberMaterial;
 		private Material _stylizedTonemapMaterial;
 		private Material _smaaMaterial;
 		private Material _finalMaterial;
 
+		public Material BlitMaterial
+		{
+			get
+			{
+				GetMaterial(ref _blitMaterial, ref blitShader);
+
+				return _blitMaterial;
+			}
+		}
+		
 		public Material BloomMaterial
 		{
 			get
@@ -108,6 +115,7 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		public void DestroyMaterials()
 		{
+			SafeDestroyMaterial(ref _blitMaterial);
 			SafeDestroyMaterial(ref _bloomMaterial);
 			SafeDestroyMaterial(ref _uberMaterial);
 			SafeDestroyMaterial(ref _stylizedTonemapMaterial);

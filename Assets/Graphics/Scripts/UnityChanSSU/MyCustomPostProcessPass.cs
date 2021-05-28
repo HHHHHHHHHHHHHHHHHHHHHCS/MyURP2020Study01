@@ -11,13 +11,15 @@ namespace Graphics.Scripts.UnityChanSSU
 {
 	public class MyCustomPostProcessPass : ScriptableRenderPass
 	{
+		#region RenderPipeline
+		
 		private const string k_tag = "MyCustomPostProcess";
 
 		private MyCustomPostProcessShaders shaders;
 
 		private GraphicsFormat defaultHDRFormat;
 
-		private Camera camera;
+		// private Camera camera;
 		private RenderTextureDescriptor srcDesc;
 		private int width, height;
 		private bool isXR;
@@ -69,7 +71,7 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
-			camera = renderingData.cameraData.camera;
+			// camera = renderingData.cameraData.camera;
 			isXR = renderingData.cameraData.camera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Mono &&
 			       renderingData.cameraData.camera.stereoTargetEye == StereoTargetEyeMask.Both;
 
@@ -119,11 +121,12 @@ namespace Graphics.Scripts.UnityChanSSU
 				var stylizedTonemapSettings = stack.GetComponent<StylizedTonemapFinalPostProcess>();
 				bool haveStylized = stylizedTonemapSettings != null && stylizedTonemapSettings.IsActive();
 
-				bool haveMSAA =
+				//这里不写FXAA
+				bool haveSMAA =
 					renderingData.cameraData.antialiasing == AntialiasingMode.SubpixelMorphologicalAntiAliasing &&
 					SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES2;
 
-				bool uberIsTemp = haveStylized || haveMSAA;
+				bool uberIsTemp = haveStylized || haveSMAA;
 
 				if (SrcIsFinal(cmd))
 				{
@@ -141,16 +144,18 @@ namespace Graphics.Scripts.UnityChanSSU
 				if (haveStylized)
 				{
 					DoStylizedTonemapFinal(context, cmd, stylizedTonemapSettings);
+					SwapRT();
 				}
 
 
 				// SM Anti-aliasing
-				if (haveMSAA)
+				if (haveSMAA)
 				{
 					DoSMAA(context, cmd);
+					SwapRT();
 				}
 
-				if (uberIsTemp)
+				if (uberIsTemp && !SrcIsFinal(cmd))
 				{
 					DoFinal(context, cmd);
 				}
@@ -160,6 +165,7 @@ namespace Graphics.Scripts.UnityChanSSU
 			CommandBufferPool.Release(cmd);
 		}
 
+		#endregion
 
 		#region HelpUtils
 
@@ -664,6 +670,10 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		private const string k_stylizedTonemapTag = "StylizedTonemap";
 
+		private static readonly int Exposure_ID = Shader.PropertyToID("_Exposure");
+		private static readonly int Saturation_ID = Shader.PropertyToID("_Saturation");
+		private static readonly int Contrast_ID = Shader.PropertyToID("_Contrast");
+		
 		private ProfilingSampler stylizedTonemapProfilingSampler;
 
 		private void InitStylizedTonemapFinal()
@@ -681,6 +691,11 @@ namespace Graphics.Scripts.UnityChanSSU
 
 			using (new ProfilingScope(cmd, stylizedTonemapProfilingSampler))
 			{
+				stylizedTonemapMat.SetFloat(Exposure_ID, settings.exposure.value);
+				stylizedTonemapMat.SetFloat(Saturation_ID, settings.saturation.value);
+				stylizedTonemapMat.SetFloat(Contrast_ID, settings.contrast.value);
+				
+				DrawFullScreen(cmd,GetSrc(cmd),GetDest(cmd),stylizedTonemapMat,0);
 			}
 
 			context.ExecuteCommandBuffer(cmd);
@@ -706,7 +721,7 @@ namespace Graphics.Scripts.UnityChanSSU
 
 			Assert.IsNotNull(smaaMat);
 
-			using (new ProfilingScope(cmd, finalProfilingSampler))
+			using (new ProfilingScope(cmd, smaaProfilingSampler))
 			{
 				// DrawFullScreen(cmd, GetSrc(cmd), cameraColorTex_RTI, smaaMat, 0);
 			}
