@@ -127,20 +127,32 @@ namespace Graphics.Scripts.UnityChanSSU
 		}
 	}
 
+	[System.Serializable]
+	public class MyCustomPostProcessAssets
+	{
+		//dither
+		public Texture2D[] ditherBlueNoises;
+
+		//smaa
+		public Texture2D smaaLutsArea;
+		public Texture2D smaaLutsSearch;
+	}
+
 	public class MyCustomPostProcessFeature : ScriptableRendererFeature
 	{
 		public bool enableEffect;
 
 		public MyCustomPostProcessShaders shaders;
 
-		public Texture2D[] ditherBlueNoises;
+		public MyCustomPostProcessAssets assets;
 
 		private MyCustomPostProcessPass myCustomPostProcessPass;
 
 		public override void Create()
 		{
-			if (shaders == null)
+			if (shaders == null || assets == null)
 			{
+				myCustomPostProcessPass = null;
 				return;
 			}
 
@@ -148,7 +160,7 @@ namespace Graphics.Scripts.UnityChanSSU
 			{
 				renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing,
 			};
-			myCustomPostProcessPass.Init(shaders, ditherBlueNoises);
+			myCustomPostProcessPass.Init(shaders, assets);
 		}
 
 		protected override void Dispose(bool disposing)
@@ -160,7 +172,7 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
-			if (enableEffect == false || shaders == null || myCustomPostProcessPass == null)
+			if (enableEffect == false || myCustomPostProcessPass == null)
 			{
 				return;
 			}

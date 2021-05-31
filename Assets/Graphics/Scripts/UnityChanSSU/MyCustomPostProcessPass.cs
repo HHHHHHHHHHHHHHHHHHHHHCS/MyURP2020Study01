@@ -16,22 +16,23 @@ namespace Graphics.Scripts.UnityChanSSU
 		private const string k_tag = "MyCustomPostProcess";
 
 		private MyCustomPostProcessShaders shaders;
-		private Texture2D[] ditherBlueNoises;
+		private MyCustomPostProcessAssets assets;
 
 		private GraphicsFormat defaultHDRFormat;
 
 		// private Camera camera;
 		private RenderTextureDescriptor srcDesc;
+		private RenderTextureFormat format;
 		private int width, height;
-		private bool isXR;
+		private bool isXR, allowDynamicResolution;
 
 
-		public void Init(MyCustomPostProcessShaders _shaders, Texture2D[] _ditherBlueNoises)
+		public void Init(MyCustomPostProcessShaders _shaders, MyCustomPostProcessAssets _assets)
 		{
 			profilingSampler = new ProfilingSampler(k_tag);
 
 			shaders = _shaders;
-			ditherBlueNoises = _ditherBlueNoises;
+			assets = _assets;
 
 			// Texture format pre-lookup
 			if (SystemInfo.IsFormatSupported(GraphicsFormat.B10G11R11_UFloatPack32,
@@ -58,6 +59,8 @@ namespace Graphics.Scripts.UnityChanSSU
 			srcDesc = renderingData.cameraData.cameraTargetDescriptor;
 			width = srcDesc.width;
 			height = srcDesc.height;
+			format = srcDesc.colorFormat;
+			allowDynamicResolution = renderingData.cameraData.camera.allowDynamicResolution;
 
 			// camera = renderingData.cameraData.camera;
 			isXR = renderingData.cameraData.camera.stereoActiveEye != Camera.MonoOrStereoscopicEye.Mono &&
@@ -127,7 +130,7 @@ namespace Graphics.Scripts.UnityChanSSU
 				bool haveSMAA =
 					renderingData.cameraData.antialiasing == AntialiasingMode.SubpixelMorphologicalAntiAliasing &&
 					SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES2;
-
+				
 				bool uberIsTemp = haveStylized || haveSMAA;
 
 				if (SrcIsFinal(cmd))
@@ -153,12 +156,13 @@ namespace Graphics.Scripts.UnityChanSSU
 				// SM Anti-aliasing
 				if (haveSMAA)
 				{
+					SetupSMAA(renderingData.cameraData.antialiasingQuality);
 					DoSMAA(context, cmd);
 					SwapRT();
 				}
 
 				//TODO:FXAA
-				
+
 
 				if (uberIsTemp && !SrcIsFinal(cmd))
 				{
@@ -711,25 +715,75 @@ namespace Graphics.Scripts.UnityChanSSU
 		#endregion
 
 		#region MySMAA
+		
+		enum SMAAPass
+		{
+			EdgeDetection = 0,
+			BlendWeights = 3,
+			NeighborhoodBlending = 6
+		}
 
 		private const string k_smaaTag = "MySMAA";
 
+		private static readonly int AreaTex_ID = Shader.PropertyToID("_AreaTex");
+		private static readonly int SearchTex_ID = Shader.PropertyToID("_SearchTex");
+		private static readonly int BlendTex_ID = Shader.PropertyToID("_BlendTex");
+
+
+		private static readonly int SMAA_Flip_ID = Shader.PropertyToID("_SMAA_Flip");
+		private static readonly int SMAA_Flop_ID = Shader.PropertyToID("_SMAA_Flop");
+
+		private static readonly RenderTargetIdentifier SMAA_Flip_RTI = new RenderTargetIdentifier(SMAA_Flip_ID);
+		private static readonly RenderTargetIdentifier SMAA_Flop_RTI = new RenderTargetIdentifier(SMAA_Flop_ID);
+		
 		private ProfilingSampler smaaProfilingSampler;
+		
+		private AntialiasingQuality ssmaaQuality = AntialiasingQuality.High;
+
 
 		private void InitSMAA()
 		{
 			smaaProfilingSampler = new ProfilingSampler(k_smaaTag);
 		}
 
+		private void SetupSMAA(AntialiasingQuality _smaaQuality)
+		{
+			ssmaaQuality = _smaaQuality;
+		}
+		
+
 		private void DoSMAA(ScriptableRenderContext context, CommandBuffer cmd)
 		{
+			//https://zhuanlan.zhihu.com/p/342211163
+			
+			//TODO:有BUG   要用全屏的QUAD   三角形会光栅化不正确
+			
+			//这里没有做VR XR的 不支持跳过
+			
 			var smaaMat = shaders.SMAAMaterial;
 
 			Assert.IsNotNull(smaaMat);
 
 			using (new ProfilingScope(cmd, smaaProfilingSampler))
 			{
-				// DrawFullScreen(cmd, GetSrc(cmd), cameraColorTex_RTI, smaaMat, 0);
+
+				smaaMat.SetTexture(AreaTex_ID, assets.smaaLutsArea);
+				smaaMat.SetTexture(SearchTex_ID, assets.smaaLutsSearch);
+
+				cmd.GetTemporaryRT(SMAA_Flip_ID, width, height, 0, FilterMode.Bilinear, format,
+					RenderTextureReadWrite.Linear, 1, false, RenderTextureMemoryless.None,
+					allowDynamicResolution);
+				cmd.GetTemporaryRT(SMAA_Flop_ID, width, height, 0, FilterMode.Bilinear, format,
+					RenderTextureReadWrite.Linear, 1, false, RenderTextureMemoryless.None,
+					allowDynamicResolution);
+				
+				DrawFullScreen(cmd, GetSrc(cmd), SMAA_Flip_RTI, smaaMat, (int) SMAAPass.EdgeDetection + (int)ssmaaQuality);
+				DrawFullScreen(cmd, SMAA_Flip_RTI, SMAA_Flop_RTI, smaaMat, (int)SMAAPass.BlendWeights + (int)ssmaaQuality);
+				cmd.SetGlobalTexture(BlendTex_ID,SMAA_Flop_RTI);
+				DrawFullScreen(cmd, GetSrc(cmd), GetDest(cmd), smaaMat, (int)SMAAPass.NeighborhoodBlending);
+
+				cmd.ReleaseTemporaryRT(SMAA_Flip_ID);
+				cmd.ReleaseTemporaryRT(SMAA_Flop_ID);
 			}
 
 			context.ExecuteCommandBuffer(cmd);
@@ -749,14 +803,14 @@ namespace Graphics.Scripts.UnityChanSSU
 		private void DoDithering(ScriptableRenderContext context, CommandBuffer cmd)
 		{
 			//主要是为了抖动颜色  用眼睛补颜色   比如8抖10
-			
+
 			var finalMat = shaders.FinalMaterial;
 
 			Assert.IsNotNull(finalMat);
 
-			Assert.IsTrue(ditherBlueNoises != null && ditherBlueNoises.Length > 0);
+			Assert.IsTrue(assets.ditherBlueNoises != null && assets.ditherBlueNoises.Length > 0);
 
-			if (++noiseTextureIndex >= ditherBlueNoises.Length)
+			if (++noiseTextureIndex >= assets.ditherBlueNoises.Length)
 			{
 				noiseTextureIndex = 0;
 			}
@@ -764,7 +818,7 @@ namespace Graphics.Scripts.UnityChanSSU
 			float rndOffsetX = (float) random.NextDouble();
 			float rndOffsetY = (float) random.NextDouble();
 
-			var noiseTex = ditherBlueNoises[noiseTextureIndex];
+			var noiseTex = assets.ditherBlueNoises[noiseTextureIndex];
 
 			finalMat.SetTexture(DitheringTex_ID, noiseTex);
 			finalMat.SetVector(Dithering_Coords_ID, new Vector4(
