@@ -2,7 +2,7 @@ Shader "MyRP/UnityChanSSU/4_MySMAA_Final"
 {
 	HLSLINCLUDE
 	#pragma exclude_renderers d3d11_9x gles
-	#define filePath "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/SubpixelMorphologicalAntialiasingBridge.hlsl"
+	// "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/SubpixelMorphologicalAntialiasingBridge.hlsl"
 	ENDHLSL
 
 	SubShader

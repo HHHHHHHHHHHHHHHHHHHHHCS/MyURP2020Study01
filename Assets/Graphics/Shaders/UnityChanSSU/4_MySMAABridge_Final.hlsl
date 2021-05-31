@@ -13,7 +13,7 @@
 #if UNITY_COLORSPACE_GAMMA
     #define GAMMA_FOR_EDGE_DETECTION (1)
 #else
-    #define GAMMA_FOR_EDGE_DETECTION (1/2.2)
+#define GAMMA_FOR_EDGE_DETECTION (1/2.2)
 #endif
 
 TEXTURE2D(_AreaTex);
@@ -22,7 +22,6 @@ TEXTURE2D(_BlendTex);
 
 
 #include "Packages/com.unity.render-pipelines.universal/Shaders/PostProcessing/SubpixelMorphologicalAntialiasing.hlsl"
-
 
 
 // ----------------------------------------------------------------------------------------
@@ -105,8 +104,9 @@ VaryingsNeighbor VertNeighbor(a2v IN)
     VaryingsNeighbor o;
     o.vertex = GetFullScreenTriangleVertexPosition(IN.vertexID);
     o.texcoord = GetFullScreenTriangleTexCoord(IN.vertexID);
-
+    
     o.offset = mad(SMAA_RT_METRICS.xyxy, float4(1.0, 0.0, 0.0, 1.0), o.texcoord.xyxy);
+
     return o;
 }
 

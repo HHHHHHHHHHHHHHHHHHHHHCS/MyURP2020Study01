@@ -152,7 +152,7 @@ namespace Graphics.Scripts.UnityChanSSU
 					SwapRT();
 				}
 
-
+								
 				// SM Anti-aliasing
 				if (haveSMAA)
 				{
@@ -169,6 +169,7 @@ namespace Graphics.Scripts.UnityChanSSU
 					DoDithering(context, cmd);
 					DoFinal(context, cmd);
 				}
+
 			}
 
 			context.ExecuteCommandBuffer(cmd);
@@ -258,11 +259,13 @@ namespace Graphics.Scripts.UnityChanSSU
 		private RenderTextureDescriptor GetRenderDescriptor(int _width, int _height, GraphicsFormat _format)
 		{
 			var desc = srcDesc;
+
 			desc.width = _width;
 			desc.height = _height;
 			desc.depthBufferBits = 0;
 			desc.msaaSamples = 1;
 			desc.graphicsFormat = _format;
+
 			return desc;
 		}
 
@@ -756,8 +759,6 @@ namespace Graphics.Scripts.UnityChanSSU
 		{
 			//https://zhuanlan.zhihu.com/p/342211163
 			
-			//TODO:有BUG   要用全屏的QUAD   三角形会光栅化不正确
-			
 			//这里没有做VR XR的 不支持跳过
 			
 			var smaaMat = shaders.SMAAMaterial;
@@ -769,11 +770,10 @@ namespace Graphics.Scripts.UnityChanSSU
 
 				smaaMat.SetTexture(AreaTex_ID, assets.smaaLutsArea);
 				smaaMat.SetTexture(SearchTex_ID, assets.smaaLutsSearch);
-
-				cmd.GetTemporaryRT(SMAA_Flip_ID, width, height, 0, FilterMode.Bilinear, format,
+				cmd.GetTemporaryRT(SMAA_Flip_ID, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR,
 					RenderTextureReadWrite.Linear, 1, false, RenderTextureMemoryless.None,
 					allowDynamicResolution);
-				cmd.GetTemporaryRT(SMAA_Flop_ID, width, height, 0, FilterMode.Bilinear, format,
+				cmd.GetTemporaryRT(SMAA_Flop_ID, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR,
 					RenderTextureReadWrite.Linear, 1, false, RenderTextureMemoryless.None,
 					allowDynamicResolution);
 				
