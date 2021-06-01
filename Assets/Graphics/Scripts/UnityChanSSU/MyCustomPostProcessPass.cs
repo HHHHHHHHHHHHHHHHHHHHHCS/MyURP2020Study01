@@ -126,12 +126,14 @@ namespace Graphics.Scripts.UnityChanSSU
 				var stylizedTonemapSettings = stack.GetComponent<StylizedTonemapFinalPostProcess>();
 				bool haveStylized = stylizedTonemapSettings != null && stylizedTonemapSettings.IsActive();
 
-				//这里不写FXAA
 				bool haveSMAA =
 					renderingData.cameraData.antialiasing == AntialiasingMode.SubpixelMorphologicalAntiAliasing &&
 					SystemInfo.graphicsDeviceType != GraphicsDeviceType.OpenGLES2;
-				
-				bool uberIsTemp = haveStylized || haveSMAA;
+
+				bool haveFXAA =
+					renderingData.cameraData.antialiasing == AntialiasingMode.FastApproximateAntialiasing;
+
+				bool uberIsTemp = haveStylized || haveSMAA || haveFXAA;
 
 				if (SrcIsFinal(cmd))
 				{
@@ -152,7 +154,7 @@ namespace Graphics.Scripts.UnityChanSSU
 					SwapRT();
 				}
 
-								
+
 				// SM Anti-aliasing
 				if (haveSMAA)
 				{
@@ -161,15 +163,20 @@ namespace Graphics.Scripts.UnityChanSSU
 					SwapRT();
 				}
 
-				//TODO:FXAA
-
+				if (haveFXAA)
+				{
+					DoFXAA(context, cmd);
+				}
+				else
+				{
+					DisableFXAA();
+				}
 
 				if (uberIsTemp && !SrcIsFinal(cmd))
 				{
 					DoDithering(context, cmd);
 					DoFinal(context, cmd);
 				}
-
 			}
 
 			context.ExecuteCommandBuffer(cmd);
@@ -718,7 +725,7 @@ namespace Graphics.Scripts.UnityChanSSU
 		#endregion
 
 		#region MySMAA
-		
+
 		enum SMAAPass
 		{
 			EdgeDetection = 0,
@@ -738,9 +745,9 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		private static readonly RenderTargetIdentifier SMAA_Flip_RTI = new RenderTargetIdentifier(SMAA_Flip_ID);
 		private static readonly RenderTargetIdentifier SMAA_Flop_RTI = new RenderTargetIdentifier(SMAA_Flop_ID);
-		
+
 		private ProfilingSampler smaaProfilingSampler;
-		
+
 		private AntialiasingQuality ssmaaQuality = AntialiasingQuality.High;
 
 
@@ -753,21 +760,20 @@ namespace Graphics.Scripts.UnityChanSSU
 		{
 			ssmaaQuality = _smaaQuality;
 		}
-		
+
 
 		private void DoSMAA(ScriptableRenderContext context, CommandBuffer cmd)
 		{
 			//https://zhuanlan.zhihu.com/p/342211163
-			
+
 			//这里没有做VR XR的 不支持跳过
-			
+
 			var smaaMat = shaders.SMAAMaterial;
 
 			Assert.IsNotNull(smaaMat);
 
 			using (new ProfilingScope(cmd, smaaProfilingSampler))
 			{
-
 				smaaMat.SetTexture(AreaTex_ID, assets.smaaLutsArea);
 				smaaMat.SetTexture(SearchTex_ID, assets.smaaLutsSearch);
 				cmd.GetTemporaryRT(SMAA_Flip_ID, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR,
@@ -776,11 +782,13 @@ namespace Graphics.Scripts.UnityChanSSU
 				cmd.GetTemporaryRT(SMAA_Flop_ID, width, height, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR,
 					RenderTextureReadWrite.Linear, 1, false, RenderTextureMemoryless.None,
 					allowDynamicResolution);
-				
-				DrawFullScreen(cmd, GetSrc(cmd), SMAA_Flip_RTI, smaaMat, (int) SMAAPass.EdgeDetection + (int)ssmaaQuality);
-				DrawFullScreen(cmd, SMAA_Flip_RTI, SMAA_Flop_RTI, smaaMat, (int)SMAAPass.BlendWeights + (int)ssmaaQuality);
-				cmd.SetGlobalTexture(BlendTex_ID,SMAA_Flop_RTI);
-				DrawFullScreen(cmd, GetSrc(cmd), GetDest(cmd), smaaMat, (int)SMAAPass.NeighborhoodBlending);
+
+				DrawFullScreen(cmd, GetSrc(cmd), SMAA_Flip_RTI, smaaMat,
+					(int) SMAAPass.EdgeDetection + (int) ssmaaQuality);
+				DrawFullScreen(cmd, SMAA_Flip_RTI, SMAA_Flop_RTI, smaaMat,
+					(int) SMAAPass.BlendWeights + (int) ssmaaQuality);
+				cmd.SetGlobalTexture(BlendTex_ID, SMAA_Flop_RTI);
+				DrawFullScreen(cmd, GetSrc(cmd), GetDest(cmd), smaaMat, (int) SMAAPass.NeighborhoodBlending);
 
 				cmd.ReleaseTemporaryRT(SMAA_Flip_ID);
 				cmd.ReleaseTemporaryRT(SMAA_Flop_ID);
@@ -792,8 +800,36 @@ namespace Graphics.Scripts.UnityChanSSU
 
 		#endregion
 
+		#region MyFXAA
+
+
+		private const string k_FXAA = "_FXAA";
+
+
+		private void DoFXAA(ScriptableRenderContext context, CommandBuffer cmd)
+		{
+			var finalMat = shaders.FinalMaterial;
+
+			Assert.IsNotNull(finalMat);
+			
+			finalMat.EnableKeyword(k_FXAA);
+		}
+		
+		private void DisableFXAA()
+		{
+			var finalMat = shaders.FinalMaterial;
+
+			if (finalMat != null)
+			{
+				finalMat.DisableKeyword(k_FXAA);
+			}
+		}
+
+		#endregion
+		
 		#region Dither
 
+		private const string k_Dithering = "_DITHERING";
 		private static readonly int DitheringTex_ID = Shader.PropertyToID("_DitheringTex");
 		private static readonly int Dithering_Coords_ID = Shader.PropertyToID("_Dithering_Coords");
 
@@ -809,6 +845,8 @@ namespace Graphics.Scripts.UnityChanSSU
 			Assert.IsNotNull(finalMat);
 
 			Assert.IsTrue(assets.ditherBlueNoises != null && assets.ditherBlueNoises.Length > 0);
+
+			finalMat.EnableKeyword(k_Dithering);
 
 			if (++noiseTextureIndex >= assets.ditherBlueNoises.Length)
 			{
