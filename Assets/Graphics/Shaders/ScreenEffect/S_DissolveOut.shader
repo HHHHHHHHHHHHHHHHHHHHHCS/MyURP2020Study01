@@ -4,6 +4,8 @@
 	{
 		_ProgressCtrl("Progress Ctrl",Range(0,1))=0.5
 		_DistortCtrl("Distort Ctrl",Range(0.001,3))=0.5
+		_OutlineCtrl("Outline Ctrl",Range(0.0,1))=1.0
+		_UVOffset("UV Offset",Vector)=(0.0,0.0,0,0)
 		_FrontTex("Front Texture",2D)="white"{}
 		_BackTex("Back Texture",2D)="black"{}
 		_DistortTex("Distort Texture",2D)="white"{}
@@ -57,6 +59,8 @@
 
 			float _ProgressCtrl;
 			float _DistortCtrl;
+			float _OutlineCtrl;
+			float2 _UVOffset;
 
 			float Remap(float x, float t1, float t2, float s1, float s2)
 			{
@@ -74,12 +78,13 @@
 			half4 frag(v2f IN) : SV_Target
 			{
 				float2 uv = IN.uv;
+				float2 uvOffset = uv - _UVOffset;
 				float ctrl = _ProgressCtrl;
-				float distortCtrl = _ProgressCtrl*3+0.001;//_DistortCtrl
+				float distortCtrl = _ProgressCtrl * 3 + 0.001; //_DistortCtrl
 
 				//Distort
 				//-----------
-				float2 distortUV = (uv - 0.5) / distortCtrl + 0.5;
+				float2 distortUV = (uvOffset - 0.5) / distortCtrl + 0.5;
 				half2 distortCol = SAMPLE_TEXTURE2D(_DistortTex, s_linear_clamp_sampler, distortUV).rg;
 				distortUV = (distortCol - 0.5) * ctrl * 0.04;
 
@@ -91,7 +96,7 @@
 				float maskC = step(0, maskA - maskB);
 				float maskScale = lerp(maskA, maskB, maskC);
 
-				float2 maskUV = (uv - 0.5) / maskScale + 0.5;
+				float2 maskUV = (uvOffset - 0.5) / maskScale + 0.5;
 				half mask = SAMPLE_TEXTURE2D(_MaskTex, s_linear_clamp_sampler, distortUV + maskUV).r;
 
 				//dissolve
@@ -101,19 +106,19 @@
 				float dissolveC = step(0.0, dissolveA - dissolveB);
 				float dissolveScale = lerp(dissolveA, dissolveB, dissolveC);
 
-				float2 dissolveUV = (uv - 0.5) / dissolveScale + 0.5;
+				float2 dissolveUV = (uvOffset - 0.5) / dissolveScale + 0.5;
 				half dissolve = SAMPLE_TEXTURE2D(_DissolveTex, s_linear_clamp_sampler, distortUV + dissolveUV).r;
 
 				//backTex
 				//-----------
 				float backScale = (ctrl * 2 - 1) * 0.4 + 0.6;
-				float2 backUV = (uv - 0.5) / backScale + 0.5;
+				float2 backUV = (uv - 0.5 - _UVOffset) / backScale + 0.5 + _UVOffset;
 				half3 backCol = SAMPLE_TEXTURE2D(_BackTex, s_linear_clamp_sampler, backUV).rgb;
 
 				//frontTex
 				//-----------
 				float frontScale = smoothstep(0, 1, ctrl) + 1;
-				float2 frontUV = (uv - float2(0.51, 0.3)) / frontScale + float2(0.5, 0.3);
+				float2 frontUV = (uv - float2(0.5, 0.3) - _UVOffset) / frontScale + float2(0.5, 0.3) + _UVOffset;
 				half3 frontCol = SAMPLE_TEXTURE2D(_FrontTex, s_linear_clamp_sampler, frontUV).rgb;
 
 
@@ -136,8 +141,8 @@
 				whiteStrength = pow(whiteStrength, 0.5);
 				half3 white = half3(1, 1, 1) * whiteStrength;
 
-				
-				frontCol += purple + white;
+
+				frontCol += (purple + white) * _OutlineCtrl;
 
 				float lerpAlpha = smoothstep(0.77, 0.75, remapCtrl);
 
