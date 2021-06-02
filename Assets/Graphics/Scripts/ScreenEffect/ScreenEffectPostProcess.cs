@@ -29,6 +29,8 @@ namespace Graphics.Scripts.ScreenEffect
 	{
 		public BoolParameter enableEffect = new BoolParameter(false);
 
+		public BoolParameter useCustom = new BoolParameter(false);
+		
 		public RenderPassEventParameter renderPassEvent =
 			new RenderPassEventParameter(RenderPassEvent.BeforeRenderingPostProcessing);
 

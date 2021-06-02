@@ -230,6 +230,7 @@ GameObject:
   - component: {fileID: 637037512}
   - component: {fileID: 637037511}
   - component: {fileID: 637037513}
+  - component: {fileID: 637037514}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -295,8 +296,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 637037507}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0.61087304, y: 0.33679262, z: 0.32022184, w: 0.64098585}
+  m_LocalPosition: {x: -2.2609124, y: -5.4955297, z: 1.9139416}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -359,11 +360,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 27feaaae1f47cdf4aa4546c4126ecdc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sphere: {fileID: 649584721}
+  prefab: {fileID: 649584721}
   height: 10
   radiusSpeed: 10
-  angleSpeed: 100
+  angleSpeed: 50
   count: 1000
+  percent: 1
+--- !u!114 &637037514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 637037507}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a66c2bde249e884fbd3982268d49c62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncCamera: 0
 --- !u!1 &649584717
 GameObject:
   m_ObjectHideFlags: 0
@@ -381,7 +396,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &649584719
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -401,7 +416,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: c1731daf1d2280a4795feff9fb825d20, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -430,7 +445,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 649584717}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &649584721
 Transform:
   m_ObjectHideFlags: 0

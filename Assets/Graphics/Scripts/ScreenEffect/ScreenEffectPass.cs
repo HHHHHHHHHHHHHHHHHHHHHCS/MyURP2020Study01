@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -43,23 +44,28 @@ namespace Graphics.Scripts.ScreenEffect
 
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
+			var mat = settings.effectMat.value;
+
+			if (mat == null)
+			{
+				return;
+			}
+
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
-				var mat = settings.effectMat.value;
-
 				if (settings.inputMainTex.value)
 				{
-					cmd.GetTemporaryRT(tempRT_ID, desc);//width, height, 0, FilterMode.Point, colorFormat);
-					
+					cmd.GetTemporaryRT(tempRT_ID, desc); //width, height, 0, FilterMode.Point, colorFormat);
+
 					cmd.Blit(cameraColorTex_RTI, tempRT_RTI);
-					
+
 					cmd.SetGlobalTexture("_SrcTex", tempRT_RTI);
 					cmd.SetRenderTarget(cameraColorTex_RTI, RenderBufferLoadAction.DontCare
 						, RenderBufferStoreAction.Store);
-					
+
 					CoreUtils.DrawFullScreen(cmd, settings.effectMat.value);
-					
+
 					cmd.ReleaseTemporaryRT(tempRT_ID);
 				}
 				else

@@ -5,6 +5,7 @@
 		_ProgressCtrl("Progress Ctrl",Range(0,1))=0.5
 		_DistortCtrl("Distort Ctrl",Range(0.001,3))=0.5
 		_OutlineCtrl("Outline Ctrl",Range(0.0,1))=1.0
+		[Toggle]_3DUV("_3DUV",Int)=0
 		_UVOffset("UV Offset",Vector)=(0.0,0.0,0,0)
 		_FrontTex("Front Texture",2D)="white"{}
 		_BackTex("Back Texture",2D)="black"{}
@@ -29,6 +30,9 @@
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+
+			#pragma enable_d3d11_debug_symbols
+			#pragma multi_compile_local_fragment _ _3DUV_ON
 
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
@@ -67,6 +71,39 @@
 				return (x - t1) / (t2 - t1) * (s2 - s1) + s1;
 			}
 
+			#if _3DUV_ON
+			
+			// old code
+			// float2 Use3DUV(float2 inUV, float2 uvOffset)
+			// {
+			// 	float2 uv = inUV - uvOffset;
+			//
+			// 	float depth = saturate(1 - length(uv - 0.5) * 0.707107);
+			//
+			// 	uv = uv * 2 - 1;
+			//
+			// 	float4x4 invVP = UNITY_MATRIX_I_VP;
+			//
+			// 	float4 worldPos = mul(invVP, float4(uv, 0, 1));
+			// 	worldPos.xyzw /= worldPos.w;
+			// 	worldPos.xyz += GetCameraPositionWS() * (0.5 * depth * _ProjectionParams.z);
+			// 	float4 hclipPos = mul(UNITY_MATRIX_VP, worldPos);
+			// 	hclipPos.xyzw /= hclipPos.w;
+			// 	float2 newUV = hclipPos.xy * 0.5 + 0.5;
+			// 	return lerp(0, 0.5, 0.5 - abs(_ProgressCtrl - 0.5)) * (inUV - newUV + uvOffset);
+			// }
+
+			float2 Use3DUV(float2 inUV, float2 uvOffset)
+			{
+				float2 uv = inUV - 0.5 - uvOffset;
+				float t = -dot(uv, uvOffset);
+				t *= lerp(0, 2, _ProgressCtrl);
+				float len = max(0.001, length(uvOffset));
+				return t * uvOffset / len;
+			}
+
+			#endif
+
 			v2f vert(a2v IN)
 			{
 				v2f o;
@@ -79,6 +116,9 @@
 			{
 				float2 uv = IN.uv;
 				float2 uvOffset = uv - _UVOffset;
+				#if _3DUV_ON
+				uvOffset += Use3DUV(uv, _UVOffset);
+				#endif
 				float ctrl = _ProgressCtrl;
 				float distortCtrl = _ProgressCtrl * 3 + 0.001; //_DistortCtrl
 

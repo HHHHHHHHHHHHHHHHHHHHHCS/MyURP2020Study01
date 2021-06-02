@@ -6,21 +6,43 @@ namespace Graphics.Scripts.ScreenEffect
 {
 	public class ScreenEffectFeature : ScriptableRendererFeature
 	{
-		private ScreenEffectPass screenEffectPass;
+		private  ScriptableRenderPass screenEffectPass;
 
 		public override void Create()
 		{
-			screenEffectPass = new ScreenEffectPass();
 		}
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
 			var settings = VolumeManager.instance.stack.GetComponent<ScreenEffectPostProcess>();
-			if (settings.IsActive() && settings.effectMat.value != null)
+
+			if (settings == null)
 			{
-				screenEffectPass.Setup(settings);
-				screenEffectPass.renderPassEvent = settings.renderPassEvent.value;
-				renderer.EnqueuePass(screenEffectPass);
+				screenEffectPass = null;
+				return;
+			}
+
+			if (settings.useCustom.value == false)
+			{
+				var pass = screenEffectPass as ScreenEffectPass;
+				if (pass == null)
+				{
+					pass = new ScreenEffectPass();
+					screenEffectPass = pass;
+				}
+
+				pass.Setup(settings);
+				pass.renderPassEvent = settings.renderPassEvent.value;
+				renderer.EnqueuePass(pass);
+			}
+			else
+			{
+				var pass = ScreenEffectMono.pass;
+				if (pass == null)
+				{
+					pass.renderPassEvent = settings.renderPassEvent.value;
+					renderer.EnqueuePass(pass);
+				}
 			}
 		}
 	}
