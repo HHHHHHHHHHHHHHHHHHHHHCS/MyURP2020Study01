@@ -71,8 +71,8 @@
 				return (x - t1) / (t2 - t1) * (s2 - s1) + s1;
 			}
 
-			#if _3DUV_ON
-			
+			// #if _3DUV_ON
+
 			// old code
 			// float2 Use3DUV(float2 inUV, float2 uvOffset)
 			// {
@@ -93,16 +93,33 @@
 			// 	return lerp(0, 0.5, 0.5 - abs(_ProgressCtrl - 0.5)) * (inUV - newUV + uvOffset);
 			// }
 
-			float2 Use3DUV(float2 inUV, float2 uvOffset)
+			float2 Use3DUV(float2 inUV, float2 uvOffset, float ctrl)
 			{
 				float2 uv = inUV - 0.5 - uvOffset;
-				float t = -dot(uv, uvOffset);
-				t *= lerp(0, 2, _ProgressCtrl);
+				float t = abs(dot(uv, uvOffset));
+				t *= lerp(0, 2, ctrl);
 				float len = max(0.001, length(uvOffset));
 				return t * uvOffset / len;
 			}
 
-			#endif
+			float2 RotFrontUV(float2 inUV, float2 uvOffset, float ctrl)
+			{
+				const float range = 0.5;
+				const float angle = -PI/6;
+
+				uvOffset += 0.5;
+				float d = distance(inUV, uvOffset);
+				inUV -= uvOffset;
+				// d = clamp(-angle/range * d + angle,0.,angle); // 线性方程
+				d = smoothstep(0., range, range - d) * angle * 50 * ctrl;
+				float s, c;
+				sincos(d, s, c);
+				float2 temp = mul(float2x2(c, -s, s, c), inUV);
+				temp += uvOffset;
+				return float4(temp, 0, 1);
+			}
+
+			// #endif
 
 			v2f vert(a2v IN)
 			{
@@ -114,13 +131,14 @@
 
 			half4 frag(v2f IN) : SV_Target
 			{
+				float ctrl = _ProgressCtrl;
 				float2 uv = IN.uv;
 				float2 uvOffset = uv - _UVOffset;
 				#if _3DUV_ON
-				uvOffset += Use3DUV(uv, _UVOffset);
+				uvOffset += Use3DUV(uv, _UVOffset,ctrl);
 				#endif
-				float ctrl = _ProgressCtrl;
-				float distortCtrl = _ProgressCtrl * 3 + 0.001; //_DistortCtrl
+				float distortCtrl = ctrl * 3 + 0.001; //_DistortCtrl
+
 
 				//Distort
 				//-----------
@@ -158,9 +176,9 @@
 				//frontTex
 				//-----------
 				float frontScale = smoothstep(0, 1, ctrl) + 1;
-				float2 frontUV = (uv - float2(0.5, 0.3) - _UVOffset) / frontScale + float2(0.5, 0.3) + _UVOffset;
+				float2 frontUV = RotFrontUV(uv, _UVOffset, ctrl);
+				frontUV = (frontUV - float2(0.5, 0.3) - _UVOffset) / frontScale + float2(0.5, 0.3) + _UVOffset;
 				half3 frontCol = SAMPLE_TEXTURE2D(_FrontTex, s_linear_clamp_sampler, frontUV).rgb;
-
 
 				float remapCtrl = Remap(ctrl, 0, 1, -0.7, 1) + dissolve;
 				float tempCtrl = (2 - ctrl) * mask * 5 + remapCtrl;
