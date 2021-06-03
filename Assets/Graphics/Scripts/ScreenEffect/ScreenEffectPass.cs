@@ -21,9 +21,13 @@ namespace Graphics.Scripts.ScreenEffect
 		// private RenderTextureFormat colorFormat;
 		private RenderTextureDescriptor desc;
 
-		public void Setup(ScreenEffectPostProcess _settings)
+		public void Init()
 		{
 			profilingSampler = new ProfilingSampler(k_tag);
+		}
+
+		public void Setup(ScreenEffectPostProcess _settings)
+		{
 			settings = _settings;
 		}
 

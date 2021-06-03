@@ -60,10 +60,10 @@ MonoBehaviour:
   active: 1
   m_AdvancedMode: 0
   enableEffect:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 1
   useCustom:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 0
   renderPassEvent:
     m_OverrideState: 0

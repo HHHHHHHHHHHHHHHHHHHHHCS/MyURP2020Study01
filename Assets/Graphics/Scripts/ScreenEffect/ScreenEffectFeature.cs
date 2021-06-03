@@ -28,9 +28,9 @@ namespace Graphics.Scripts.ScreenEffect
 				if (pass == null)
 				{
 					pass = new ScreenEffectPass();
+					pass.Init();
 					screenEffectPass = pass;
 				}
-
 				pass.Setup(settings);
 				pass.renderPassEvent = settings.renderPassEvent.value;
 				renderer.EnqueuePass(pass);
@@ -38,7 +38,7 @@ namespace Graphics.Scripts.ScreenEffect
 			else
 			{
 				var pass = ScreenEffectMono.pass;
-				if (pass == null)
+				if (pass != null)
 				{
 					pass.renderPassEvent = settings.renderPassEvent.value;
 					renderer.EnqueuePass(pass);

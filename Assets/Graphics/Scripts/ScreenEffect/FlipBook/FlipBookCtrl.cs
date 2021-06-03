@@ -6,6 +6,7 @@ namespace Graphics.Scripts.ScreenEffect.FlipBook
 {
 	//todo: 写个cmd copy texture 给rt
 	//绘制mesh 给屏幕
+	//先抄袭shader
 	//如果有SSAO 或者给模型的周围的顶点属性添加标记    可以制造阴影  效果更好
 	public class FlipBookCtrl : MonoBehaviour
 	{
@@ -27,22 +28,18 @@ namespace Graphics.Scripts.ScreenEffect.FlipBook
 
 		#region Project asset references
 
-		[SerializeField, HideInInspector] private Mesh _mesh = null;
+		[SerializeField] private Mesh _mesh = null;
 
-		[SerializeField, HideInInspector] private Shader _shader = null;
+		[SerializeField] private Shader _shader = null;
 
 		#endregion
 
 		#region Private variables
 
-		private Material _material;
+		private List<FlipBookPage> _pages = new List<FlipBookPage>();
 
-		private RenderTexture _rt;
-
-		private Queue<FlipBookPage> _pages = new Queue<FlipBookPage>();
-
-		private float _timer;
-
+		private FlipBookPass _flipBookPass;
+		
 		#endregion
 
 		private void OnValidate()
@@ -54,8 +51,6 @@ namespace Graphics.Scripts.ScreenEffect.FlipBook
 
 		private void Start()
 		{
-			_material = new Material(_shader);
-
 			int w, h;
 			if (_useOriginalResolution)
 			{
@@ -68,33 +63,31 @@ namespace Graphics.Scripts.ScreenEffect.FlipBook
 				h = _resolution.y;
 			}
 
-			_rt = new RenderTexture(w, h, 0);
-			//set camera target
 
+			_pages = new List<FlipBookPage>(_pageCount);
 			for (var i = 0; i < _pageCount; i++)
 			{
-				// _pages.Enqueue();
+				_pages.Add(FlipBookPage.Allocate(w, h));
 			}
+
+			_flipBookPass = new FlipBookPass();
+			_flipBookPass.Init(_mesh,_shader,_pages);
+			
+			
+			ScreenEffectMono.pass = _flipBookPass;
 		}
 
 		private void OnDestroy()
 		{
-			if (_material)
+			_flipBookPass.OnDestroy();
+
+			
+			foreach (var page in _pages)
 			{
-				Destroy(_material);
-				_material = null;
+				FlipBookPage.Deallocate(page);
 			}
+			_pages.Clear();
 		}
 
-		// private void Update()
-		// {
-		// 	_timer += Time.deltaTime;
-		//
-		// 	if (_timer > _interval)
-		// 	{
-		// 		_pages.Enqueue();
-		// 		_timer %= _interval;
-		// 	}
-		// }
 	}
 }
