@@ -81,13 +81,14 @@
 			float2 Use3DUV(float2 inUV, float2 uvOffset, float ctrl)
 			{
 				float2 dir = uvOffset + float2(0.5,0.5) - _3DOffset;
-				// float len = 1 / max(0.001, length(dir));
-				dir = mul(float2x2(0.7, 0.7, -0.7, 0.7), dir);
+				float len = 1 / max(0.001, length(dir));
+				// dir = mul(float2x2(0.707, 0.707, -0.707, 0.707), dir);
+				// dir = mul(float2x2(0, -1, 1, 0), dir);
 				float2 center = 0.5 + uvOffset;
 				float2 cDir = inUV - center;
 				float t = dot(dir, cDir);
 				t = t * lerp(0, 3, ctrl);
-				return dir * t ;//* len;
+				return dir * t * len;
 			}
 
 			float2 RotFrontUV(float2 inUV, float2 uvOffset, float ctrl)
@@ -99,12 +100,18 @@
 
 				float t = -dot((inUV - float2(0.5, 0.5) - uvOffset), uvOffset);
 
+				// float2 dir = uvOffset + float2(0.5,0.5) - _3DOffset;
+				// float len = 1 / max(0.001, length(dir));
+				// float2 center = 0.5 + uvOffset;
+				// float2 cDir = inUV - center;
+				// float t = dot(dir, cDir);
+				// t = t * lerp(0, 3, ctrl);
 				
 				uvOffset += 0.5;
 				float d = distance(inUV, uvOffset) + t * 0.5;
 				inUV -= uvOffset;
 				// d = clamp(-angle/range * d + angle,0.,angle); // 线性方程
-				d = smoothstep(0., range * ctrl, range * ctrl - d) * angle * 50 * ctrl;
+				d = smoothstep(0., range * ctrl, range * ctrl - d) * (angle + lerp(0,angle,ctrl)) * 50 * ctrl;
 				d = min(0,d + PI/12);
 				float s, c;
 				sincos(d, s, c);
@@ -128,10 +135,11 @@
 				float ctrl = _ProgressCtrl;
 				float2 uv = IN.uv;
 				float2 uvOffset = uv - _UVOffset;
+
 				#if _3DUV_ON
 				float2 uv3d = Use3DUV(uv, _UVOffset,ctrl);
 				uvOffset += uv3d;
-				// return half4(uv3d,0,1);
+				// return half4((uv3d),0,1);
 				#endif
 				float distortCtrl = ctrl * 3 + 0.001; //_DistortCtrl
 
@@ -161,9 +169,10 @@
 				float dissolveScale = lerp(dissolveA, dissolveB, dissolveC);
 
 				float2 dissolveUV = distortUV + (uvOffset - 0.5) / dissolveScale + 0.5;
-				dissolveUV = (dissolveUV - 0.5) * 0.5 + 0.5;
+				dissolveUV = (dissolveUV - 0.5) * 0.707 + 0.5;
 				half dissolve = SAMPLE_TEXTURE2D(_DissolveTex, s_linear_clamp_sampler, dissolveUV).r;
-
+				// return dissolve;//half4(dissolveUV,0,1);
+ 
 				//backTex
 				//-----------
 				float backScale = (ctrl * 2 - 1) * 0.4 + 0.6;
