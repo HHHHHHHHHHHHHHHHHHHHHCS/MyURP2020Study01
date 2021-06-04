@@ -359,12 +359,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7cbada64b147ab46aafba180f6e2fdf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _sourceCamera: {fileID: 0}
   _useOriginalResolution: 1
-  _resolution: {x: 1280, y: 720}
-  _pageCount: 15
-  _interval: 0.1
-  _speed: 0.1
+  _resolution: {x: 1920, y: 1080}
+  _pageCount: 5
+  _interval: 0.2
+  _speed: 5
   _mesh: {fileID: 4300000, guid: 8d13b76e28c4f8148afc7ff9bfaa6b4b, type: 2}
   _shader: {fileID: 4800000, guid: 7aaf3ed3c84371640a39549f53561d82, type: 3}
 --- !u!1 &1178052643

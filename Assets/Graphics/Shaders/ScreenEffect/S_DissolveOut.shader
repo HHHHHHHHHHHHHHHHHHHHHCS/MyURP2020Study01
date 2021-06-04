@@ -106,7 +106,7 @@
 			{
 				const float range = 0.5;
 				const float angle = -PI/6;
-
+				
 				uvOffset += 0.5;
 				float d = distance(inUV, uvOffset);
 				inUV -= uvOffset;
@@ -116,7 +116,7 @@
 				sincos(d, s, c);
 				float2 temp = mul(float2x2(c, -s, s, c), inUV);
 				temp += uvOffset;
-				return float4(temp, 0, 1);
+				return temp;
 			}
 
 			// #endif
