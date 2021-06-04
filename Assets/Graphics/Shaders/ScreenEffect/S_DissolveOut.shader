@@ -7,6 +7,7 @@
 		_OutlineCtrl("Outline Ctrl",Range(0.0,1))=1.0
 		[Toggle]_3DUV("_3DUV",Int)=0
 		_UVOffset("UV Offset",Vector)=(0.0,0.0,0,0)
+		_3DOffset("3D Offset",Vector)=(0.5,0.0,0,0)
 		_FrontTex("Front Texture",2D)="white"{}
 		_BackTex("Back Texture",2D)="black"{}
 		_DistortTex("Distort Texture",2D)="white"{}
@@ -66,60 +67,53 @@
 			float _OutlineCtrl;
 			float2 _UVOffset;
 
+			#if _3DUV_ON
+			float2 _3DOffset;
+			#endif
+
 			float Remap(float x, float t1, float t2, float s1, float s2)
 			{
 				return (x - t1) / (t2 - t1) * (s2 - s1) + s1;
 			}
 
-			// #if _3DUV_ON
-
-			// old code
-			// float2 Use3DUV(float2 inUV, float2 uvOffset)
-			// {
-			// 	float2 uv = inUV - uvOffset;
-			//
-			// 	float depth = saturate(1 - length(uv - 0.5) * 0.707107);
-			//
-			// 	uv = uv * 2 - 1;
-			//
-			// 	float4x4 invVP = UNITY_MATRIX_I_VP;
-			//
-			// 	float4 worldPos = mul(invVP, float4(uv, 0, 1));
-			// 	worldPos.xyzw /= worldPos.w;
-			// 	worldPos.xyz += GetCameraPositionWS() * (0.5 * depth * _ProjectionParams.z);
-			// 	float4 hclipPos = mul(UNITY_MATRIX_VP, worldPos);
-			// 	hclipPos.xyzw /= hclipPos.w;
-			// 	float2 newUV = hclipPos.xy * 0.5 + 0.5;
-			// 	return lerp(0, 0.5, 0.5 - abs(_ProgressCtrl - 0.5)) * (inUV - newUV + uvOffset);
-			// }
+			#if _3DUV_ON
 
 			float2 Use3DUV(float2 inUV, float2 uvOffset, float ctrl)
 			{
-				float2 uv = inUV - 0.5 - uvOffset;
-				float t = abs(dot(uv, uvOffset));
-				t *= lerp(0, 2, ctrl);
-				float len = max(0.001, length(uvOffset));
-				return t * uvOffset / len;
+				float2 dir = uvOffset + float2(0.5,0.5) - _3DOffset;
+				// float len = 1 / max(0.001, length(dir));
+				dir = mul(float2x2(0.7, 0.7, -0.7, 0.7), dir);
+				float2 center = 0.5 + uvOffset;
+				float2 cDir = inUV - center;
+				float t = dot(dir, cDir);
+				t = t * lerp(0, 3, ctrl);
+				return dir * t ;//* len;
 			}
 
 			float2 RotFrontUV(float2 inUV, float2 uvOffset, float ctrl)
 			{
-				const float range = 0.5;
-				const float angle = -PI/6;
+				const float range = 1;
+				const float angle = -PI / 12;
+
+				ctrl = smoothstep(0.0, 1.0, ctrl);
+
+				float t = -dot((inUV - float2(0.5, 0.5) - uvOffset), uvOffset);
+
 				
 				uvOffset += 0.5;
-				float d = distance(inUV, uvOffset);
+				float d = distance(inUV, uvOffset) + t * 0.5;
 				inUV -= uvOffset;
 				// d = clamp(-angle/range * d + angle,0.,angle); // 线性方程
-				d = smoothstep(0., range, range - d) * angle * 50 * ctrl;
+				d = smoothstep(0., range * ctrl, range * ctrl - d) * angle * 50 * ctrl;
+				d = min(0,d + PI/12);
 				float s, c;
 				sincos(d, s, c);
 				float2 temp = mul(float2x2(c, -s, s, c), inUV);
-				temp += uvOffset;
-				return temp;
+				uvOffset += temp;
+				return uvOffset;
 			}
 
-			// #endif
+			#endif
 
 			v2f vert(a2v IN)
 			{
@@ -135,7 +129,9 @@
 				float2 uv = IN.uv;
 				float2 uvOffset = uv - _UVOffset;
 				#if _3DUV_ON
-				uvOffset += Use3DUV(uv, _UVOffset,ctrl);
+				float2 uv3d = Use3DUV(uv, _UVOffset,ctrl);
+				uvOffset += uv3d;
+				// return half4(uv3d,0,1);
 				#endif
 				float distortCtrl = ctrl * 3 + 0.001; //_DistortCtrl
 
@@ -164,8 +160,9 @@
 				float dissolveC = step(0.0, dissolveA - dissolveB);
 				float dissolveScale = lerp(dissolveA, dissolveB, dissolveC);
 
-				float2 dissolveUV = (uvOffset - 0.5) / dissolveScale + 0.5;
-				half dissolve = SAMPLE_TEXTURE2D(_DissolveTex, s_linear_clamp_sampler, distortUV + dissolveUV).r;
+				float2 dissolveUV = distortUV + (uvOffset - 0.5) / dissolveScale + 0.5;
+				dissolveUV = (dissolveUV - 0.5) * 0.5 + 0.5;
+				half dissolve = SAMPLE_TEXTURE2D(_DissolveTex, s_linear_clamp_sampler, dissolveUV).r;
 
 				//backTex
 				//-----------
@@ -176,7 +173,11 @@
 				//frontTex
 				//-----------
 				float frontScale = smoothstep(0, 1, ctrl) + 1;
-				float2 frontUV = RotFrontUV(uv, _UVOffset, ctrl);
+				float2 frontUV = uv;
+				#if _3DUV_ON
+				frontUV = RotFrontUV(frontUV, _UVOffset, ctrl);
+				// return half4(frontUV,0,1);
+				#endif
 				frontUV = (frontUV - float2(0.5, 0.3) - _UVOffset) / frontScale + float2(0.5, 0.3) + _UVOffset;
 				half3 frontCol = SAMPLE_TEXTURE2D(_FrontTex, s_linear_clamp_sampler, frontUV).rgb;
 
