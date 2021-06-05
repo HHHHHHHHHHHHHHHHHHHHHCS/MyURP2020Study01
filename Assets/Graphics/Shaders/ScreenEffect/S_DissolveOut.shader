@@ -6,8 +6,8 @@
 		_DistortCtrl("Distort Ctrl",Range(0.001,3))=0.5
 		_OutlineCtrl("Outline Ctrl",Range(0.0,1))=1.0
 		[Toggle]_3DUV("_3DUV",Int)=0
-		_UVOffset("UV Offset",Vector)=(0.0,0.0,0,0)
-		_3DOffset("3D Offset",Vector)=(0.5,0.0,0,0)
+		_UVOffset("UV Offset",Vector)=(0.0,0.0,0,0) //uv偏移 -0.5~0.5
+		_PlayerPos("Player Pos",Vector)=(0.5,0.0,0,0) //角色位置 0~1
 		_FrontTex("Front Texture",2D)="white"{}
 		_BackTex("Back Texture",2D)="black"{}
 		_DistortTex("Distort Texture",2D)="white"{}
@@ -68,7 +68,7 @@
 			float2 _UVOffset;
 
 			#if _3DUV_ON
-			float2 _3DOffset;
+			float2 _PlayerPos;
 			#endif
 
 			float Remap(float x, float t1, float t2, float s1, float s2)
@@ -80,10 +80,8 @@
 
 			float2 Use3DUV(float2 inUV, float2 uvOffset, float ctrl)
 			{
-				float2 dir = uvOffset + float2(0.5,0.5) - _3DOffset;
+				float2 dir = uvOffset + float2(0.5,0.5) - _PlayerPos;
 				float len = 1 / max(0.001, length(dir));
-				// dir = mul(float2x2(0.707, 0.707, -0.707, 0.707), dir);
-				// dir = mul(float2x2(0, -1, 1, 0), dir);
 				float2 center = 0.5 + uvOffset;
 				float2 cDir = inUV - center;
 				float t = dot(dir, cDir);
@@ -94,31 +92,25 @@
 			float2 RotFrontUV(float2 inUV, float2 uvOffset, float ctrl)
 			{
 				const float range = 1;
-				const float angle = -PI / 12;
-
+				const float angle = -PI/2 ;
+			
 				ctrl = smoothstep(0.0, 1.0, ctrl);
-
+			
 				float t = -dot((inUV - float2(0.5, 0.5) - uvOffset), uvOffset);
 
-				// float2 dir = uvOffset + float2(0.5,0.5) - _3DOffset;
-				// float len = 1 / max(0.001, length(dir));
-				// float2 center = 0.5 + uvOffset;
-				// float2 cDir = inUV - center;
-				// float t = dot(dir, cDir);
-				// t = t * lerp(0, 3, ctrl);
-				
 				uvOffset += 0.5;
 				float d = distance(inUV, uvOffset) + t * 0.5;
-				inUV -= uvOffset;
-				// d = clamp(-angle/range * d + angle,0.,angle); // 线性方程
-				d = smoothstep(0., range * ctrl, range * ctrl - d) * (angle + lerp(0,angle,ctrl)) * 50 * ctrl;
-				d = min(0,d + PI/12);
+				d = smoothstep(0., range * ctrl, range * ctrl - d);
+				float2 sAng = normalize( _UVOffset + 0.5 - _PlayerPos);
+				float ang = d * (angle - atan2(sAng.y,sAng.x)) * ctrl;
 				float s, c;
-				sincos(d, s, c);
+				sincos(ang, s, c);
+				inUV -= uvOffset;
 				float2 temp = mul(float2x2(c, -s, s, c), inUV);
 				uvOffset += temp;
 				return uvOffset;
 			}
+
 
 			#endif
 
@@ -172,7 +164,7 @@
 				dissolveUV = (dissolveUV - 0.5) * 0.707 + 0.5;
 				half dissolve = SAMPLE_TEXTURE2D(_DissolveTex, s_linear_clamp_sampler, dissolveUV).r;
 				// return dissolve;//half4(dissolveUV,0,1);
- 
+
 				//backTex
 				//-----------
 				float backScale = (ctrl * 2 - 1) * 0.4 + 0.6;
