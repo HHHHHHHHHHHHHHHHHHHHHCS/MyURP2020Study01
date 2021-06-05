@@ -5,7 +5,8 @@ using UnityEngine.Rendering;
 namespace Graphics.Scripts.AtmosphericScattering
 {
 	//https://zhuanlan.zhihu.com/p/127026136
-	//https://github.com/PZZZB/Atmospheric-Scattering-URP
+	//https://github.com/PZZZB/Atmospheric-Scattering-
+	//https://github.com/Scrawk/Brunetons-Improved-Atmospheric-Scattering  这个写的也不错
 	[RequireComponent(typeof(ScatteringSetting))]
 	[ExecuteInEditMode]
 	public class RuntimeSkySetting : MonoBehaviour
