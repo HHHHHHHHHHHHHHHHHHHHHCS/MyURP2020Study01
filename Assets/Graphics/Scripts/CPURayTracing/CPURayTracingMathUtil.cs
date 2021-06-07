@@ -181,6 +181,7 @@ namespace Graphics.Scripts.CPURayTracing
 		private float lensRadius;
 		
 		// vfov is top to bottom in degrees
+		//focusDist 可能是近平面
 		public Camera(float3 lookFrom, float3 lookAt, float3 vup, float vfov, float aspect, float aperture,
 			float focusDist)
 		{
@@ -194,19 +195,18 @@ namespace Graphics.Scripts.CPURayTracing
 			v = cross(w, u);
 			lowerLeftCorner = origin - halfWidth * focusDist * u - halfHeight * focusDist * v - focusDist * w;
 			
-			//TODO:暂时还不知道 focusDist干嘛的
 			horizontal = 2 * halfWidth * focusDist * u;
 			vertical = 2 * halfHeight * focusDist * v;
 		}
 
-		public Ray GetRay(float s, float t, ref uint state)
-		{
-			//todo:
-			// float3 rd = lensRadius * CPURayTracingMathUtil.RandomInUnitDisk(ref state);
-			// float3 offset = u * rd.x + v * rd.y;
-			// return new Ray(origin + offset,
-			// 	normalize(lowerLeftCorner + s * horizontal + t * vertical - origin - offset));
-		}
+		// public Ray GetRay(float s, float t, ref uint state)
+		// {
+		// 	//todo:
+		// 	// float3 rd = lensRadius * CPURayTracingMathUtil.RandomInUnitDisk(ref state);
+		// 	// float3 offset = u * rd.x + v * rd.y;
+		// 	// return new Ray(origin + offset,
+		// 	// 	normalize(lowerLeftCorner + s * horizontal + t * vertical - origin - offset));
+		// }
 
 
 	}
