@@ -98,7 +98,7 @@
 			{
 				// center = center + SafeNormalize( uv-0.5)*0.25;
 				float2 delta = uv - center;
-				float angle = strength * 1;//length(delta);
+				float angle = strength * (1.5-length(delta));
 				// float t = saturate(5 * (1 - _ProgressCtrl) * length(delta));
 				// angle = lerp(angle, 0, t);
 				float x = cos(angle) * delta.x - sin(angle) * delta.y;
@@ -122,7 +122,7 @@
 				float2 uv = IN.uv;
 
 
-				float2 twirl = uv; //ScaleUV(uv, _UVOffset.xy, ctrl);
+				float2 twirl = ScaleUV(uv, _UVOffset.xy, ctrl);
 				twirl = Twirl(twirl, _UVOffset.xy, _UVOffset.zw, _TwirlStrength * ctrl);
 
 				float2 nearPoint = clamp(twirl, 0, 1);
