@@ -179,7 +179,7 @@ namespace Graphics.Scripts.CPURayTracing
 		private float3 vertical;
 		private float3 u, v, w;
 		private float lensRadius;
-		
+
 		// vfov is top to bottom in degrees
 		//focusDist 可能是近平面
 		public Camera(float3 lookFrom, float3 lookAt, float3 vup, float vfov, float aspect, float aperture,
@@ -194,26 +194,197 @@ namespace Graphics.Scripts.CPURayTracing
 			u = normalize(cross(vup, w));
 			v = cross(w, u);
 			lowerLeftCorner = origin - halfWidth * focusDist * u - halfHeight * focusDist * v - focusDist * w;
-			
+
 			horizontal = 2 * halfWidth * focusDist * u;
 			vertical = 2 * halfHeight * focusDist * v;
 		}
 
-		// public Ray GetRay(float s, float t, ref uint state)
-		// {
-		// 	//todo:
-		// 	// float3 rd = lensRadius * CPURayTracingMathUtil.RandomInUnitDisk(ref state);
-		// 	// float3 offset = u * rd.x + v * rd.y;
-		// 	// return new Ray(origin + offset,
-		// 	// 	normalize(lowerLeftCorner + s * horizontal + t * vertical - origin - offset));
-		// }
-
-
+		public Ray GetRay(float s, float t, ref uint state)
+		{
+			float3 rd = lensRadius * CPURayTracingMathUtil.RandomInUnitDisk(ref state);
+			float3 offset = u * rd.x + v * rd.y;
+			return new Ray(origin + offset,
+				normalize(lowerLeftCorner + s * horizontal + t * vertical - origin - offset));
+		}
 	}
 
 
 	public class CPURayTracingMathUtil
 	{
 		public static float kPI => 3.1415926f;
+
+		//生成随机数
+		static uint XorShift32(ref uint state)
+		{
+			uint x = state;
+			x ^= x << 13;
+			x ^= x >> 17;
+			x ^= x << 15;
+			state = x;
+			return x;
+		}
+
+		//[0,1)
+		public static float RandomFloat01(ref uint state)
+		{
+			// 0xFFFFFF => 16777215
+			return (XorShift32(ref state) & 0xFFFFFF) / 16777216.0f;
+		}
+
+		public static float3 RandomInUnitDisk(ref uint state)
+		{
+			float3 p;
+			// do
+			// {
+			// 	p = 2.0f * new float3(RandomFloat01(ref state), RandomFloat01(ref state), 0) - new float3(1, 1, 0);
+			// } while (lengthsq(p) >= 1.0);
+
+			var x = RandomFloat01(ref state);
+			var y = RandomFloat01(ref state);
+
+			float length = 1;
+			float dx, dy;
+			if (x == 0 && y == 0)
+			{
+				// return float3(2, 2, 0); // => float3(1,1,0)+float3(1,1,0);
+				dx = 1;
+				dy = 1;
+			}
+			else
+			{
+				float len = sqrt(x * x + y * y);
+				dx = x / len;
+				dy = y / len;
+
+				if (x != 0 && y != 0)
+				{
+					float maxDis = min(y / x, x / y); //碰触到 x=1|y=1 的点的距离
+					maxDis = sqrt(maxDis * maxDis + 1 * 1) - 1;
+					length += maxDis * RandomFloat01(ref state);
+				}
+			}
+
+
+			//象限
+			var xx = RandomFloat01(ref state);
+			if (xx < 0.25f) //第一象限
+			{
+			}
+			else if (xx < 0.5f) //第二象限
+			{
+				dx *= -1;
+			}
+			else if (xx < 0.75f) //第三象限
+			{
+				dx *= -1;
+				dy *= -1;
+			}
+			else //if (xx < 1f)//第四象限
+			{
+				dy *= -1;
+			}
+
+			p = float3(dx * length, dy * length, 0);
+
+
+			return p;
+		}
+
+		public static float3 RandomInUnitSphere(ref uint state)
+		{
+			float3 p;
+			// do
+			// {
+			// 	p = 2.0f * new float3(RandomFloat01(ref state), RandomFloat01(ref state), RandomFloat01(ref state)) -
+			// 	    new float3(1, 1, 1);
+			// } while (lengthsq(p) >= 1.0);
+
+			var x = RandomFloat01(ref state);
+			var y = RandomFloat01(ref state);
+			var z = RandomFloat01(ref state);
+
+			float length = 1;
+			float dx, dy, dz;
+
+			if (x == 0 && y == 0 && z == 0)
+			{
+				// return float3(2, 2, 2); // => float3(1,1,1)+float3(1,1,1);
+				dx = 1;
+				dy = 1;
+				dz = 1;
+			}
+			else
+			{
+				float len = sqrt(x * x + y * y + z * z);
+				dx = x / len;
+				dy = y / len;
+				dz = z / len;
+
+				float a, b, c;
+				float macD = max(max(x, y), z);
+				a = x / macD;
+				b = y / macD;
+				c = z / macD;
+
+				float maxDis = sqrt(a * a + b * b + c * c) - 1;
+				length += maxDis * RandomFloat01(ref state);
+			}
+
+
+			//象限
+			var xx = RandomFloat01(ref state);
+			if (xx < 0.125f) //第一象限
+			{
+			}
+			else if (xx < 0.25f) //第二象限
+			{
+				dx *= -1;
+			}
+			else if (xx < 0.375f) //第三象限
+			{
+				dx *= -1;
+				dy *= -1;
+			}
+			else if (xx < 0.5f) //第四象限
+			{
+				dy *= -1;
+			}
+
+			if (xx < 0.625f) //第五象限
+			{
+				dz *= -1;
+			}
+			else if (xx < 0.75f) //第六象限
+			{
+				dx *= -1;
+				dz *= -1;
+			}
+			else if (xx < 0.875f) //第七象限
+			{
+				dx *= -1;
+				dy *= -1;
+				dz *= -1;
+			}
+			else //if (xx < 1f)//第八象限
+			{
+				dy *= -1;
+				dz *= -1;
+			}
+
+			p = float3(dx * length, dy * length, dz * length);
+
+
+			return p;
+		}
+
+		public static float3 RandomUnitVector(ref uint state)
+		{
+			float z = RandomFloat01(ref state) * 2.0f - 1.0f;
+			float a = RandomFloat01(ref state) * 2.0f * kPI;
+			float r = sqrt(1.0f - z * z);
+			float x, y;
+			sincos(a, out x, out y);
+			return new float3(r * x, r * y, z);
+		}
 	}
 }
