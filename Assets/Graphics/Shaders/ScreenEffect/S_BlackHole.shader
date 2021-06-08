@@ -1,4 +1,4 @@
-﻿Shader "MyRP/ScreenEffect/S_Inhalation"
+﻿Shader "MyRP/ScreenEffect/S_BlackHole"
 {
 	Properties
 	{
@@ -21,7 +21,7 @@
 
 		Pass
 		{
-			Name "Inhalation"
+			Name "Black Hole"
 			ZTest Always
 			ZWrite Off
 			Cull Off
@@ -86,24 +86,52 @@
 			float2 ScaleUV(float2 uv, float2 center, float ctrl)
 			{
 				ctrl = smoothstep(0, 1, ctrl);
-				float2 dir = SafeNormalize(uv - center);
-				// float2 dir = SafeNormalize(uv - center) * 0.05 * ctrl;
-				// dir = SafeNormalize(uv - (center + dir));
+				float2 dir = uv - center;
+				dir = SafeNormalize(dir);
+				// dir = lerp(SafeNormalize(dir), dir, ctrl * 0.5);
 				float2 delta = ctrl * dir;
 				uv = uv + delta;
 				return uv;
 			}
 
-			float2 Twirl(float2 uv, float2 center, float2 offset, float strength)
+			float2 Rot(float2 delta, float angle = 0)
 			{
-				float2 delta = uv - center;
-				float angle = strength * (1.5 - length(delta));
-				float s, c;
-				sincos(angle, s, c);
+				float c, s;
+				sincos(angle, c, s);
 				float x = c * delta.x - s * delta.y;
 				float y = s * delta.x + c * delta.y;
-				// offset += delta * 0.25 * _ProgressCtrl;
-				return float2(x + center.x + offset.x, y + center.y + offset.y);
+
+				return float2(x, y);
+			}
+
+			float2 Bezier(float2 uv, float2 center, float t)
+			{
+				float2 down = uv - center;
+				float2 left = Rot(uv - center);
+				float2 up = -down;
+				float2 right = -left;
+
+				float2 points[9];
+
+				points[0] = down;
+				points[1] = left * 8;
+				points[2] = up * 16;
+				points[3] = right * 28;
+				points[4] = down * 36;
+				points[5] = left * 48;
+				points[6] = up * 48;
+				points[7] = right * 48;
+				points[8] = down * 20;
+
+				for (int i = 8; i >= 0; i--)
+				{
+					for (int j = 0; j < i; j++)
+					{
+						points[j] = lerp(points[j], points[j + 1], t);
+					}
+				}
+
+				return points[0] + center;
 			}
 
 			v2f vert(a2v IN)
@@ -120,27 +148,27 @@
 				float2 uv = IN.uv;
 
 
-				float2 twirl = ScaleUV(uv, _UVOffset.xy, ctrl);
-				twirl = Twirl(twirl, _UVOffset.xy, _UVOffset.zw, _TwirlStrength * ctrl);
+				float2 bezier = uv; //ScaleUV(uv, _UVOffset.xy, ctrl);
+				bezier = Bezier(bezier, _UVOffset.xy, ctrl);
 
-				float2 nearPoint = clamp(twirl, 0, 1);
-				float len = distance(twirl, nearPoint);
-
-				float lerpBack = smoothstep(0.01, 0.25, len);
-
+				float isBack = 0;
+				if (bezier.x < 0 || bezier.y < 0 || bezier.x > 1 || bezier.y > 1)
+				{
+					isBack = 1;
+				}
 
 				//backTex
 				//-----------
-				half3 backCol = SAMPLE_TEXTURE2D(_BackTex, s_linear_clamp_sampler, twirl).rgb;
+				half3 backCol = SAMPLE_TEXTURE2D(_BackTex, s_linear_clamp_sampler, bezier).rgb;
 				float backLine = max(0, ctrl - _DistortUVStart)
-					* (SAMPLE_TEXTURE2D(_DistortUVTex, s_linear_clamp_sampler, twirl).r);
-				backCol += backLine;
+					* (SAMPLE_TEXTURE2D(_DistortUVTex, s_linear_clamp_sampler, bezier).r);
+				backCol += 0 * backLine;
 
 				//frontTex
 				//-----------
 				half3 frontCol = SAMPLE_TEXTURE2D(_FrontTex, s_linear_clamp_sampler, uv).rgb;
 
-				half3 finalCol = lerp(backCol, frontCol, lerpBack);
+				half3 finalCol = lerp(backCol, frontCol, isBack);
 
 				return half4(finalCol, 1);
 			}
