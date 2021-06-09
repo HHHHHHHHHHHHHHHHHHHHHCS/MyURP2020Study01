@@ -80,15 +80,20 @@
 
 			#if _3DUV_ON
 
+			float Use3DOffset(float2 uvOffset)
+			{
+				float2 offset3D = _UVOffset.xy - _PlayerPos;
+				float d = dot(uvOffset, offset3D);
+				return d;
+			}
+
 
 			#endif
 
 			float2 ScaleUV(float2 uv, float2 center, float ctrl)
 			{
 				ctrl = smoothstep(0, 1, ctrl);
-				float2 dir = SafeNormalize(uv - center);
-				// float2 dir = SafeNormalize(uv - center) * 0.05 * ctrl;
-				// dir = SafeNormalize(uv - (center + dir));
+				float2 dir = (0.5 * ctrl + 0.5) * SafeNormalize(uv - center);
 				float2 delta = ctrl * dir;
 				uv = uv + delta;
 				return uv;
@@ -102,7 +107,6 @@
 				sincos(angle, s, c);
 				float x = c * delta.x - s * delta.y;
 				float y = s * delta.x + c * delta.y;
-				// offset += delta * 0.25 * _ProgressCtrl;
 				return float2(x + center.x + offset.x, y + center.y + offset.y);
 			}
 
@@ -119,20 +123,34 @@
 				float ctrl = _ProgressCtrl;
 				float2 uv = IN.uv;
 
+				float2 uvOffset = uv - _UVOffset.xy;
 
-				float2 twirl = ScaleUV(uv, _UVOffset.xy, ctrl);
-				twirl = Twirl(twirl, _UVOffset.xy, _UVOffset.zw, _TwirlStrength * ctrl);
+				float uv3d = 0;
+				#if _3DUV_ON
+				uv3d = Use3DOffset(uvOffset);
+				#endif
+
+				float scaleStr = saturate(ctrl - 0.6 * (1 - ctrl) - uv3d);
+
+
+				float d = dot(uvOffset, uvOffset);
+				d = Remap(d, 0, 0.5, 0, 1);
+				d = pow(d * 0.3, 2 / 3.0);
+				float twirlStr = _TwirlStrength * saturate(ctrl - d);
+
+				float2 twirl = ScaleUV(uv, _UVOffset.xy, scaleStr);
+				twirl = Twirl(twirl, _UVOffset.xy, _UVOffset.zw, _TwirlStrength * twirlStr);
 
 				float2 nearPoint = clamp(twirl, 0, 1);
 				float len = distance(twirl, nearPoint);
 
-				float lerpBack = smoothstep(0.01, 0.25, len);
+				float lerpBack = smoothstep(0.01, 0.2, len);
 
 
 				//backTex
 				//-----------
 				half3 backCol = SAMPLE_TEXTURE2D(_BackTex, s_linear_clamp_sampler, twirl).rgb;
-				float backLine = max(0, ctrl - _DistortUVStart)
+				float backLine = 2 * twirlStr * ctrl
 					* (SAMPLE_TEXTURE2D(_DistortUVTex, s_linear_clamp_sampler, twirl).r);
 				backCol += backLine;
 

@@ -63,7 +63,7 @@ Material:
     - _Iteration: 20
     - _Opacity: 1
     - _OutlineCtrl: 0
-    - _ProgressCtrl: 0.5
+    - _ProgressCtrl: 0.8
     m_Colors:
     - _3DOffset: {r: 0.3, g: 0, b: 0, a: 0}
     - _EdgeColor: {r: 0.14999998, g: 0.049999982, b: 0.049999982, a: 1}
