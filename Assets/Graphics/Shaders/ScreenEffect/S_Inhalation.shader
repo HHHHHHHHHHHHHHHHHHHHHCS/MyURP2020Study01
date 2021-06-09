@@ -122,21 +122,26 @@
 			{
 				float ctrl = _ProgressCtrl;
 				float2 uv = IN.uv;
+				float4 uvOffset = _UVOffset;
 
-				float2 uvOffset = uv - _UVOffset.xy;
+
+				float2 offsetUV = uv - _UVOffset.xy;
 
 				float uv3d = 0;
 				#if _3DUV_ON
-				uv3d = Use3DOffset(uvOffset);
+				uv3d = Use3DOffset(offsetUV);
 				#endif
 
-				float scaleStr = saturate(ctrl - 0.6 * (1 - ctrl) - uv3d);
+				//todo: d0 and uv3d
 
+				float d0 = 2 * dot(uvOffset.xy - 0.5, uvOffset.xy - 0.5);
+				float scaleStr = saturate(ctrl - 0.6 * lerp(1, 5, d0) * (1 - ctrl) + uv3d);
 
-				float d = dot(uvOffset, uvOffset);
-				d = Remap(d, 0, 0.5, 0, 1);
+				float d = dot(offsetUV, offsetUV);
+				d = Remap(d, 0, 0.75, 0, 1);
 				d = pow(d * 0.3, 2 / 3.0);
-				float twirlStr = _TwirlStrength * saturate(ctrl - d);
+
+				float twirlStr = _TwirlStrength * saturate(ctrl - d + 1 * d0 + uv3d);
 
 				float2 twirl = ScaleUV(uv, _UVOffset.xy, scaleStr);
 				twirl = Twirl(twirl, _UVOffset.xy, _UVOffset.zw, _TwirlStrength * twirlStr);
@@ -144,8 +149,10 @@
 				float2 nearPoint = clamp(twirl, 0, 1);
 				float len = distance(twirl, nearPoint);
 
-				float lerpBack = smoothstep(0.01, 0.2, len);
+				float lerpBack = 0; //smoothstep(0.01, 0.2, len);
 
+				float alpha = max(ctrl - 0.95, 0.0) * 20;
+				lerpBack = min(lerpBack + alpha, 1.0);
 
 				//backTex
 				//-----------
@@ -157,6 +164,7 @@
 				//frontTex
 				//-----------
 				half3 frontCol = SAMPLE_TEXTURE2D(_FrontTex, s_linear_clamp_sampler, uv).rgb;
+
 
 				half3 finalCol = lerp(backCol, frontCol, lerpBack);
 

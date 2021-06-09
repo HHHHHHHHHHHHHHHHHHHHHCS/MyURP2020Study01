@@ -150,7 +150,9 @@
 
 				float2 bezier = uv; //ScaleUV(uv, _UVOffset.xy, ctrl);
 				bezier = Bezier(bezier, _UVOffset.xy, ctrl);
-
+				float l = saturate(2 * dot(uv - _UVOffset.xy, uv - _UVOffset.xy) - ctrl);
+				bezier = lerp(bezier, uv, l);
+				
 				float isBack = 0;
 				if (bezier.x < 0 || bezier.y < 0 || bezier.x > 1 || bezier.y > 1)
 				{
