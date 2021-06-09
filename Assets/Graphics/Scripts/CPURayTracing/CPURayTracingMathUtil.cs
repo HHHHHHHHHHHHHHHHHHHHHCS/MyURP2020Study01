@@ -33,7 +33,7 @@ namespace Graphics.Scripts.CPURayTracing
 			=> (center, radius) = (c, r);
 	}
 
-	public struct SphereSOA
+	public struct SpheresSOA
 	{
 		[ReadOnly] public NativeArray<float> centerX;
 		[ReadOnly] public NativeArray<float> centerY;
@@ -43,7 +43,7 @@ namespace Graphics.Scripts.CPURayTracing
 		[ReadOnly] public NativeArray<int> emissives;
 		public int emissiveCount;
 
-		public SphereSOA(int len)
+		public SpheresSOA(int len)
 		{
 			var simdLen = ((len + 3) / 4) * 4;
 			centerX = new NativeArray<float>(simdLen, Allocator.Persistent);
@@ -121,11 +121,11 @@ namespace Graphics.Scripts.CPURayTracing
 				float4 nb = coX * rDirX + coY * rDirY + coZ * rDirZ.z;
 				float4 c = coX * coX + coY * coY + coZ * coZ - sSqRadius;
 				float4 discr = nb * nb - c;
-				bool4 discrPos = discr > 0.0f;
+				bool4 discrPos = discr > 0.0f;//如果有一个交点  也不算射中
 				//if ray hits any of the 4 spheres
 				if (any(discrPos))
 				{
-					float4 discrSq = math.sqrt(discr);
+					float4 discrSq = sqrt(discr);
 
 					//rau could hit spheres at t0&t1
 					float4 t0 = nb - discrSq;
