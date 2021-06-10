@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: M_Inhalation
-  m_Shader: {fileID: 4800000, guid: 978778922332ce447b19715105b0584e, type: 3}
+  m_Name: M_Rotation
+  m_Shader: {fileID: 4800000, guid: c9b6ae1604be1ef4496a2eb5260db2c6, type: 3}
   m_ShaderKeywords: _3DUV_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -51,6 +51,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 28900e40ebe304b4a83ff4b9a016b20c, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MaskTex:
         m_Texture: {fileID: 2800000, guid: c19726eef5763d344961480d7f231043, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -77,8 +81,8 @@ Material:
     - _Iteration: 20
     - _Opacity: 1
     - _OutlineCtrl: 0
-    - _ProgressCtrl: 0.5
-    - _TwirlStrength: 3
+    - _ProgressCtrl: 1
+    - _TwirlStrength: 1
     m_Colors:
     - _3DOffset: {r: 0.3, g: 0, b: 0, a: 0}
     - _EdgeColor: {r: 0.14999998, g: 0.049999982, b: 0.049999982, a: 1}

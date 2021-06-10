@@ -63,9 +63,9 @@
 			float _TwirlStrength;
 			float _DistortUVStart;
 
-			// #if _3DUV_ON
+			#if _3DUV_ON
 			float2 _PlayerPos;
-			// #endif
+			#endif
 
 			float Remap(float x, float t1, float t2, float s1, float s2)
 			{
@@ -83,7 +83,7 @@
 				return dot(v, v);
 			}
 
-			// #if _3DUV_ON
+			#if _3DUV_ON
 
 			float Use3DOffset(float2 uvOffset)
 			{
@@ -97,7 +97,7 @@
 			}
 
 
-			// #endif
+			#endif
 
 			float2 ScaleUV(float2 uv, float2 center, float ctrl)
 			{
@@ -118,7 +118,6 @@
 				sincos(angle, s, c);
 				float x = c * delta.x - s * delta.y;
 				float y = s * delta.x + c * delta.y;
-				float2 ddd = float2(x, y);
 				return float2(x + center.x + offset.x, y + center.y + offset.y);
 			}
 
@@ -140,9 +139,9 @@
 				float2 offsetUV = uv - _UVOffset.xy;
 
 				float uv3d = 0;
-				// #if _3DUV_ON
+				#if _3DUV_ON
 				uv3d = Use3DOffset(offsetUV);
-				// #endif
+				#endif
 
 
 				float d0 = 2 * Length2(uvOffset.xy - 0.5);
