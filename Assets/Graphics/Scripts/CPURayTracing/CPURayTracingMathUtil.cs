@@ -121,7 +121,7 @@ namespace Graphics.Scripts.CPURayTracing
 				float4 nb = coX * rDirX + coY * rDirY + coZ * rDirZ.z;
 				float4 c = coX * coX + coY * coY + coZ * coZ - sSqRadius;
 				float4 discr = nb * nb - c;
-				bool4 discrPos = discr > 0.0f;//如果有一个交点  也不算射中
+				bool4 discrPos = discr > 0.0f; //如果有一个交点  也不算射中
 				//if ray hits any of the 4 spheres
 				if (any(discrPos))
 				{
@@ -211,6 +211,35 @@ namespace Graphics.Scripts.CPURayTracing
 
 	public class CPURayTracingMathUtil
 	{
+		//Math
+		//----------------------------
+
+		public static bool Refract(float3 v, float3 n, float nint, out float3 outRefracted)
+		{
+			float dt = dot(v, n);
+			float discr = 1.0f - nint * nint * (1 - dt * dt);
+			if (discr > 0)
+			{
+				outRefracted = nint * (v - n * dt) - n * sqrt(discr);
+				return true;
+			}
+
+			outRefracted = new float3(0, 0, 0);
+			return false;
+		}
+
+		// cosine越大  reflProb越小    ri越大  reflProb越大
+		public static float Schlick(float cosine, float ri)
+		{
+			float r0 = (1 - ri) / (1 + ri);
+			r0 = r0 * r0;
+			return r0 + (1 - r0) * pow(1 - cosine, 5);
+		}
+
+
+		//Random
+		//-------------------
+
 		public static float kPI => 3.1415926f;
 
 		//生成随机数

@@ -5,9 +5,12 @@
 // 46 spheres (2 emissive) when enabled; 9 spheres (1 emissive) when disabled
 #define DO_BIG_SCENE
 
+using Unity.Burst;
 using Unity.Collections;
+using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine.ProBuilder;
+using UnityEngine.ProBuilder.MeshOperations;
 using static Unity.Mathematics.math;
 using static Graphics.Scripts.CPURayTracing.CPURayTracingMathUtil;
 
@@ -170,7 +173,6 @@ namespace Graphics.Scripts.CPURayTracing
 			return outID != -1;
 		}
 
-		/*
 		private static bool Scatter(Material mat, Ray r_in, Hit rec, out float3 attenuation, out Ray scattered,
 			out float3 outLightE, ref int inoutRayCount, ref SpheresSOA spheres, NativeArray<Material> materials,
 			ref uint randState)
@@ -200,7 +202,7 @@ namespace Graphics.Scripts.CPURayTracing
 					{
 						continue;
 					}
-					
+
 					//create a random direction towards sphere
 					//coord system for sampling: sw,su,sv
 					float3 sw = normalize(sCenter - rec.pos);
@@ -237,9 +239,127 @@ namespace Graphics.Scripts.CPURayTracing
 #endif
 				return true;
 			}
+			else if (mat.type == Material.Type.Metal)
+			{
+				float3 refl = reflect(r_in.dir, rec.normal);
+				scattered = new Ray(rec.pos, normalize(refl + mat.roughness * RandomInUnitSphere(ref randState)));
+				attenuation = mat.albedo;
+				return dot(scattered.dir, rec.normal) > 0;
+			}
+			else if (mat.type == Material.Type.Dielectric)
+			{
+				float3 outWN; //out world normal
+				float3 rdir = r_in.dir;
+				float3 refl = reflect(rdir, rec.normal);
+				float nint;
+				attenuation = new float3(1, 1, 1);
+				float3 refr;
+				float reflProb;
+				float cosine;
+				float dn = dot(rdir, rec.normal);
+				//折射的  射入和射出
+				if (dn > 0)
+				{
+					outWN = -rec.normal;
+					nint = mat.ri;
+					cosine = mat.ri * dn;
+				}
+				else
+				{
+					outWN = rec.normal;
+					nint = 1.0f / mat.ri;
+					cosine = -dn;
+				}
+
+				//如果折射射入成功  计算光滑度
+				//reflProb越大则越粗糙    走反射概率越大
+				//cosine越大  reflProb越小    ri越大  reflProb越大
+				if (Refract(rdir, outWN, nint, out refr))
+				{
+					reflProb = Schlick(cosine, mat.ri);
+				}
+				else
+				{
+					reflProb = 1;
+				}
+
+				//越光滑  
+				if (RandomFloat01(ref randState) < reflProb)
+				{
+					scattered = new Ray(rec.pos, normalize(refl));
+				}
+				else
+				{
+					scattered = new Ray(rec.pos, normalize(refr));
+				}
+			}
+			else
+			{
+				attenuation = new float3(0, 0, 0);
+				scattered = default;
+				return false;
+			}
 
 			return false;
 		}
-		*/
+
+
+		private static float3 Trace(Ray r, int depth, ref int inoutRayCount, ref SpheresSOA spheres,
+			NativeArray<Material> materials, ref uint randState, bool doMaterialE = true)
+		{
+			Hit rec = default;
+			int id = 0;
+			++inoutRayCount;
+			if (HitWorld(r, kMinT, kMaxT, ref rec, ref id, ref spheres))
+			{
+				Ray scattered;
+				float3 attenuation;
+				float3 lightE;
+				var mat = materials[id];
+				var matE = mat.emissive;
+				if (depth < kMaxDepth && Scatter(mat, r, rec, out attenuation, out scattered, out lightE,
+					ref inoutRayCount, ref spheres, materials, ref randState))
+				{
+#if DO_LIGHT_SAMPLING
+					if (!doMaterialE)
+					{
+						matE = new float3(0, 0, 0);
+					}
+
+					doMaterialE = (mat.type != Material.Type.Lambert);
+#endif
+					return matE + lightE + attenuation * Trace(scattered, depth + 1, ref inoutRayCount, ref spheres,
+						materials, ref randState, doMaterialE);
+				}
+				else
+				{
+					return matE;
+				}
+			}
+			else
+			{
+				// sky
+				float3 unitDir = r.dir;
+				float t = 0.5f * (unitDir.y + 1.0f);
+				return ((1.0f - t) * new float3(1.0f, 1.0f, 1.0f) + t * new float3(0.5f, 0.7f, 1.0f)) * 0.3f;
+			}
+		}
+
+		[BurstCompile]
+		private struct TraceRowJob : IJobParallelFor
+		{
+			public int screenWidth, screenHeight, frameCount;
+			public Camera cam;
+
+			[NativeDisableParallelForRestriction] public NativeArray<UnityEngine.Color> backbuffer;
+			[NativeDisableParallelForRestriction] public NativeArray<int> rayCounter;
+			[NativeDisableParallelForRestriction] public SpheresSOA spheres;
+			[NativeDisableParallelForRestriction] public NativeArray<Material> materials;
+			
+			public void Execute(int index)
+			{
+				
+			}
+		}
 	}
 }
