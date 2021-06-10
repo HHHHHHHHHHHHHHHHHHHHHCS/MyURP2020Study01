@@ -63,9 +63,9 @@
 			float _TwirlStrength;
 			float _DistortUVStart;
 
-			#if _3DUV_ON
+			// #if _3DUV_ON
 			float2 _PlayerPos;
-			#endif
+			// #endif
 
 			float Remap(float x, float t1, float t2, float s1, float s2)
 			{
@@ -78,21 +78,32 @@
 				return inVec * rsqrt(dp2);
 			}
 
-			#if _3DUV_ON
+			float Length2(float2 v)
+			{
+				return dot(v, v);
+			}
+
+			// #if _3DUV_ON
 
 			float Use3DOffset(float2 uvOffset)
 			{
-				float2 offset3D = _UVOffset.xy - _PlayerPos;
-				float d = dot(uvOffset, offset3D);
+				float2 dir = _UVOffset.xy - _PlayerPos;
+				// float s, c;
+				// sincos(PI / 2, s, c);
+				// dir = float2(c * dir.x - s * dir.y, s * dir.x + c * dir.y);
+				dir = SafeNormalize(dir);
+				float d = dot(uvOffset, dir);
 				return d;
 			}
 
 
-			#endif
+			// #endif
 
 			float2 ScaleUV(float2 uv, float2 center, float ctrl)
 			{
 				ctrl = smoothstep(0, 1, ctrl);
+				// float2 d = normalize(uv - center);
+				// center += d * 0.1; // * ctrl;
 				float2 dir = (0.5 * ctrl + 0.5) * SafeNormalize(uv - center);
 				float2 delta = ctrl * dir;
 				uv = uv + delta;
@@ -107,6 +118,7 @@
 				sincos(angle, s, c);
 				float x = c * delta.x - s * delta.y;
 				float y = s * delta.x + c * delta.y;
+				float2 ddd = float2(x, y);
 				return float2(x + center.x + offset.x, y + center.y + offset.y);
 			}
 
@@ -128,28 +140,31 @@
 				float2 offsetUV = uv - _UVOffset.xy;
 
 				float uv3d = 0;
-				#if _3DUV_ON
+				// #if _3DUV_ON
 				uv3d = Use3DOffset(offsetUV);
-				#endif
+				// #endif
 
-				//todo: d0 and uv3d
 
-				float d0 = 2 * dot(uvOffset.xy - 0.5, uvOffset.xy - 0.5);
-				float scaleStr = saturate(ctrl - 0.6 * lerp(1, 5, d0) * (1 - ctrl) + uv3d);
+				float d0 = 2 * Length2(uvOffset.xy - 0.5);
+				d0 = 0.6 * lerp(1, 5, d0) * (1 - ctrl);
 
-				float d = dot(offsetUV, offsetUV);
+				uv3d = ctrl * (1 - 2 * max(ctrl - 0.5, 0.0)) * max(abs(uv3d), 0.01);
+				float scaleStr = saturate(ctrl - d0 + uv3d);
+
+				float d = Length2(offsetUV);
 				d = Remap(d, 0, 0.75, 0, 1);
 				d = pow(d * 0.3, 2 / 3.0);
 
-				float twirlStr = _TwirlStrength * saturate(ctrl - d + 1 * d0 + uv3d);
+				float twirlStr = _TwirlStrength * saturate(ctrl - d);
 
 				float2 twirl = ScaleUV(uv, _UVOffset.xy, scaleStr);
 				twirl = Twirl(twirl, _UVOffset.xy, _UVOffset.zw, _TwirlStrength * twirlStr);
 
+
 				float2 nearPoint = clamp(twirl, 0, 1);
 				float len = distance(twirl, nearPoint);
 
-				float lerpBack = 0; //smoothstep(0.01, 0.2, len);
+				float lerpBack = smoothstep(0.01, 0.2, len);
 
 				float alpha = max(ctrl - 0.95, 0.0) * 20;
 				lerpBack = min(lerpBack + alpha, 1.0);
