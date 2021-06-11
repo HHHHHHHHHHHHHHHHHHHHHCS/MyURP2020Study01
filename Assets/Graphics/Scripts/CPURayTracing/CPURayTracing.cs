@@ -1,4 +1,4 @@
-//#define DO_ANIMATE
+// #define DO_ANIMATE
 
 #define DO_LIGHT_SAMPLING
 #define DO_THREADED
@@ -9,8 +9,6 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
-using UnityEngine.ProBuilder;
-using UnityEngine.ProBuilder.MeshOperations;
 using static Unity.Mathematics.math;
 using static Graphics.Scripts.CPURayTracing.CPURayTracingMathUtil;
 
@@ -355,11 +353,83 @@ namespace Graphics.Scripts.CPURayTracing
 			[NativeDisableParallelForRestriction] public NativeArray<int> rayCounter;
 			[NativeDisableParallelForRestriction] public SpheresSOA spheres;
 			[NativeDisableParallelForRestriction] public NativeArray<Material> materials;
-			
-			public void Execute(int index)
+
+			public void Execute(int y)
 			{
-				
+				int backbufferIdx = y * screenWidth;
+				float invWidth = 1.0f / screenWidth;
+				float invHeight = 1.0f / screenHeight;
+				float lerpFac = ((float) frameCount / (frameCount + 1));
+#if DO_ANIMATE
+				lerpFac = saturate(lerpFac * DO_ANIMATE_SMOOTHING);
+#endif
+				uint state = (uint) (y * 9781 + frameCount * 6271) | 1;
+				int rayCount = 0;
+				for (int x = 0; x < screenWidth; ++x)
+				{
+					float3 col = new float3(0, 0, 0);
+					for (int s = 0; s < DO_SAMPLES_PER_PIXEL; s++)
+					{
+						float u = (x + RandomFloat01(ref state)) * invWidth;
+						float v = (y + RandomFloat01(ref state)) * invHeight;
+						Ray r = cam.GetRay(u, v, ref state);
+						col += Trace(r, 0, ref rayCount, ref spheres, materials, ref state);
+					}
+
+					col /= (float) DO_SAMPLES_PER_PIXEL;
+
+					UnityEngine.Color prev = backbuffer[backbufferIdx];
+					col = new float3(prev.r, prev.g, prev.b) * lerpFac + col * (1 - lerpFac);
+					backbuffer[backbufferIdx] = new UnityEngine.Color(col.x, col.y, col.z, 1);
+					backbufferIdx++;
+				}
+
+				//TODO: how to do atomics add?
+				rayCounter[0] += rayCount;
 			}
+		}
+
+		public void DoDraw(float time, int frameCount, int screenWidth, int screenHeight,
+			NativeArray<UnityEngine.Color> backbuffer, out int outRayCount)
+		{
+			int rayCount = 0;
+#if DO_ANIMATE
+			spheresData[1].center.y = cos(time) + 1.0f;
+			spheresData[8].center.z = sin(time) * 0.3f;
+#endif
+			float3 lookFrom = new float3(0, 2, 3);
+			float3 lookAt = new float3(0, 0, 0);
+			float distToFocus = 3;
+			float aperture = 0.1f;
+#if DO_BIG_SCENE
+			aperture *= 0.2f;
+#endif
+			spheresSOA.Update(spheresData, sphereMatsData);
+
+			Camera cam = new Camera(lookFrom, lookAt, new float3(0, 1, 0), 60,
+				(float) screenWidth / (float) screenHeight, aperture, distToFocus);
+#if DO_THREADED
+			TraceRowJob job;
+			job.screenWidth = screenWidth;
+			job.screenHeight = screenHeight;
+			job.frameCount = frameCount;
+			job.backbuffer = backbuffer;
+			job.cam = cam;
+			job.rayCounter = new NativeArray<int>(1, Allocator.TempJob);
+			job.spheres = spheresSOA;
+			job.materials = new NativeArray<Material>(sphereMatsData, Allocator.TempJob);
+			var fence = job.Schedule(screenHeight, 4);
+			fence.Complete();
+			rayCount = job.rayCounter[0];
+			job.rayCounter.Dispose();
+			job.materials.Dispose();
+#else
+			for (int y = 0; y < screenHeight; ++y)
+			{
+				rayCount += TraceRowJob(y, screenWidth, screenHeight, frameCount, backbuffer, ref cam);
+			}
+#endif
+			outRayCount = rayCount;
 		}
 	}
 }

@@ -1,7 +1,6 @@
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
-using UnityEngine;
 using static Unity.Mathematics.math;
 
 namespace Graphics.Scripts.CPURayTracing
@@ -54,7 +53,7 @@ namespace Graphics.Scripts.CPURayTracing
 			// set trailing data to "impossible sphere" state
 			for (int i = len; i < simdLen; ++i)
 			{
-				centerX[i] = centerY[i] = centerZ[i] = 10000.0f;
+				centerX[i] = centerY[i] = centerZ[i] = INFINITY;
 				sqRadius[i] = 0.0f;
 				invRadius[i] = 0.0f;
 			}
@@ -118,7 +117,7 @@ namespace Graphics.Scripts.CPURayTracing
 				float4 coX = sCenterX - rOriX;
 				float4 coY = sCenterY - rOriY;
 				float4 coZ = sCenterZ - rOriZ;
-				float4 nb = coX * rDirX + coY * rDirY + coZ * rDirZ.z;
+				float4 nb = coX * rDirX + coY * rDirY + coZ * rDirZ;
 				float4 c = coX * coX + coY * coY + coZ * coZ - sSqRadius;
 				float4 discr = nb * nb - c;
 				bool4 discrPos = discr > 0.0f; //如果有一个交点  也不算射中
@@ -133,7 +132,7 @@ namespace Graphics.Scripts.CPURayTracing
 
 					// if t0 is above min, take it (since it's the earlier hit); else try t1.
 					float4 t = select(t1, t0, t0 > tMin4);
-					bool4 mask = discrPos & (t > tMin4) & (t < hitT);
+					bool4 mask = discrPos & (t > tMin4) & (t < hitT) & (sCenterX != INFINITY);
 					//if hit ,take it
 					id = select(id, curId, mask);
 					hitT = select(hitT, t, mask);
@@ -151,7 +150,7 @@ namespace Graphics.Scripts.CPURayTracing
 			float minT = min(minT2.x, minT2.y);
 			if (minT < tMax)
 			{
-				int laneMask = csum(int4(hitT == float4(minT) * int4(1, 2, 4, 8)));
+				int laneMask = csum(int4(hitT == float4(minT)) * int4(1, 2, 4, 8));
 				//get index of first closet lane
 				//tzcnt:返回二进制 末尾零的个数
 				int lane = tzcnt(laneMask);
