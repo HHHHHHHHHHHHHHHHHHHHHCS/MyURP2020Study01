@@ -162,7 +162,7 @@
 				d = Remap(d, 0, 0.75, 0, 1);
 				d = pow(d * 0.3, 2 / 3.0);
 
-				float twirlStr = twirlStrength * saturate(ctrl - d);
+				float twirlStr = abs(twirlStrength) * saturate(ctrl - d);
 
 
 				float2 twirl = ScaleUV(uv, center, offsetCenter, scaleStr);
