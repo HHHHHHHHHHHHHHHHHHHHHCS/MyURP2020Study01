@@ -34,7 +34,6 @@
 			#pragma multi_compile_local_fragment _ _3DUV_ON
 
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
-			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
 			struct a2v
@@ -85,9 +84,9 @@
 
 			#if _3DUV_ON
 
-			float Use3DOffset(float2 uvOffset)
+			float Use3DOffset(float2 uvOffset,float2 center,float2 playerPos)
 			{
-				float2 dir = _UVOffset.xy - _PlayerPos;
+				float2 dir = center - playerPos;
 				// float s, c;
 				// sincos(PI / 2, s, c);
 				// dir = float2(c * dir.x - s * dir.y, s * dir.x + c * dir.y);
@@ -99,12 +98,12 @@
 
 			#endif
 
-			float2 ScaleUV(float2 uv, float2 center, float ctrl)
+			float2 ScaleUV(float2 uv, float2 center, float2 offsetCenter, float ctrl)
 			{
 				ctrl = smoothstep(0, 1, ctrl);
 				// float2 d = normalize(uv - center);
 				// center += d * 0.1; // * ctrl;
-				float2 dir = (0.5 * ctrl + 0.5) * SafeNormalize(uv - center);
+				float2 dir = (0.5 * ctrl + 0.5) * SafeNormalize(offsetCenter);
 				float2 delta = ctrl * dir;
 				uv = uv + delta;
 				return uv;
@@ -133,33 +132,45 @@
 			{
 				float ctrl = _ProgressCtrl;
 				float2 uv = IN.uv;
-				float4 uvOffset = _UVOffset;
+				float2 center = _UVOffset.xy;
+				float2 offset = _UVOffset.zw;
+				float twirlStrength = _TwirlStrength;
 
 
-				float2 offsetUV = uv - _UVOffset.xy;
+				float2 offsetCenter = uv - center;
 
 				float uv3d = 0;
 				#if _3DUV_ON
-				uv3d = Use3DOffset(offsetUV);
+				uv3d = Use3DOffset(offsetCenter, center, _PlayerPos);
+				uv3d = ctrl * (1 - 2 * max(ctrl - 0.5, 0.0)) * max(abs(uv3d), 0.01);
 				#endif
 
+				//缩放强度
+				//----------------------------
 
-				float d0 = 2 * Length2(uvOffset.xy - 0.5);
+				//根据中心点越偏移  缩放越小
+				float d0 = 2 * Length2(center - 0.5);
 				d0 = 0.6 * lerp(1, 5, d0) * (1 - ctrl);
 
-				uv3d = ctrl * (1 - 2 * max(ctrl - 0.5, 0.0)) * max(abs(uv3d), 0.01);
 				float scaleStr = saturate(ctrl - d0 + uv3d);
 
-				float d = Length2(offsetUV);
+				//旋转强度
+				//-----------------------------
+
+				//根据到中心点距离有关
+				float d = Length2(offsetCenter);
 				d = Remap(d, 0, 0.75, 0, 1);
 				d = pow(d * 0.3, 2 / 3.0);
 
-				float twirlStr = _TwirlStrength * saturate(ctrl - d);
-
-				float2 twirl = ScaleUV(uv, _UVOffset.xy, scaleStr);
-				twirl = Twirl(twirl, _UVOffset.xy, _UVOffset.zw, _TwirlStrength * twirlStr);
+				float twirlStr = twirlStrength * saturate(ctrl - d);
 
 
+				float2 twirl = ScaleUV(uv, center, offsetCenter, scaleStr);
+				twirl = Twirl(twirl, center, offset, twirlStrength * twirlStr);
+
+
+				//羽化边缘
+				//-------------------------
 				float2 nearPoint = clamp(twirl, 0, 1);
 				float len = distance(twirl, nearPoint);
 
@@ -171,9 +182,8 @@
 				//backTex
 				//-----------
 				half3 backCol = SAMPLE_TEXTURE2D(_BackTex, s_linear_clamp_sampler, twirl).rgb;
-				float backLine = 2 * twirlStr * ctrl
-					* (SAMPLE_TEXTURE2D(_DistortUVTex, s_linear_clamp_sampler, twirl).r);
-				backCol += backLine;
+				float backLine = SAMPLE_TEXTURE2D(_DistortUVTex, s_linear_clamp_sampler, twirl).r;
+				backCol += 2 * twirlStr * ctrl * backLine;
 
 				//frontTex
 				//-----------
