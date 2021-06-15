@@ -32,7 +32,7 @@ namespace Graphics.Scripts.CartoonWater
 			public bool shadows;
 		}
 
-		private const string c_cameraName = "Planar Reflection Camera";
+		private const string k_cameraName = "Planar Reflection Camera";
 
 		public static Camera reflectionCamera;
 
@@ -141,7 +141,7 @@ namespace Graphics.Scripts.CartoonWater
 		{
 			if (reflectionCamera == null)
 			{
-				SafeDestroy(GameObject.Find(c_cameraName));
+				SafeDestroy(GameObject.Find(k_cameraName));
 				reflectionCamera = CreateMirrorObjects(realCamera);
 			}
 
@@ -182,7 +182,7 @@ namespace Graphics.Scripts.CartoonWater
 			//SRP 应该可以直接set vp 的
 			//不用创建新的摄像机
 			GameObject go =
-				new GameObject(c_cameraName, typeof(Camera));
+				new GameObject(k_cameraName, typeof(Camera));
 			var newCameraData =
 				go.AddComponent<UniversalAdditionalCameraData>();
 			// var currentCameraData =

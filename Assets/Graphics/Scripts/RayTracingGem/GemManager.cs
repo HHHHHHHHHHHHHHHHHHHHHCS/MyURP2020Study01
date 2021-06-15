@@ -153,7 +153,7 @@ namespace Graphics.Scripts.RayTracingGem
 				material.SetBuffer(Vertices_ID, vertexBuffer);
 				material.SetBuffer(Indices_ID, meshObjectBuffer);
 
-				MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+				// mpb.Clear();
 				renderer.GetPropertyBlock(mpb);
 				mpb.SetInt(MeshIndex_ID, i);
 				renderer.SetPropertyBlock(mpb);
