@@ -97,13 +97,18 @@ namespace Graphics.Scripts.CartoonWater
 				return;
 			}
 
+			if (camera == reflectionCamera)
+			{
+				return;
+			}
+
 			var oldCulling = GL.invertCulling;
 			var oldFog = RenderSettings.fog;
 			var oldMax = QualitySettings.maximumLODLevel;
 			var oldBias = QualitySettings.lodBias;
 			var oldGlobalEnable = MyRenderObjectsFeature.globalEnable;
 
-			//剔除时针改变  显示背面  因为水可能要背面
+			//确保剔除顺序是正确的
 			GL.invertCulling = false;
 			RenderSettings.fog = false;
 			QualitySettings.maximumLODLevel = 1;
@@ -181,8 +186,20 @@ namespace Graphics.Scripts.CartoonWater
 		{
 			//SRP 应该可以直接set vp 的
 			//不用创建新的摄像机
-			GameObject go =
-				new GameObject(k_cameraName, typeof(Camera));
+			GameObject go = new GameObject(k_cameraName)
+			{
+				hideFlags = HideFlags.HideAndDontSave
+			};
+
+
+			//添加了UniversalAdditionalCameraData  会自动添加Camera
+			var refCam = go.AddComponent<Camera>();
+			refCam.transform.SetPositionAndRotation(transform.position, transform.rotation);
+			refCam.allowMSAA = currentCamera.allowMSAA;
+			refCam.depth = currentCamera.depth - 10; //保证优先渲染
+			refCam.allowHDR = currentCamera.allowHDR;
+			refCam.enabled = false;
+
 			var newCameraData =
 				go.AddComponent<UniversalAdditionalCameraData>();
 			// var currentCameraData =
@@ -190,14 +207,6 @@ namespace Graphics.Scripts.CartoonWater
 			newCameraData.renderShadows = settings.shadows;
 			newCameraData.requiresColorOption = CameraOverrideOption.Off;
 			newCameraData.requiresDepthOption = CameraOverrideOption.Off;
-
-			var refCam = go.GetComponent<Camera>();
-			refCam.transform.SetPositionAndRotation(transform.position, transform.rotation);
-			refCam.allowMSAA = currentCamera.allowMSAA;
-			refCam.depth = currentCamera.depth - 10; //保证优先渲染
-			refCam.allowHDR = currentCamera.allowHDR;
-			refCam.enabled = false;
-			go.hideFlags = HideFlags.HideAndDontSave;
 
 			return refCam;
 		}
@@ -210,7 +219,7 @@ namespace Graphics.Scripts.CartoonWater
 			}
 
 			dest.CopyFrom(src); //复制camera设置
-			dest.cameraType = src.cameraType;//加上一些game的处理
+			dest.cameraType = src.cameraType; //加上一些game的处理
 			dest.useOcclusionCulling = false;
 		}
 
