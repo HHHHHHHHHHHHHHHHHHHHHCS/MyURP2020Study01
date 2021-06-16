@@ -150,7 +150,7 @@
 
 				//根据中心点越偏移  缩放越小
 				float d0 = 2 * Length2(center - 0.5);
-				d0 = 0.6 * lerp(1, 5, d0) * (1 - ctrl);
+				d0 = 2.5 * lerp(1, 5, d0) * (1 - ctrl);
 
 				float scaleStr = saturate(ctrl - d0 + uv3d);
 
@@ -160,7 +160,7 @@
 				//根据到中心点距离有关
 				float d = Length2(offsetCenter);
 				d = Remap(d, 0, 0.75, 0, 1);
-				d = pow(d * 0.3, 2 / 3.0);
+				d = pow(d * 0.3, 1 / 5.0);
 
 				float twirlStr = abs(twirlStrength) * saturate(ctrl - d);
 
