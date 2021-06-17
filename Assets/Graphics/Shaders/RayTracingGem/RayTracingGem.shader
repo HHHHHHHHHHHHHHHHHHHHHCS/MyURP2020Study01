@@ -3,6 +3,15 @@ Shader "MyRP/RayTracingGem//RayTracingGem"
 {
 	Properties
 	{
+		_TraceCount("Trace Count", Int) = 5
+		_IOR("IOR", Range(1,5)) = 2.417
+
+		_Color("Color", Color) = (1, 1, 1, 1)
+		_AbsorbIntensity("Absorb Intensity", Range(0,10)) = 1.0
+		_ColorMultiply("Color Multiply", Range(0,5)) = 1.0
+		_ColorAdd("Color Add", Range(0,1)) = 0.0
+
+		_Specular("Specular", Range(0,1)) = 0.0
 	}
 	SubShader
 	{
@@ -21,31 +30,26 @@ Shader "MyRP/RayTracingGem//RayTracingGem"
 			struct a2v
 			{
 				float4 vertex : POSITION;
-				float2 uv : TEXCOORD0;
 			};
 
 			struct v2f
 			{
 				float4 vertex : SV_POSITION;
+				float2 screenPos : TEXCOORD0;
 			};
 
 			v2f vert(a2v v)
 			{
 				v2f o;
 				o.vertex = TransformObjectToHClip(v.vertex.xyz);
+				o.screenPos.xy = o.vertex.xy / o.vertex.w;
+				o.screenPos.xy = 2.0 * (o.screenPos.xy) - 1.0;
 				return o;
 			}
 
-			half4 frag(v2f IN, half facing : VFACE) : SV_Target
+			half4 frag(v2f IN/*, half facing : VFACE*/) : SV_Target
 			{
-				if (facing > 0)
-				{
-					return half4(1, 0, 0, 1);
-				}
-				else
-				{
-					return 1;
-				}
+				return 0;
 			}
 			ENDHLSL
 		}
