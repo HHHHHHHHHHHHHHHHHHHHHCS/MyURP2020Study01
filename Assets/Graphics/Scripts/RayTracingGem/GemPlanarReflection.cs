@@ -95,7 +95,7 @@ namespace Graphics.Scripts.RayTracingGem
 			QualitySettings.lodBias = oldBias * 0.5f;
 
 			UpdateReflectionCamera();
-
+			
 			UniversalRenderPipeline.RenderSingleCamera(context, reflectionCamera);
 
 			GL.invertCulling = oldCulling;
@@ -117,7 +117,7 @@ namespace Graphics.Scripts.RayTracingGem
 
 			var camGO = new GameObject(k_cameraName)
 			{
-				hideFlags = HideFlags.HideAndDontSave
+				// hideFlags = HideFlags.HideAndDontSave
 			};
 
 			//添加了 UniversalAdditionalCameraData  会自动添加Camera
@@ -145,14 +145,22 @@ namespace Graphics.Scripts.RayTracingGem
 				return;
 			}
 
-			reflectionTexture = new RenderTexture(mainCamera.scaledPixelWidth, mainCamera.pixelHeight, 24);
+			reflectionTexture = new RenderTexture(mainCamera.scaledPixelWidth, mainCamera.pixelHeight, 24)
+			{
+				name = "_ReflectionTexture"
+			};
 			reflectionCamera.targetTexture = reflectionTexture;
 		}
 
 		private void UpdateReflectionCamera()
 		{
 			reflectionCamera.CopyFrom(mainCamera);
-
+			reflectionCamera.cameraType = mainCamera.cameraType; //加上一些game的处理
+			reflectionCamera.useOcclusionCulling = false;
+			
+			//Camera.CopyFrom() 会改变设置   所以需要重新 设置回来
+			reflectionCamera.targetTexture = reflectionTexture;
+			
 			Vector3 camForward = mainCameraTS.forward;
 			Vector3 camUp = mainCameraTS.up;
 			Vector3 camPos = mainCameraTS.position;

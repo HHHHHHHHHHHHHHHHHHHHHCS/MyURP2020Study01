@@ -125,10 +125,135 @@ bool IntersectTriangle_MT97_NoCull(Ray ray, float3 vert0, float3 vert1, float3 v
     return true;
 }
 
-void IntersectMeshObject(Ray ray,inout RayHit baseHit,MeshObject meshObject)
+void IntersectMeshObject(Ray ray, inout RayHit baseHit, MeshObject meshObject)
 {
-    // uint offset = meshObject.indicesOffset;
-    //TODO:
+    uint offset = meshObject.indicesOffset;
+    uint count = offset + meshObject.indicesCount;
+
+    for (uint i = offset; i < count; i += 3)
+    {
+        float3 v0 = mul(meshObject.localToWorldMatrix, float4(_Vertices[_Indices[i]], 1)).xyz;
+        float3 v1 = mul(meshObject.localToWorldMatrix, float4(_Vertices[_Indices[i + 1]], 1)).xyz;
+        float3 v2 = mul(meshObject.localToWorldMatrix, float4(_Vertices[_Indices[i + 2]], 1)).xyz;
+
+        float t, u, v;
+        if (IntersectTriangle_MT97_NoCull(ray, v0, v1, v2, t, u, v))
+        {
+            if (t > 0 && t < baseHit.distance)
+            {
+                baseHit.distance = t;
+                baseHit.position = ray.origin + t * ray.direction;
+                baseHit.normal = normalize(cross(v1 - v0, v2 - v0));
+            }
+        }
+    }
 }
+
+//Trace
+//-----------------------
+
+RayHit Trace(Ray ray)
+{
+    RayHit baseHit = CreateRayHit();
+
+    //Trace mesh objects
+    IntersectMeshObject(ray, baseHit, _MeshObjects[_MeshIndex]);
+
+    return baseHit;
+}
+
+//Shade
+//----------------------
+
+float3 SampleCubemap(float3 direction)
+{
+    return SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, direction, 0);
+}
+
+float Refract(float3 i, float n, float eta, inout float3 o)
+{
+    float cosi = dot(-i, n);
+    float cost2 = max(1.0f - eta * eta * (1 - cosi * cosi), 0);
+
+    o = eta * i + ((eta * cosi - sqrt(cost2)) * n);
+    return 1 - step(cost2,HALF_EPS);
+}
+
+float FresnelSchlick(float3 normal, float3 incident, float ref_idx)
+{
+    float cosine = dot(-incident, normal);
+    float r0 = (1 - ref_idx) / (1 + ref_idx); //ref_idx = n2/n1
+    r0 = r0 * r0;
+    float ret = r0 + (1 - r0) * pow((1 - cosine), 5);
+    return ret;
+}
+
+float3 Shade(inout Ray ray, RayHit hit, int depth)
+{
+    //1.#INF
+    if (hit.distance < FLT_INF && depth < (_TraceCount - 1))
+    {
+        float3 specular = float3(0, 0, 0);
+
+        float eta;
+        float3 normal;
+
+        //out
+        if (dot(ray.direction, hit.normal) > 0)
+        {
+            normal = -hit.normal;
+            eta = _IOR;
+        }
+        else //in
+        {
+            normal = hit.normal;
+            eta = 1.0 / _IOR;
+        }
+
+        ray.origin = hit.position - normal * 0.001f;
+
+        float3 refractRay;
+        float refracted = Refract(ray.direction, normal, eta, refractRay);
+
+        if (depth == 0.0)
+        {
+            float3 reflectDir = reflect(ray.direction, hit.normal);
+            reflectDir = normalize(reflectDir);
+
+            float3 reflectProb = FresnelSchlick(normal, ray.direction, eta) * _Specular;
+            specular = SampleCubemap(reflectDir) * reflectProb;
+            ray.energy *= 1 - reflectProb;
+        }
+        else
+        {
+            ray.absorbDistance += hit.distance;
+        }
+
+        //Refraction
+        if (refracted == 1.0)
+        {
+            ray.direction = refractRay;
+        }
+        else //Total Internal Reflection
+        {
+            ray.direction = reflect(ray.direction, normal);
+        }
+
+        ray.direction = normalize(ray.direction);
+
+        return specular;
+    }
+    else
+    {
+        ray.energy = 0.0f;
+
+        float3 cubeColor = SampleCubemap(ray.direction);
+        float3 absorbColor = 1.0 - _Color;
+        float3 absorb = exp(-absorbColor * ray.absorbDistance * _AbsorbIntensity);
+
+        return cubeColor * absorb * _ColorMultiply + _ColorAdd * _Color;
+    }
+}
+
 
 #endif

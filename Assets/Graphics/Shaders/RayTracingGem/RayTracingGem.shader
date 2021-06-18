@@ -1,5 +1,5 @@
 //https://github.com/Sorumi/UnityRayTracingGem
-Shader "MyRP/RayTracingGem//RayTracingGem"
+Shader "MyRP/RayTracingGem/RayTracingGem"
 {
 	Properties
 	{
@@ -27,6 +27,9 @@ Shader "MyRP/RayTracingGem//RayTracingGem"
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+			#include "RayTracingGem.hlsl"
+
+
 			struct a2v
 			{
 				float4 vertex : POSITION;
@@ -49,7 +52,24 @@ Shader "MyRP/RayTracingGem//RayTracingGem"
 
 			half4 frag(v2f IN/*, half facing : VFACE*/) : SV_Target
 			{
-				return 0;
+				Ray ray = CreateCameraRay(IN.screenPos);
+
+				float3 result = 0;
+
+				UNITY_UNROLLX(10)
+				for (int i = 0; i < _TraceCount; i++)
+				{
+					RayHit hit = Trace(ray);
+
+					result += ray.energy * Shade(ray, hit, i);
+
+					if (!any(ray.energy))
+					{
+						break;
+					}
+				}
+
+				return half4(result, 1);
 			}
 			ENDHLSL
 		}
