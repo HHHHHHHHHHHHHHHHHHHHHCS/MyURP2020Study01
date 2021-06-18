@@ -136,6 +136,7 @@ GameObject:
   - component: {fileID: 309291076}
   - component: {fileID: 309291080}
   - component: {fileID: 309291079}
+  - component: {fileID: 309291081}
   m_Layer: 0
   m_Name: EmeraldCut
   m_TagString: Untagged
@@ -162,7 +163,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7a9db2fbb5ca6c745a55c6e9a1f200ba, type: 2}
+  - {fileID: 2100000, guid: 58e378313bb3062419e462bd33c2b223, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -236,6 +237,18 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -2680835801149292301, guid: ec7cf6256ae15ed45a4e9e3b76dc1b28, type: 3}
+--- !u!114 &309291081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 309291075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284cd104b680e7245b12ea4a5679d6df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &608392413
 GameObject:
   m_ObjectHideFlags: 0
@@ -342,6 +355,7 @@ GameObject:
   - component: {fileID: 855979207}
   - component: {fileID: 855979211}
   - component: {fileID: 855979210}
+  - component: {fileID: 855979212}
   m_Layer: 0
   m_Name: PrincessCut
   m_TagString: Untagged
@@ -368,7 +382,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7a9db2fbb5ca6c745a55c6e9a1f200ba, type: 2}
+  - {fileID: 2100000, guid: 8c4d8f83b2fe4f240b263c0b654c3614, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -442,6 +456,18 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -4328902592951985921, guid: d58f3762a99b7d944ad3803515413730, type: 3}
+--- !u!114 &855979212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 855979206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284cd104b680e7245b12ea4a5679d6df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1098036052
 GameObject:
   m_ObjectHideFlags: 0
@@ -506,6 +532,7 @@ GameObject:
   - component: {fileID: 1164814825}
   - component: {fileID: 1164814829}
   - component: {fileID: 1164814828}
+  - component: {fileID: 1164814830}
   m_Layer: 0
   m_Name: MarquiseCut
   m_TagString: Untagged
@@ -532,7 +559,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7a9db2fbb5ca6c745a55c6e9a1f200ba, type: 2}
+  - {fileID: 2100000, guid: 3fef2b1b071483b4b90afc18e9331c44, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -606,6 +633,18 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 3850561580446142958, guid: f43325dd0e4329640ab37dda39e055a2, type: 3}
+--- !u!114 &1164814830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1164814824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284cd104b680e7245b12ea4a5679d6df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1208668379
 GameObject:
   m_ObjectHideFlags: 0
@@ -619,6 +658,7 @@ GameObject:
   - component: {fileID: 1208668380}
   - component: {fileID: 1208668384}
   - component: {fileID: 1208668383}
+  - component: {fileID: 1208668385}
   m_Layer: 0
   m_Name: OvalCut
   m_TagString: Untagged
@@ -645,7 +685,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7a9db2fbb5ca6c745a55c6e9a1f200ba, type: 2}
+  - {fileID: 2100000, guid: a2e56b7d21d7dd042befd3314f5458a9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -719,6 +759,18 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -554374368974360513, guid: 4c54f29ce9d8db042869204fe713d9eb, type: 3}
+--- !u!114 &1208668385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1208668379}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284cd104b680e7245b12ea4a5679d6df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1264023708
 GameObject:
   m_ObjectHideFlags: 0
@@ -842,6 +894,7 @@ GameObject:
   - component: {fileID: 1469937602}
   - component: {fileID: 1469937606}
   - component: {fileID: 1469937605}
+  - component: {fileID: 1469937607}
   m_Layer: 0
   m_Name: CushionCut
   m_TagString: Untagged
@@ -868,7 +921,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7a9db2fbb5ca6c745a55c6e9a1f200ba, type: 2}
+  - {fileID: 2100000, guid: 50f8a3e0401bcc54287efef2c8b5f4ae, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -942,6 +995,18 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 4918931548267546780, guid: 7c456c3ef725ad646947195854962e90, type: 3}
+--- !u!114 &1469937607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1469937601}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284cd104b680e7245b12ea4a5679d6df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1522002437
 GameObject:
   m_ObjectHideFlags: 0
@@ -1021,8 +1086,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1522002437}
-  m_LocalRotation: {x: -0.6490413, y: -0.025421394, z: 0.021675752, w: -0.76001936}
-  m_LocalPosition: {x: -0.01788085, y: 3.9226904, z: 0.7030693}
+  m_LocalRotation: {x: -0.15329765, y: 0.83112854, z: -0.45545873, w: -0.27979028}
+  m_LocalPosition: {x: 1.5514181, y: -0.053846836, z: 1.0351903}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1099,6 +1164,7 @@ GameObject:
   - component: {fileID: 1571763719}
   - component: {fileID: 1571763723}
   - component: {fileID: 1571763722}
+  - component: {fileID: 1571763724}
   m_Layer: 0
   m_Name: AsscherCut
   m_TagString: Untagged
@@ -1199,6 +1265,18 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -6202458756033265190, guid: 3140300eb818b85489a056b68d71ca43, type: 3}
+--- !u!114 &1571763724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1571763718}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284cd104b680e7245b12ea4a5679d6df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2026568754
 GameObject:
   m_ObjectHideFlags: 0
@@ -1212,6 +1290,7 @@ GameObject:
   - component: {fileID: 2026568755}
   - component: {fileID: 2026568759}
   - component: {fileID: 2026568758}
+  - component: {fileID: 2026568760}
   m_Layer: 0
   m_Name: RoundCut
   m_TagString: Untagged
@@ -1238,7 +1317,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7a9db2fbb5ca6c745a55c6e9a1f200ba, type: 2}
+  - {fileID: 2100000, guid: 797ba03588cddfe4293c1c4232b46aa9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1312,6 +1391,18 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -5576962347323423645, guid: 6e64d04dfd0415d4190b573e55879a1b, type: 3}
+--- !u!114 &2026568760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2026568754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284cd104b680e7245b12ea4a5679d6df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2075702077
 GameObject:
   m_ObjectHideFlags: 0
@@ -1325,6 +1416,7 @@ GameObject:
   - component: {fileID: 2075702078}
   - component: {fileID: 2075702082}
   - component: {fileID: 2075702081}
+  - component: {fileID: 2075702083}
   m_Layer: 0
   m_Name: PearCut
   m_TagString: Untagged
@@ -1351,7 +1443,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 7a9db2fbb5ca6c745a55c6e9a1f200ba, type: 2}
+  - {fileID: 2100000, guid: 2e45ea79d7b042748801c6e687d74193, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1425,3 +1517,15 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -3607130675063494120, guid: 277468db56525f5448d1df3a5edb03da, type: 3}
+--- !u!114 &2075702083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2075702077}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 284cd104b680e7245b12ea4a5679d6df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -19,15 +19,28 @@ namespace Graphics.Scripts.RayTracingGem
 		private static readonly int Indices_ID = Shader.PropertyToID("_Indices");
 		private static readonly int MeshIndex_ID = Shader.PropertyToID("_MeshIndex");
 
-		public static GemManager Instance { get; private set; }
+		private static GemManager _instance;
 
-		private List<GemObject> gemObjects = new List<GemObject>();
-		private List<MeshObject> meshObjects = new List<MeshObject>();
-		private List<Vector3> vertices = new List<Vector3>();
-		private List<int> indices = new List<int>();
+		public static GemManager Instance
+		{
+			get
+			{
+				if (_instance == null)
+				{
+					FindObjectOfType<GemManager>().Init();
+				}
 
-		private List<Transform> transformsToWatch = new List<Transform>();
-		private bool meshObjectsNeedRebuilding = true;
+				return _instance;
+			}
+		}
+
+		private List<GemObject> gemObjects;
+		private List<MeshObject> meshObjects;
+		private List<Vector3> vertices;
+		private List<int> indices;
+
+		private List<Transform> transformsToWatch;
+		private bool meshObjectsNeedRebuilding;
 
 		private ComputeBuffer meshObjectBuffer;
 		private ComputeBuffer vertexBuffer;
@@ -38,8 +51,28 @@ namespace Graphics.Scripts.RayTracingGem
 
 		private void Awake()
 		{
-			Instance = this;
+			Init();
+		}
+
+		//GemObject 的 OnEnable 可能在  GemManager的Awake之前
+		//但是又懒得加调整顺序   所以直接单例FindObjectOfType
+		private void Init()
+		{
+			if (_instance != null)
+			{
+				return;
+			}
+
+			_instance = this;
 			mpb = new MaterialPropertyBlock();
+
+			meshObjectsNeedRebuilding = true;
+
+			gemObjects = new List<GemObject>();
+			meshObjects = new List<MeshObject>();
+			vertices = new List<Vector3>();
+			indices = new List<int>();
+			transformsToWatch = new List<Transform>();
 		}
 
 		private void Update()
@@ -77,7 +110,7 @@ namespace Graphics.Scripts.RayTracingGem
 		{
 			gemObjects.Remove(gem);
 			transformsToWatch.Remove(gem.transform);
-			meshObjectsNeedRebuilding = false;
+			meshObjectsNeedRebuilding = true;
 		}
 
 		private void BuildMeshObjectBuffers()
@@ -111,9 +144,9 @@ namespace Graphics.Scripts.RayTracingGem
 				});
 			}
 
-			CreateComputeBuffer(ref meshObjectBuffer, meshObjects, 72);
-			CreateComputeBuffer(ref vertexBuffer, vertices, 12);
-			CreateComputeBuffer(ref indexBuffer, indices, 4);
+			CreateComputeBuffer(ref meshObjectBuffer, meshObjects, 72); //16*4+4+4
+			CreateComputeBuffer(ref vertexBuffer, vertices, 12); //3*4
+			CreateComputeBuffer(ref indexBuffer, indices, 4); //1*4
 		}
 
 		private void CreateComputeBuffer<T>(ref ComputeBuffer buffer, List<T> data, int stride)

@@ -125,7 +125,7 @@ bool IntersectTriangle_MT97_NoCull(Ray ray, float3 vert0, float3 vert1, float3 v
     return true;
 }
 
-void IntersectMeshObject(Ray ray, inout RayHit baseHit, MeshObject meshObject)
+void IntersectMeshObject(Ray ray, inout RayHit bestHit, MeshObject meshObject)
 {
     uint offset = meshObject.indicesOffset;
     uint count = offset + meshObject.indicesCount;
@@ -139,11 +139,11 @@ void IntersectMeshObject(Ray ray, inout RayHit baseHit, MeshObject meshObject)
         float t, u, v;
         if (IntersectTriangle_MT97_NoCull(ray, v0, v1, v2, t, u, v))
         {
-            if (t > 0 && t < baseHit.distance)
+            if (t > 0 && t < bestHit.distance)
             {
-                baseHit.distance = t;
-                baseHit.position = ray.origin + t * ray.direction;
-                baseHit.normal = normalize(cross(v1 - v0, v2 - v0));
+                bestHit.distance = t;
+                bestHit.position = ray.origin + t * ray.direction;
+                bestHit.normal = normalize(cross(v1 - v0, v2 - v0));
             }
         }
     }
@@ -154,20 +154,20 @@ void IntersectMeshObject(Ray ray, inout RayHit baseHit, MeshObject meshObject)
 
 RayHit Trace(Ray ray)
 {
-    RayHit baseHit = CreateRayHit();
+    RayHit bestHit = CreateRayHit();
 
     //Trace mesh objects
-    IntersectMeshObject(ray, baseHit, _MeshObjects[_MeshIndex]);
+    IntersectMeshObject(ray, bestHit, _MeshObjects[_MeshIndex]);
 
-    return baseHit;
+    return bestHit;
 }
 
 //Shade
 //----------------------
 
-float3 SampleCubemap(float3 direction)
+half3 SampleCubemap(float3 direction)
 {
-    return SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, direction, 0);
+    return SAMPLE_TEXTURECUBE_LOD(unity_SpecCube0, samplerunity_SpecCube0, direction, 0).rgb;
 }
 
 float Refract(float3 i, float n, float eta, inout float3 o)
@@ -188,7 +188,7 @@ float FresnelSchlick(float3 normal, float3 incident, float ref_idx)
     return ret;
 }
 
-float3 Shade(inout Ray ray, RayHit hit, int depth)
+half3 Shade(inout Ray ray, RayHit hit, int depth)
 {
     //1.#INF
     if (hit.distance < FLT_INF && depth < (_TraceCount - 1))
@@ -253,6 +253,28 @@ float3 Shade(inout Ray ray, RayHit hit, int depth)
 
         return cubeColor * absorb * _ColorMultiply + _ColorAdd * _Color;
     }
+}
+
+half3 RayTrace(float2 screenUV)
+{
+    Ray ray = CreateCameraRay(screenUV);
+    
+    float3 result = 0;
+
+    // UNITY_UNROLLX(10)
+    for (int i = 0; i < _TraceCount; i++)
+    {
+        RayHit hit = Trace(ray);
+
+        result += ray.energy * Shade(ray, hit, i);
+
+        if (!any(ray.energy))
+        {
+            break;
+        }
+    }
+
+    return result;
 }
 
 

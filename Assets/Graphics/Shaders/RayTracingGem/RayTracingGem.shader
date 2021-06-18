@@ -18,7 +18,7 @@ Shader "MyRP/RayTracingGem/RayTracingGem"
 
 		Pass
 		{
-			Cull Back
+			//Cull Back
 
 			HLSLPROGRAM
 			#pragma vertex vert
@@ -45,29 +45,14 @@ Shader "MyRP/RayTracingGem/RayTracingGem"
 			{
 				v2f o;
 				o.vertex = TransformObjectToHClip(v.vertex.xyz);
-				o.screenPos.xy = o.vertex.xy / o.vertex.w;
-				o.screenPos.xy = 2.0 * (o.screenPos.xy) - 1.0;
+				o.screenPos = o.vertex.xy;
+				o.screenPos.y *=_ProjectionParams.x;
 				return o;
 			}
 
 			half4 frag(v2f IN/*, half facing : VFACE*/) : SV_Target
 			{
-				Ray ray = CreateCameraRay(IN.screenPos);
-
-				float3 result = 0;
-
-				UNITY_UNROLLX(10)
-				for (int i = 0; i < _TraceCount; i++)
-				{
-					RayHit hit = Trace(ray);
-
-					result += ray.energy * Shade(ray, hit, i);
-
-					if (!any(ray.energy))
-					{
-						break;
-					}
-				}
+				half3 result = RayTrace(IN.screenPos);
 
 				return half4(result, 1);
 			}
