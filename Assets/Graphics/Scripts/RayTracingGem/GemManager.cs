@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 
 namespace Graphics.Scripts.RayTracingGem
@@ -27,7 +28,7 @@ namespace Graphics.Scripts.RayTracingGem
 			{
 				if (_instance == null)
 				{
-					FindObjectOfType<GemManager>().Init();
+					FindObjectOfType<GemManager>()?.Init();
 				}
 
 				return _instance;
@@ -134,13 +135,13 @@ namespace Graphics.Scripts.RayTracingGem
 				//the indices need to be offfset
 				int firstIndex = indices.Count;
 				var _indices = mesh.GetIndices(0);
-				indices.AddRange(_indices.Select(index => index + firstVertex));
+				indices.AddRange(_indices.Select(idx => idx + firstVertex));
 
 				meshObjects.Add(new MeshObject()
 				{
 					localToWorldMatrix = gem.transform.localToWorldMatrix,
 					indicesOffset = firstIndex,
-					indicesCount = indices.Count
+					indicesCount = _indices.Length
 				});
 			}
 
@@ -184,7 +185,7 @@ namespace Graphics.Scripts.RayTracingGem
 
 				material.SetBuffer(MeshObjects_ID, meshObjectBuffer);
 				material.SetBuffer(Vertices_ID, vertexBuffer);
-				material.SetBuffer(Indices_ID, meshObjectBuffer);
+				material.SetBuffer(Indices_ID, indexBuffer);
 
 				// mpb.Clear();
 				renderer.GetPropertyBlock(mpb);

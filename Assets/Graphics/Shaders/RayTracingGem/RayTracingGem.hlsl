@@ -50,12 +50,19 @@ Ray CreateRay(float3 origin, float3 direction)
     return ray;
 }
 
-Ray CreateCameraRay(float2 uv)
+Ray CreateCameraRay(float2 screenUV)
 {
     // Transform the camera origin to world space
-    float3 origin = mul(UNITY_MATRIX_I_V, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
-    float4 _direction = mul(UNITY_MATRIX_I_VP, float4(uv, 0.0f, 1.0f));
-    float3 direction = normalize(_direction.xyz / _direction.w);
+    float3 origin = UNITY_MATRIX_I_V._14_24_34;
+
+    // float3 direction = mul(UNITY_MATRIX_I_P, float4(screenUV, 0.0f, 1.0f)).xyz;
+    // direction = mul(UNITY_MATRIX_I_V, float4(direction, 0.0f)).xyz;
+    // direction = normalize(direction);
+
+    //和上面等效  不过上面的存在一定的误差
+    float4 wpos = mul(UNITY_MATRIX_I_VP, float4(screenUV, 1.0f, 1.0f));
+    wpos.xyz /= wpos.w;
+    float3 direction = normalize(wpos.xyz - origin);
 
     return CreateRay(origin, direction);
 }
@@ -258,10 +265,10 @@ half3 Shade(inout Ray ray, RayHit hit, int depth)
 half3 RayTrace(float2 screenUV)
 {
     Ray ray = CreateCameraRay(screenUV);
-    
+
     float3 result = 0;
 
-    // UNITY_UNROLLX(10)
+    UNITY_UNROLLX(10)
     for (int i = 0; i < _TraceCount; i++)
     {
         RayHit hit = Trace(ray);

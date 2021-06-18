@@ -21,6 +21,9 @@ Shader "MyRP/RayTracingGem/RayTracingGem"
 			//Cull Back
 
 			HLSLPROGRAM
+
+			#pragma enable_d3d11_debug_symbols
+			
 			#pragma vertex vert
 			#pragma fragment frag
 
@@ -45,8 +48,8 @@ Shader "MyRP/RayTracingGem/RayTracingGem"
 			{
 				v2f o;
 				o.vertex = TransformObjectToHClip(v.vertex.xyz);
-				o.screenPos = o.vertex.xy;
-				o.screenPos.y *=_ProjectionParams.x;
+				o.screenPos = o.vertex.xy / o.vertex.w;
+				// o.screenPos.y *= _ProjectionParams.x;
 				return o;
 			}
 
