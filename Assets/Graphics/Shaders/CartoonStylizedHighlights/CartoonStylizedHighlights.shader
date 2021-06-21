@@ -35,6 +35,7 @@ Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
 			#pragma fragment frag
 
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
 			#define DegreeToRadian 0.0174533
 
@@ -80,12 +81,29 @@ Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
 			{
 				v2f o;
 
-				o.pos = TransformObjectToHClip(IN.vertex);
-				// o.tangentNormal = TransformObjectToTangent()
-				//TODO:
+				o.worldPos = TransformObjectToWorld(IN.vertex.xyz);
+				o.pos = TransformWorldToHClip(o.worldPos);
 
+				VertexNormalInputs TBNs = GetVertexNormalInputs(IN.normal, IN.tangent);
+				float3x3 rotation = float3x3(TBNs.tangentWS, TBNs.bitangentWS, TBNs.normalWS);
+
+				o.tangentNormal = mul(rotation, IN.normal);
+				o.tangentLightDir = mul(rotation, _MainLightPosition.xyz);
+				o.tangentNormal = mul(rotation, GetWorldSpaceViewDir(o.worldPos));
+
+				o.uv = TRANSFORM_TEX(IN.texcoord, _MainTex);
+
+				return o;
 			}
-			
+
+			half4 frag(v2f IN):SV_Target
+			{
+				half3 tangentNormal = normalize(IN.tangentNormal);
+				half3 tangentLightDir = normalize(IN.tangentLightDir);
+				half3 tangentViewDir = normalize(IN.tangentViewDir);
+				half3 tangentHalfDir = normalize(tangentViewDir + tangentLightDir);
+				return 1;
+			}
 			ENDHLSL
 		}
 	}
