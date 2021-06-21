@@ -102,6 +102,49 @@ Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
 				half3 tangentLightDir = normalize(IN.tangentLightDir);
 				half3 tangentViewDir = normalize(IN.tangentViewDir);
 				half3 tangentHalfDir = normalize(tangentViewDir + tangentLightDir);
+
+				//Scale
+				tangentHalfDir = tangentHalfDir - _ScaleX * tangentHalfDir.x * half3(1, 0, 0);
+				tangentHalfDir = normalize(tangentHalfDir);
+				tangentHalfDir = tangentHalfDir - _ScaleY * tangentHalfDir.y * half3(0, 1, 0);
+				tangentHalfDir = normalize(tangentHalfDir);
+
+				//Rotation
+				float xRad = _RotationX * DegreeToRadian;
+				float3x3 xRotation = float3x3(1, 0, 0,
+				                              0, cos(xRad), sin(xRad),
+				                              0, -sin(xRad), cos(xRad)
+				);
+				float yRad = _RotationY * DegreeToRadian;
+				float3x3 yRotation = float3x3(cos(yRad), 0, -sin(yRad),
+				                              0, 1, 0,
+				                              sin(yRad), 0, cos(yRad));
+				float zRad = _RotationZ * DegreeToRadian;
+				float3x3 zRotation = float3x3(cos(zRad), sin(zRad), 0,
+				                              -sin(zRad), cos(zRad), 0,
+				                              0, 0, 1);
+				tangentHalfDir = mul(zRotation, mul(yRotation, mul(xRotation, tangentHalfDir)));
+
+
+				//Translation
+				tangentHalfDir = tangentHalfDir + half3(_TranslationX, _TranslationY, 0);
+				tangentHalfDir = normalize(tangentHalfDir);
+
+				//Split
+				half signX = sign(tangentHalfDir.x);
+				half signY = sign(tangentHalfDir.y);
+				tangentHalfDir = tangentHalfDir - _SplitX * signX * half3(1, 0, 0) - _SplitY * signY * half3(0, 1, 0);
+				tangentHalfDir = normalize(tangentHalfDir);
+
+				//Square
+				float sqrThetaX = acos(tangentHalfDir.x);
+				float sqrThetaY = acos(tangentHalfDir.y);
+				half sqrNormalX = sin(pow(2 * sqrThetaX, _SquareN));
+				half sqrNormalY = sin(pow(2 * sqrThetaY, _SquareN));
+				tangentHalfDir = tangentHalfDir - _SquareScale * (sqrNormalX * tangentHalfDir * half3(1, 0, 0) +
+					sqrNormalY * tangentHalfDir.y * half3(0, 1, 0));
+				tangentHalfDir = normalize(tangentHalfDir);
+
 				return 1;
 			}
 			ENDHLSL
