@@ -217,6 +217,7 @@ half3 Shade(inout Ray ray, RayHit hit, int depth)
             eta = 1.0 / _IOR;
         }
 
+        //改变射线原点
         ray.origin = hit.position - normal * 0.001f;
 
         float3 refractRay;
@@ -275,7 +276,7 @@ half3 RayTrace(float2 screenUV)
 
         result += ray.energy * Shade(ray, hit, i);
 
-        if (!any(ray.energy))
+        if (any(ray.energy < 0.001))
         {
             break;
         }
