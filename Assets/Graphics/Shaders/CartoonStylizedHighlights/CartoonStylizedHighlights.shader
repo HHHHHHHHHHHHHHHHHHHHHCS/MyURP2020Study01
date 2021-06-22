@@ -62,8 +62,8 @@ Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
 			struct a2v
 			{
 				float4 vertex:POSITION;
+				float2 texcoord:TEXCOORD0;
 				float3 normal:NORMAL;
-				float4 texcoord:TEXCOORD0;
 				float4 tangent:TANGENT;
 			};
 
@@ -84,12 +84,15 @@ Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
 				o.worldPos = TransformObjectToWorld(IN.vertex.xyz);
 				o.pos = TransformWorldToHClip(o.worldPos);
 
-				VertexNormalInputs TBNs = GetVertexNormalInputs(IN.normal, IN.tangent);
-				float3x3 rotation = float3x3(TBNs.tangentWS, TBNs.bitangentWS, TBNs.normalWS);
+				//这个会to world  不是我们想要的
+				// VertexNormalInputs TBNs = GetVertexNormalInputs(IN.normal, IN.tangent);
 
-				o.tangentNormal = mul(rotation, IN.normal);
-				o.tangentLightDir = mul(rotation, _MainLightPosition.xyz);
-				o.tangentNormal = mul(rotation, GetWorldSpaceViewDir(o.worldPos));
+				float3 binormal = cross(normalize(IN.normal), normalize(IN.tangent.xyz)) * IN.tangent.w * GetOddNegativeScale();
+				float3x3 rotation = float3x3(IN.tangent.xyz, binormal, IN.normal);
+
+				o.tangentNormal = mul(rotation, IN.normal); // Equal to (0, 0, 1)
+				o.tangentLightDir = mul(rotation, TransformWorldToObjectDir(_MainLightPosition.xyz));
+				o.tangentViewDir = mul(rotation, TransformWorldToObject(_WorldSpaceCameraPos) - IN.vertex);
 
 				o.uv = TRANSFORM_TEX(IN.texcoord, _MainTex);
 
@@ -131,6 +134,7 @@ Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
 				tangentHalfDir = normalize(tangentHalfDir);
 
 				//Split
+				//这里取出符号进行分割
 				half signX = sign(tangentHalfDir.x);
 				half signY = sign(tangentHalfDir.y);
 				tangentHalfDir = tangentHalfDir - _SplitX * signX * half3(1, 0, 0) - _SplitY * signY * half3(0, 1, 0);
@@ -141,11 +145,28 @@ Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
 				float sqrThetaY = acos(tangentHalfDir.y);
 				half sqrNormalX = sin(pow(2 * sqrThetaX, _SquareN));
 				half sqrNormalY = sin(pow(2 * sqrThetaY, _SquareN));
-				tangentHalfDir = tangentHalfDir - _SquareScale * (sqrNormalX * tangentHalfDir * half3(1, 0, 0) +
+				tangentHalfDir = tangentHalfDir - _SquareScale * (sqrNormalX * tangentHalfDir.x * half3(1, 0, 0) +
 					sqrNormalY * tangentHalfDir.y * half3(0, 1, 0));
 				tangentHalfDir = normalize(tangentHalfDir);
 
-				return 1;
+				//Compute the lighting model
+				half3 ambient = UNITY_LIGHTMODEL_AMBIENT.rgb;
+
+				float atten = 1.0;
+
+				half diff = dot(tangentNormal, tangentLightDir);
+				diff = diff * 0.5 + 0.5;
+
+				half4 c = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
+				half3 diffuseColor = c.rgb * _Color.rgb;
+				half3 diffuse = _MainLightColor.rgb * diffuseColor
+					* SAMPLE_TEXTURE2D(_Ramp, sampler_Ramp, float2(diff,diff)).rgb;
+
+				half spec = dot(tangentNormal, tangentHalfDir);
+				half w = fwidth(spec) * 1.0;
+				half3 specular = lerp(half3(0, 0, 0), _Specular.rgb, smoothstep(-w, w, spec + _SpecularScale - 1));
+
+				return half4(ambient + (diffuse + specular) * atten, 1.0);
 			}
 			ENDHLSL
 		}
