@@ -3,7 +3,7 @@
 
 //本来卡通还有outline 阴影什么的  这里偷懒就做一个高光
 //By https://github.com/candycat1992/NPR_Lab
-Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
+Shader "MyRP/ObjectEffect/CartoonStylizedHighlights"
 {
 	Properties
 	{
@@ -92,7 +92,7 @@ Shader "MyRP/CartoonStylizedHighlights/CartoonStylizedHighlights"
 
 				o.tangentNormal = mul(rotation, IN.normal); // Equal to (0, 0, 1)
 				o.tangentLightDir = mul(rotation, TransformWorldToObjectDir(_MainLightPosition.xyz));
-				o.tangentViewDir = mul(rotation, TransformWorldToObject(_WorldSpaceCameraPos) - IN.vertex);
+				o.tangentViewDir = mul(rotation, TransformWorldToObject(_WorldSpaceCameraPos) - IN.vertex.xyz);
 
 				o.uv = TRANSFORM_TEX(IN.texcoord, _MainTex);
 
