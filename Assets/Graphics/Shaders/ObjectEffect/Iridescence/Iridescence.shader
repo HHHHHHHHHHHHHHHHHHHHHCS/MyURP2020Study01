@@ -1,5 +1,5 @@
 //By https://github.com/CJT-Jackton/URP-Iridescence-Example
-Shader "MyRP/Iridescent/IridescenceLit"
+Shader "MyRP/Iridescence/IridescenceLit"
 {
 	Properties
 	{
@@ -125,8 +125,8 @@ Shader "MyRP/Iridescent/IridescenceLit"
 			#pragma multi_compile_instancing
 
 
-			#include "IridescentLitInput.hlsl"
-			#include "IridescentLitForwardPass.hlsl"
+			#include "IridescenceLitInput.hlsl"
+			#include "IridescenceLitForwardPass.hlsl"
 			ENDHLSL
 		}
 
@@ -161,7 +161,7 @@ Shader "MyRP/Iridescent/IridescenceLit"
 			#pragma multi_compile_instancing
 			#pragma shader_feature _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 
-			#include "IridescentLitInput.hlsl"
+			#include "IridescenceLitInput.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
 			ENDHLSL
 		}
@@ -196,7 +196,7 @@ Shader "MyRP/Iridescent/IridescenceLit"
 			// GPU Instancing
 			#pragma multi_compile_instancing
 
-			#include "IridescentLitInput.hlsl"
+			#include "IridescenceLitInput.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
 			ENDHLSL
 		}

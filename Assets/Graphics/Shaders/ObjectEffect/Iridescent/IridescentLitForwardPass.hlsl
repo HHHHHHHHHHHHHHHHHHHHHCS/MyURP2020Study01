@@ -1,3 +1,0 @@
-#ifndef  __IRIDESCENT_LIT_FORWARD_PASS__
-#define __IRIDESCENT_LIT_FORWARD_PASS__
-#endif
