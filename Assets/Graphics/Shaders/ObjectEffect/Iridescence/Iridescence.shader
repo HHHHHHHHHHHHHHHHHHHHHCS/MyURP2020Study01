@@ -124,9 +124,8 @@ Shader "MyRP/Iridescence/IridescenceLit"
 			// GPU Instancing
 			#pragma multi_compile_instancing
 
-
-			#include "IridescenceLitInput.hlsl"
 			#include "IridescenceLitForwardPass.hlsl"
+			
 			ENDHLSL
 		}
 

@@ -1,5 +1,5 @@
-#ifndef  __IRIDESCENCE_LIT_FORWARD_PASS__
-#define __IRIDESCENCE_LIT_FORWARD_PASS__
+#ifndef  __IRIDESCENCE_LIT_INPUT_INCLUDE__
+#define __IRIDESCENCE_LIT_INPUT_INCLUDE__
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/core.hlsl"
 //universal/ShaderLibrary/core.hlsl  需要在 CommonMaterial 上面 不然会存在 define 和 重定义 的问题
@@ -102,10 +102,10 @@ half SampleOcclusion(float2 uv)
 {
     #ifdef _OCCLUSIONMAP
 
-    #ifdef (SHADER_API_GLES)
+    #ifdef SHADER_API_GLES
         return SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap, uv).g;
     #else
-        half occ = SAMPLE_TEXTURE2D(_Occlusion, sampler_OcclusionMap,uv).g;
+        half occ = SAMPLE_TEXTURE2D(_OcclusionMap, sampler_OcclusionMap,uv).g;
         return LerpWhiteTo(occ, _OcclusionStrength);
     #endif
 
@@ -130,7 +130,7 @@ half SampleIridescenceThickness(float2 uv)
     return iridescenceThickness;
 }
 
-void InitializeStandardListSurfaceData(float2 uv, out SurfaceDataAdvanced outSurfaceData)
+void InitializeStandardLitSurfaceData(float2 uv, out SurfaceDataAdvanced outSurfaceData)
 {
     half4 albedoAlpha = SampleAlbedoAlpha(uv, TEXTURE2D_ARGS(_BaseMap, sampler_BaseMap));
     outSurfaceData.alpha = Alpha(albedoAlpha.a, _BaseColor, _Cutoff);
@@ -149,13 +149,13 @@ void InitializeStandardListSurfaceData(float2 uv, out SurfaceDataAdvanced outSur
     outSurfaceData.smoothness = specGloss.a;
     outSurfaceData.normalTS = SampleNormal(uv,TEXTURE2D_ARGS(_BumpMap, sampler_BumpMap), _BumpScale);
     outSurfaceData.occlusion = SampleOcclusion(uv);
-    outSurfaceData.emission = SampleEmission(uv, _EmissionColor, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
+    outSurfaceData.emission = SampleEmission(uv, _EmissionColor.rgb, TEXTURE2D_ARGS(_EmissionMap, sampler_EmissionMap));
 
     #if _IRIDESCENCE
-        outSurfaceData.iridescenceThickness = SampleIridescenceThcikness(uv);
+        outSurfaceData.iridescenceThickness = SampleIridescenceThickness(uv);
         outSurfaceData.iridescenceEta2 = _IridescenceEta2;
         outSurfaceData.iridescenceEta3 = _IridescenceEta3;
-        outSurfaceData.iridescenceKappa3 = _IridescenceKapp3;
+        outSurfaceData.iridescenceKappa3 = _IridescenceKappa3;
     #endif
 }
 
