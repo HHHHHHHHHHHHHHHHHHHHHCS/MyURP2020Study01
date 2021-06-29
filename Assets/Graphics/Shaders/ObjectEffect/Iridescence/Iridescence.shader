@@ -1,5 +1,5 @@
 //By https://github.com/CJT-Jackton/URP-Iridescence-Example
-Shader "MyRP/Iridescence/IridescenceLit"
+Shader "MyRP/ObjectEffect/IridescenceLit"
 {
 	Properties
 	{
@@ -36,9 +36,9 @@ Shader "MyRP/Iridescence/IridescenceLit"
 		_IridescenceThickness("Iridescence Layer Thickness", Range(0.0, 2.5)) = 0.5
 		_IridescenceThicknessMap("Iridescence Layer Thickness Map", 2D) = "white" {}
 		[MinMax(0, 2.5)] _IridescenceThicknessRemap("Iridescence Layer Thickness Remap", Vector) = (0.3, 1.8, 0.0, 0.0)
-		_IridescneceEta2("Thin-film IOR (η₂)", Range(0.0, 5.0)) = 1.33
-		_IridescneceEta3("Base IOR (η₃)", Range(0.0, 5.0)) = 1.85
-		_IridescneceKappa3("Base IOR (κ₃)", Range(0.0, 5.0)) = 0.0
+		_IridescenceEta2("Thin-film IOR (η₂)", Range(0.0, 5.0)) = 1.33
+		_IridescenceEta3("Base IOR (η₃)", Range(0.0, 5.0)) = 1.85
+		_IridescenceKappa3("Base IOR (κ₃)", Range(0.0, 5.0)) = 0.0
 
 		// Blending state
 		[HideInInspector] _Surface("__surface", Float) = 0.0
@@ -54,11 +54,11 @@ Shader "MyRP/Iridescence/IridescenceLit"
 		[HideInInspector] _QueueOffset("Queue offset", Float) = 0.0
 
 		// ObsoleteProperties
-		[HideInInspector] _MainTex("BaseMap", 2D) = "white" {}
-		[HideInInspector] _Color("Base Color", Color) = (1, 1, 1, 1)
-		[HideInInspector] _GlossMapScale("Smoothness", Float) = 0.0
-		[HideInInspector] _Glossiness("Smoothness", Float) = 0.0
-		[HideInInspector] _GlossyReflections("EnvironmentReflections", Float) = 0.0
+		// [HideInInspector] _MainTex("BaseMap", 2D) = "white" {}
+		// [HideInInspector] _Color("Base Color", Color) = (1, 1, 1, 1)
+		// [HideInInspector] _GlossMapScale("Smoothness", Float) = 0.0
+		// [HideInInspector] _Glossiness("Smoothness", Float) = 0.0
+		// [HideInInspector] _GlossyReflections("EnvironmentReflections", Float) = 0.0
 	}
 	SubShader
 	{
@@ -260,5 +260,5 @@ Shader "MyRP/Iridescence/IridescenceLit"
 		}
 	}
 	FallBack "Hidden/Universal Render Pipeline/FallbackError"
-	CustomEditor "UnityEditor.Rendering.Universal.ShaderGUI.LitIridescenceShader"
+	CustomEditor "Graphics.Editor.ObjectEffect.Iridescence.IridescenceShaderGUI"
 }

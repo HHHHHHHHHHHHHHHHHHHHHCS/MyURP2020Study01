@@ -51,6 +51,7 @@ float3 MyEvalSensitivity(float opd, float shift)
 //                         BRDF Functions                                    //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef _IRIDESCENCE
 struct BRDFDataAdvanced
 {
     half3 diffuse;
@@ -71,21 +72,29 @@ struct BRDFDataAdvanced
     half iridescenceKappa3;
     #endif
 };
+#endif
 
-inline void BRDFDataAdvancedToNormal(in BRDFDataAdvanced advanced, out BRDFData normal)
-{
-    normal.diffuse = advanced.diffuse;
-    normal.specular = advanced.specular;
-    normal.reflectivity = advanced.reflectivity;
-    normal.perceptualRoughness = advanced.perceptualRoughness;
-    normal.roughness = advanced.roughness;
-    normal.roughness2 = advanced.roughness2;
-    normal.grazingTerm = advanced.grazingTerm;
-    normal.normalizationTerm = advanced.normalizationTerm;
-    normal.roughness2MinusOne = advanced.roughness2MinusOne;
-}
+#ifdef _IRIDESCENCE
+#define CustomBRDFData BRDFDataAdvanced
+#else
+#define CustomBRDFData BRDFData
+#endif
 
-inline void InitializeBRDFDataAdvanced(SurfaceDataAdvanced surfaceData, out BRDFDataAdvanced outBRDFData)
+// unuse code
+// inline void BRDFDataAdvancedToNormal(in CustomBRDFData advanced, out BRDFData normal)
+// {
+//     normal.diffuse = advanced.diffuse;
+//     normal.specular = advanced.specular;
+//     normal.reflectivity = advanced.reflectivity;
+//     normal.perceptualRoughness = advanced.perceptualRoughness;
+//     normal.roughness = advanced.roughness;
+//     normal.roughness2 = advanced.roughness2;
+//     normal.grazingTerm = advanced.grazingTerm;
+//     normal.normalizationTerm = advanced.normalizationTerm;
+//     normal.roughness2MinusOne = advanced.roughness2MinusOne;
+// }
+
+inline void InitializeBRDFDataAdvanced(SurfaceDataAdvanced surfaceData, out CustomBRDFData outBRDFData)
 {
     #ifdef _SPECULAR_SETUP
     half reflectivity = ReflectivitySpecular(surfaceData.specular);
@@ -193,7 +202,7 @@ void FresnelConductor(in float ct1, in float n1, in float n2, in float k,
                   Sqr(Sqr(n2) * (1 + Sqr(k)) * ct1) - Sqr(n1) * (Sqr(U) + Sqr(V)));
 }
 
-half3 EnvironmentBRDFIridescence(BRDFDataAdvanced brdfData, half3 indirectDiffuse, half3 indirectSpecular,
+half3 EnvironmentBRDFIridescence(CustomBRDFData brdfData, half3 indirectDiffuse, half3 indirectSpecular,
                                  half3 fresnelIridescent)
 {
     half3 c = indirectDiffuse * brdfData.diffuse;
@@ -207,7 +216,7 @@ half3 EnvironmentBRDFIridescence(BRDFDataAdvanced brdfData, half3 indirectDiffus
 
 // Evaluate the reflectance for a thin-film layer on top of a dielectric medum
 // Based on the paper [LAURENT 2017] A Practical Extension to Microfacet Theory for the Modeling of Varying Iridescence
-half3 ThinFilmIridescence(BRDFDataAdvanced brdfData, InputDataAdvanced inputData, float cosTheta1)
+half3 ThinFilmIridescence(CustomBRDFData brdfData, InputDataAdvanced inputData, float cosTheta1)
 {
     float eta_1 = 1.0;
     float eta_2 = brdfData.iridescenceEta2;
@@ -266,7 +275,7 @@ half3 ThinFilmIridescence(BRDFDataAdvanced brdfData, InputDataAdvanced inputData
     return I;
 }
 
-half3 DirectBRDFIridescence(BRDFDataAdvanced brdfData, InputDataAdvanced inputData, half3 lightDirectionWS)
+half3 DirectBRDFIridescence(CustomBRDFData brdfData, InputDataAdvanced inputData, half3 lightDirectionWS)
 {
     //compute dot products
     float NdotL = dot(inputData.normalWS, lightDirectionWS);
@@ -298,7 +307,7 @@ half3 DirectBRDFIridescence(BRDFDataAdvanced brdfData, InputDataAdvanced inputDa
 // * NDF [Modified] GGX
 // * Modified Kelemen and Szirmay-​Kalos for Visibility term
 // * Fresnel approximated with 1/LdotH
-half3 DirectBDRFAdvanced(BRDFDataAdvanced brdfData, InputDataAdvanced inputData, half3 lightDirectionWS)
+half3 DirectBRDFAdvanced(CustomBRDFData brdfData, InputDataAdvanced inputData, half3 lightDirectionWS)
 {
     #ifndef _SPECULARHIGHLIGHTS_OFF
     float3 halfDir = SafeNormalize(float3(lightDirectionWS) + float3(inputData.viewDirectionWS));
@@ -341,7 +350,7 @@ half3 DirectBDRFAdvanced(BRDFDataAdvanced brdfData, InputDataAdvanced inputData,
 //                      Global Illumination                                  //
 ///////////////////////////////////////////////////////////////////////////////
 
-half3 GlobalIlluminationAdvanced(BRDFDataAdvanced brdfData, InputDataAdvanced inputData, half occlusion)
+half3 GlobalIlluminationAdvanced(CustomBRDFData brdfData, InputDataAdvanced inputData, half occlusion)
 {
     half3 reflectVector = reflect(-inputData.viewDirectionWS, inputData.normalWS);
 
@@ -358,10 +367,8 @@ half3 GlobalIlluminationAdvanced(BRDFDataAdvanced brdfData, InputDataAdvanced in
 
     #else
 
-    BRDFData bd;
-    BRDFDataAdvancedToNormal(brdfData,bd);
     half fresnelTerm = Pow4(1.0 - saturate(dot(inputData.normalWS, inputData.viewDirectionWS)));
-    return EnvironmentBRDF(bd, indirectDiffuse, indirectSpecular, fresnelTerm);
+    return EnvironmentBRDF(brdfData, indirectDiffuse, indirectSpecular, fresnelTerm);
 
     #endif
 }
@@ -370,7 +377,7 @@ half3 GlobalIlluminationAdvanced(BRDFDataAdvanced brdfData, InputDataAdvanced in
 //                      Lighting Functions                                   //
 ///////////////////////////////////////////////////////////////////////////////
 
-half3 LightingAdvanced(BRDFDataAdvanced brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation,
+half3 LightingAdvanced(CustomBRDFData brdfData, half3 lightColor, half3 lightDirectionWS, half lightAttenuation,
                        InputDataAdvanced inputData)
 {
     half NdotL = saturate(dot(inputData.normalWS, lightDirectionWS));
@@ -383,7 +390,7 @@ half3 LightingAdvanced(BRDFDataAdvanced brdfData, half3 lightColor, half3 lightD
     #endif
 }
 
-half3 LightingAdvanced(BRDFDataAdvanced brdfData, Light light, InputDataAdvanced inputData)
+half3 LightingAdvanced(CustomBRDFData brdfData, Light light, InputDataAdvanced inputData)
 {
     return LightingAdvanced(brdfData, light.color, light.direction, light.distanceAttenuation * light.shadowAttenuation,
                             inputData);
@@ -396,7 +403,7 @@ half3 LightingAdvanced(BRDFDataAdvanced brdfData, Light light, InputDataAdvanced
 ///////////////////////////////////////////////////////////////////////////////
 half4 UniversalFragmentAdvanced(InputDataAdvanced inputData, SurfaceDataAdvanced surfaceData)
 {
-    BRDFDataAdvanced brdfData;
+    CustomBRDFData brdfData;
     InitializeBRDFDataAdvanced(surfaceData, brdfData);
 
     Light mainLight = GetMainLight(inputData.shadowCoord);
