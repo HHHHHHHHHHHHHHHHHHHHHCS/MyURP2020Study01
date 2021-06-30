@@ -9,14 +9,14 @@ namespace Graphics.Editor.ObjectEffect.Iridescence
     {
         // Properties
         private LitGUI.LitProperties litProperties;
-        private IridescenceStatic.IridescenceProperties iridescenceProperties;
+        private IridescenceGUIProperties.IridescenceProperties iridescenceProperties;
 
         // collect properties from the material properties
         public override void FindProperties(MaterialProperty[] properties)
         {
             base.FindProperties(properties);
             litProperties = new LitGUI.LitProperties(properties);
-            iridescenceProperties = new IridescenceStatic.IridescenceProperties(properties);
+            iridescenceProperties = new IridescenceGUIProperties.IridescenceProperties(properties);
         }
 
         // material changed check
@@ -25,7 +25,7 @@ namespace Graphics.Editor.ObjectEffect.Iridescence
             if (material == null)
                 throw new ArgumentNullException("material");
 
-            SetMaterialKeywords(material, LitGUI.SetMaterialKeywords, IridescenceStatic.SetMaterialKeywords);
+            SetMaterialKeywords(material, LitGUI.SetMaterialKeywords, IridescenceGUIProperties.SetMaterialKeywords);
         }
 
         // material main surface options
@@ -56,7 +56,7 @@ namespace Graphics.Editor.ObjectEffect.Iridescence
         {
             base.DrawSurfaceInputs(material);
             LitGUI.Inputs(litProperties, materialEditor, material);
-            IridescenceStatic.DoIridescenceArea(iridescenceProperties, materialEditor);
+            IridescenceGUIProperties.DoIridescenceArea(iridescenceProperties, materialEditor);
             DrawEmissionProperties(material, true);
             DrawTileOffset(materialEditor, baseMapProp);
         }

@@ -136,7 +136,8 @@ half4 LitPassFragment(Varyings input):SV_Target
     half4 color = UniversalFragmentAdvanced(inputData, surfaceData);
 
     color.rgb = MixFog(color.rgb, inputData.fogCoord);
-    color.a = OutputAlpha(color.a);
+    //URP版本改变 如果不加surfaceType alpha则为1   效果错误
+    color.a = OutputAlpha(color.a, 1.0);
 
     return color;
 }

@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 
 namespace Graphics.Editor.ObjectEffect.Iridescence
 {
-    public static class IridescenceStatic
+    public static class IridescenceGUIProperties
     {
         public enum IridescenceMode
         {

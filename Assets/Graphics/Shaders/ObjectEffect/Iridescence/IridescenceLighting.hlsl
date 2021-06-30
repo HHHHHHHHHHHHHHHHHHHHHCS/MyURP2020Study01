@@ -62,8 +62,8 @@ struct BRDFDataAdvanced
     half roughness2;
     half grazingTerm;
 
-    half normalizationTerm;
-    half roughness2MinusOne;
+    half normalizationTerm;	// roughness * 4.0 + 2.0
+    half roughness2MinusOne;	// roughness² - 1.0
 
     #ifdef _IRIDESCENCE
     half iridescenceThickness;
