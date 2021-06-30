@@ -97,13 +97,14 @@ Shader "MyRP/ObjectEffect/IridescenceLit"
 			#pragma shader_feature _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 			#pragma shader_feature _OCCLUSIONMAP
 
-			#pragma shader_feature _IRIDESCENCE
-			#pragma shader_feature _IRIDESCENCE_THICKNESSMAP
-
 			#pragma shader_feature _SPECULARHIGHLIGHTS_OFF
 			#pragma shader_feature _ENVIRONMENTREFLECTIONS_OFF
 			#pragma shader_feature _SPECULAR_SETUP
 			#pragma shader_feature _RECEIVE_SHADOWS_OFF
+
+			//My
+			#pragma shader_feature _IRIDESCENCE
+			#pragma shader_feature _IRIDESCENCE_THICKNESSMAP
 
 			// -------------------------------------
 			// Universal Pipeline keywords
