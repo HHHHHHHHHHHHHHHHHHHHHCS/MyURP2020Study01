@@ -40,7 +40,7 @@ struct Varyings
     UNITY_VERTEX_OUTPUT_STEREO
 };
 
-void InitializeInputData(Varyings input,half3 normalTS,out InputDataAdvanced inputData )
+void InitializeInputData(Varyings input,half3 normalTS,out InputDataAdvanced inputData)
 {
     inputData = (InputDataAdvanced)0;
 

@@ -130,7 +130,8 @@ inline void InitializeBRDFDataAdvanced(SurfaceDataAdvanced surfaceData, out Cust
 
     #ifdef _ALPHAPREMULTIPLY_ON
     outBRDFData.diffuse *= surfaceData.alpha;
-    surfaceData.alpha = surfaceData.alpha * oneMinusReflectivity + reflectivity;
+    // unuse code
+    // surfaceData.alpha = surfaceData.alpha * oneMinusReflectivity + reflectivity;
     #endif
 }
 
@@ -234,7 +235,7 @@ half3 ThinFilmIridescence(CustomBRDFData brdfData, InputDataAdvanced inputData, 
     //first interface
     float2 R12, phi12;
     FresnelDielectric(cosTheta1, eta_1, eta_2, R12, phi12);
-    float2 R21 = R12;
+    // float2 R21 = R12;
     float2 T121 = float2(1.0, 1.0) - R12;
     float2 phi21 = float2(PI,PI) - phi12;
 
