@@ -62,7 +62,7 @@ namespace Graphics.Editor.ObjectEffect.Iridescence
         }
 
         // material main advanced options
-        public override void DrawAdvancedOptions(Material material)
+        public override void DrawAdvancedOptions(Material material) 
         {
             if (litProperties.reflections != null && litProperties.highlights != null)
             {

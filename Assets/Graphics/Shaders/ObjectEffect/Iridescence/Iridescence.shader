@@ -64,7 +64,7 @@ Shader "MyRP/ObjectEffect/IridescenceLit"
 	{
 		Tags
 		{
-			"RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline" "IgnoreProjector"="True"
+			"RenderType" = "Opaque" "Queue" = "Geometry" "RenderPipeline" = "UniversalPipeline" "IgnoreProjector"="True"
 		}
 
 		Pass
@@ -130,7 +130,6 @@ Shader "MyRP/ObjectEffect/IridescenceLit"
 			ENDHLSL
 		}
 
-
 		Pass
 		{
 			Name "ShadowCaster"
@@ -161,7 +160,7 @@ Shader "MyRP/ObjectEffect/IridescenceLit"
 			#pragma multi_compile_instancing
 			#pragma shader_feature _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
 
-			#include "IridescenceLitInput.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
 			ENDHLSL
 		}
@@ -196,7 +195,7 @@ Shader "MyRP/ObjectEffect/IridescenceLit"
 			// GPU Instancing
 			#pragma multi_compile_instancing
 
-			#include "IridescenceLitInput.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
 			ENDHLSL
 		}
@@ -232,6 +231,7 @@ Shader "MyRP/ObjectEffect/IridescenceLit"
 			#include "Packages/com.unity.render-pipelines.universal/Shaders/LitMetaPass.hlsl"
 			ENDHLSL
 		}
+		
 		Pass
 		{
 			Name "Universal2D"
