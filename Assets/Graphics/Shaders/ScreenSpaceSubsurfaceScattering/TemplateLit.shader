@@ -1,3 +1,4 @@
+//Todo:暂时先不做 需要延迟渲染
 Shader "MyRP/ScreenSpaceSubsurfaceScattering/TemplateLit"
 {
 	Properties
@@ -50,6 +51,8 @@ Shader "MyRP/ScreenSpaceSubsurfaceScattering/TemplateLit"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
+			#include "SSSSPBSLighting.hlsl"
+
 			struct a2v
 			{
 				float4 positionOS : POSITION;
@@ -62,29 +65,22 @@ Shader "MyRP/ScreenSpaceSubsurfaceScattering/TemplateLit"
 
 			struct v2f
 			{
+				float4 pos : SV_POSITION;
 				float2 uv : TEXCOORD0;
-				DECLARE_LIGHTMAP_OR_SH(lightmapUV, vertexSH, 1);
+				float4 TBN0 : TEXCOORD1;
+				float4 TBN1 : TEXCOORD2;
+				float4 TBN2 : TEXCOORD3;
+				float4 screenPos : TEXCOORD4;
+				DECLARE_LIGHTMAP_OR_SH(lightmapUV, vertexSH, 5);
 
-				#ifdef REQUIRES_WORLD_SPACE_POS_INTERPOLATOR
-				float3 positionWS : TEXCOORD2;
-				#endif
-
-				float3 normalWS : TEXCOORD3;
-				#ifdef _NORMALMAP
-			    float4 tangentWS : TEXCOORD4;// xyz:tangent, w:sign
-				#endif
-
-				float3 viewDirWS : TEXCOORD5;
-
-				half4 fogFactorAndVertexLight : TEXCOORD6; // x:fogFactor, yzw: vertex light
-
-				#ifdef REQUIRES_VERTEX_SHADOW_COORD_INTERPOLATOR
-			    float4 shadowCoord : TEXCOORD7;
-				#endif
-
-				float4 positionCS : SV_POSITION;
 				UNITY_VERTEX_INPUT_INSTANCE_ID
 				UNITY_VERTEX_OUTPUT_STEREO
+			};
+
+			struct Input
+			{
+				float2 uv_MainTex;
+				float4 screenPos;
 			};
 
 			CBUFFER_START(UnityPerMaterial)
@@ -113,6 +109,11 @@ Shader "MyRP/ScreenSpaceSubsurfaceScattering/TemplateLit"
 			TEXTURE2D(_TransmittanceTex); // B = Transmittance
 			SAMPLER(sampler_TransmittanceTex);
 
+
+			void surf(Input IN, inout SurfaceOutputStandardSSSS o)
+			{
+			}
+
 			v2f vert(a2v IN)
 			{
 				v2f o = (v2f)0;
@@ -121,13 +122,45 @@ Shader "MyRP/ScreenSpaceSubsurfaceScattering/TemplateLit"
 				UNITY_TRANSFER_INSTANCE_ID(IN, o);
 				UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(o);
 
-				o.positionWS = TransformObjectToWorld(IN.positionOS);
-				o.uv = TRANSFORM_TEX(o.uv, _MainTex);
+				float3 positionWS = TransformObjectToWorld(IN.positionOS);
+				o.pos = TransformWorldToHClip(positionWS);
+				o.uv = TRANSFORM_TEX(IN.texcoord, _MainTex);
 
-				GetVertexNormalInputs()
+				VertexNormalInputs tbn = GetVertexNormalInputs(IN.normalOS, IN.tangentOS);
+				o.TBN0 = float4(tbn.tangentWS.x, tbn.bitangentWS.x, tbn.normalWS.x, positionWS.x);
+				o.TBN1 = float4(tbn.tangentWS.y, tbn.bitangentWS.y, tbn.normalWS.y, positionWS.y);
+				o.TBN2 = float4(tbn.tangentWS.z, tbn.bitangentWS.z, tbn.normalWS.z, positionWS.z);
+				o.screenPos = ComputeScreenPos(o.pos);
 
-					OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, output.lightmapUV);
-				OUTPUT_SH(o.normalWS.xyz, o.vertexSH);
+				OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, o.lightmapUV);
+				OUTPUT_SH(tbn.normalWS.xyz, o.vertexSH);
+			}
+
+			void frag(v2f IN,
+			          out half4 outGBuffer0 : SV_Target0,
+			          out half4 outGBuffer1 : SV_Target1,
+			          out half4 outGBuffer2 : SV_Target2,
+			          out half4 outGBuffer3 : SV_Target3)
+			{
+				UNITY_SETUP_INSTANCE_ID(IN);
+				UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
+
+				Input input;
+				input.uv_MainTex = IN.uv;
+				input.screenPos = IN.screenPos;
+
+
+				SurfaceOutputStandardSSSS o;
+				surf(input, o);
+
+				float3 worldN;
+				worldN.x = dot(IN.TBN0.xyz, o.Normal);
+				worldN.y = dot(IN.TBN1.xyz, o.Normal);
+				worldN.z = dot(IN.TBN2.xyz, o.Normal);
+				worldN = normalize(worldN);
+				o.Normal = worldN;
+
+				UnityGIInput giInput;
 			}
 			ENDHLSL
 		}
