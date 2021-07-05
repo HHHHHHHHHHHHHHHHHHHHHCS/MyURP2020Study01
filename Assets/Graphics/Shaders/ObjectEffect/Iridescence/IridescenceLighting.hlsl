@@ -163,7 +163,7 @@ void FresnelDielectric(in float ct1, in float n1, in float n2,
     //total reflection
     if (Sqr(nr) * st1 > 1)
     {
-        float2 R = float2(1, 1);
+        R = float2(1, 1);
         phi = 2.0 * atan2(-Sqr(nr) * sqrt(st1 - 1.0 / Sqr(nr)) / ct1,
                           -sqrt(st1 - 1.0 / Sqr(nr)) / ct1);
     }

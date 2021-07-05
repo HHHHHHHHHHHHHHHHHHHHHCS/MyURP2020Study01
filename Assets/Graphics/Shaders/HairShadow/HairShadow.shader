@@ -1,3 +1,4 @@
+// https://zhuanlan.zhihu.com/p/232450616
 Shader "MyRP/HairShadow/HairShadow"
 {
 	Properties
@@ -31,7 +32,6 @@ Shader "MyRP/HairShadow/HairShadow"
 	HLSLINCLUDE
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-	#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
 
 	#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
 	#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
@@ -44,9 +44,8 @@ Shader "MyRP/HairShadow/HairShadow"
 	float4 _BaseColor, _BrightColor, _DarkColor, _OutLineColor, _MiddleColor, _RimColor;
 	float _CelShadeMidPoint, _CelShadeSmoothness, _OutLineThickness;
 	float _RimSmoothness, _RimStrength, _HairShadowDistace, _HeightCorrectMax, _HeightCorrectMin;
-
-
 	CBUFFER_END
+	
 	ENDHLSL
 	SubShader
 	{
@@ -128,54 +127,230 @@ Shader "MyRP/HairShadow/HairShadow"
 				Light mainLight;
 				#if _MAIN_LIGHT_SHADOWS
 					float4 shadowCoord = TransformWorldToShadowCoord(i.positionWS.xyz);
-					Light light = GetMainLight(shadowCoord);
+					mainLight = GetMainLight(shadowCoord);
 				#else
 				mainLight = GetMainLight();
 				#endif
 				real shadow = mainLight.shadowAttenuation * mainLight.distanceAttenuation;
 
 				//basic cel shading
-				float CelShadeMidPoint = _CelShadeMidPoint;
+				float celShadeMidPoint = _CelShadeMidPoint;
 				float halfLambert = dot(normal, mainLight.direction) * 0.5 + 0.5;
-				half ramp = smoothstep(0, CelShadeMidPoint,
-				                       pow(saturate(halfLambert - CelShadeMidPoint), _CelShadeSmoothness));
+				half ramp = smoothstep(0, celShadeMidPoint,
+				                       pow(saturate(halfLambert - celShadeMidPoint), _CelShadeSmoothness));
+
+				#if _IsFace
+				//"heightCorrect" is a easy mask which used to deal with some extreme view angles,
+				//you can delete it if you think it's unnecessary.
+				//you also can use it to adjust the shadow length, if you want.
+				float heightCorrect = smoothstep(_HeightCorrectMax, _HeightCorrectMin, i.positionWS.y);
+
+				//In DirectX, z/w from [0, 1], and use reversed Z
+				//So, it means we aren't adapt the sample for OpenGL platform
+				float depth = (i.positionCS.z / i.positionCS.w);
+
+				//get linearEyeDepth which we can using easily
+				float linearEyeDepth = LinearEyeDepth(depth, _ZBufferParams);
+				float2 scrPos = i.positionSS.xy / i.positionSS.w;
+
+				//"min(1, 5/linearEyeDepth)" is a curve to adjust viewLightDir.length by distance
+				float3 viewLightDir = normalize(TransformWorldToViewDir(mainLight.direction)) * (1 / min(i.posNDCw, 1))
+					* min(1, 5 / linearEyeDepth) /** heightCorrect*/;
+
+				//get the final sample point
+				float2 samplingPoint = scrPos + _HairShadowDistace * viewLightDir.xy;
+
+				float hairDepth = SAMPLE_TEXTURE2D(_HairSolidColor, sampler_HairSolidColor, samplingPoint).g;
+				hairDepth = LinearEyeDepth(hairDepth, _ZBufferParams);
+
+				//0.01 is bias
+				float depthContrast = linearEyeDepth > hairDepth * heightCorrect - 0.01 ? 0 : 1;
+
+				//deprecated
+				//float hairShadow = 1 - SAMPLE_TEXTURE2D(_HairSoildColor, sampler_HairSoildColor, samplingPoint).r;
+
+				//0 is shadow part, 1 is bright part
+				ramp *= depthContrast;
+				#else
+					ramp *= shadow;
+				#endif
+
+				float3 diffuse = lerp(_DarkColor.rgb, _BrightColor.rgb, ramp);
+				diffuse *= baseMap.rgb;
+
+				//rim light
+				float3 viewDirectionWS = SafeNormalize(GetCameraPositionWS() - i.positionWS.xyz);
+				float rimStrength = pow(saturate(1 - dot(normal, viewDirectionWS)), _RimSmoothness);
+				float3 rimColor = _RimColor.rgb * rimStrength * _RimStrength;
+
+				// return baseMap * _BaseColor;
+				return float4(diffuse + rimColor, 1);
 			}
 			ENDHLSL
 		}
 
+		//easy outline pass
 		Pass
 		{
-			Name "ShadowCaster"
-			Tags
-			{
-				"LightMode" = "ShadowCaster"
-			}
-
+			Name "Outline"
+			Cull Front
 			ZWrite On
-			ZTest LEqual
-			Cull Back
 
 			HLSLPROGRAM
-			// Required to compile gles 2.0 with standard srp library
-			#pragma prefer_hlslcc gles
-			#pragma exclude_renderers d3d11_9x
-			#pragma target 2.0
+			#pragma shader_feature _UseColor
+			#pragma vertex vert
+			#pragma fragment frag
 
-			#pragma vertex ShadowPassVertex
-			#pragma fragment ShadowPassFragment
+			struct a2v
+			{
+				float4 positionOS: POSITION;
+				float4 normalOS: NORMAL;
+				float4 tangentOS: TANGENT;
+				#if _UseColor
+				float3 color: COLOR;
+				#endif
+			};
 
-			// -------------------------------------
-			// Material Keywords
-			#pragma shader_feature _ALPHATEST_ON
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+			};
 
-			//--------------------------------------
-			// GPU Instancing
-			#pragma multi_compile_instancing
-			#pragma shader_feature _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
+			v2f vert(a2v v)
+			{
+				v2f o;
 
-			#include "Packages/com.unity.render-pipelines.universal/Shaders/LitInput.hlsl"
-			#include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
+				VertexNormalInputs vertexNormalInput = GetVertexNormalInputs(v.normalOS.xyz, v.tangentOS);
+
+				#if _UseColor
+				float3 color = v.color * 2 - 1;
+
+				VertexPositionInputs positionInputs = GetVertexPositionInputs(
+					v.positionOS.xyz + float3(color.xy * 0.001 * _OutLineThickness, 0));
+				o.positionCS = positionInputs.positionCS;
+				#else
+                    float3 normalWS = vertexNormalInput.normalWS;
+                    float3 normalCS = TransformWorldToHClipDir(normalWS);
+                    
+                    VertexPositionInputs positionInputs = GetVertexPositionInputs(v.positionOS.xyz);
+                    o.positionCS = positionInputs.positionCS + float4(normalCS.xy * 0.001 * _OutLineThickness * positionInputs.positionCS.w, 0, 0);
+				#endif
+
+
+				return o;
+			}
+
+			half4 frag(v2f i): SV_Target
+			{
+				float4 col = _OutLineColor;
+
+				return col;
+			}
 			ENDHLSL
+
 		}
+
+		//this Pass copy from https://github.com/ColinLeung-NiloCat/UnityURPToonLitShaderExample
+        Pass
+        {
+            Name "ShadowCaster"
+            Tags { "LightMode" = "ShadowCaster" }
+            
+            //we don't care about color, we just write to depth
+            ColorMask 0
+            
+            HLSLPROGRAM
+            
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            
+            #pragma vertex ShadowCasterPassVertex
+            #pragma fragment ShadowCasterPassFragment
+            
+            struct Attributes
+            {
+                float3 positionOS: POSITION;
+                half3 normalOS: NORMAL;
+                half4 tangentOS: TANGENT;
+                float2 uv: TEXCOORD0;
+            };
+            
+            struct Varyings
+            {
+                float2 uv: TEXCOORD0;
+                float4 positionWSAndFogFactor: TEXCOORD2; // xyz: positionWS, w: vertex fog factor
+                half3 normalWS: TEXCOORD3;
+                
+                #ifdef _MAIN_LIGHT_SHADOWS
+                    float4 shadowCoord: TEXCOORD6; // compute shadow coord per-vertex for the main light
+                #endif
+                float4 positionCS: SV_POSITION;
+            };
+            
+            Varyings ShadowCasterPassVertex(Attributes input)
+            {
+                Varyings output;
+                
+                // VertexPositionInputs contains position in multiple spaces (world, view, homogeneous clip space)
+                // Our compiler will strip all unused references (say you don't use view space).
+                // Therefore there is more flexibility at no additional cost with this struct.
+                VertexPositionInputs vertexInput = GetVertexPositionInputs(input.positionOS);
+                
+                // Similar to VertexPositionInputs, VertexNormalInputs will contain normal, tangent and bitangent
+                // in world space. If not used it will be stripped.
+                VertexNormalInputs vertexNormalInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
+                
+                // Computes fog factor per-vertex.
+                float fogFactor = ComputeFogFactor(vertexInput.positionCS.z);
+                
+                // TRANSFORM_TEX is the same as the old shader library.
+                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
+                
+                // packing posWS.xyz & fog into a vector4
+                output.positionWSAndFogFactor = float4(vertexInput.positionWS, fogFactor);
+                output.normalWS = vertexNormalInput.normalWS;
+                
+                #ifdef _MAIN_LIGHT_SHADOWS
+                    // shadow coord for the light is computed in vertex.
+                    // After URP 7.21, URP will always resolve shadows in light space, no more screen space resolve.
+                    // In this case shadowCoord will be the vertex position in light space.
+                    output.shadowCoord = GetShadowCoord(vertexInput);
+                #endif
+                
+                // Here comes the flexibility of the input structs.
+                // We just use the homogeneous clip position from the vertex input
+                output.positionCS = vertexInput.positionCS;
+                
+                // ShadowCaster pass needs special process to clipPos, else shadow artifact will appear
+                //--------------------------------------------------------------------------------------
+                
+                //see GetShadowPositionHClip() in URP/Shaders/ShadowCasterPass.hlsl
+                float3 positionWS = vertexInput.positionWS;
+                float3 normalWS = vertexNormalInput.normalWS;
+                
+                
+                Light light = GetMainLight();
+                float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, light.direction));
+                
+                #if UNITY_REVERSED_Z
+                    positionCS.z = min(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
+                #else
+                    positionCS.z = max(positionCS.z, positionCS.w * UNITY_NEAR_CLIP_VALUE);
+                #endif
+                output.positionCS = positionCS;
+                
+                //--------------------------------------------------------------------------------------
+                
+                return output;
+            }
+            
+            half4 ShadowCasterPassFragment(Varyings input): SV_TARGET
+            {
+                return 0;
+            }
+            
+            ENDHLSL
+            
+        }
 	}
 }
