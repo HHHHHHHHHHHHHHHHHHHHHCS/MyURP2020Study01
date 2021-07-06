@@ -1,5 +1,4 @@
-// https://zhuanlan.zhihu.com/p/232450616
-Shader "MyRP/HairShadow/HairShadow"
+Shader "MyRP/HairShadow/FaceWithHairShadow"
 {
 	Properties
 	{
@@ -104,7 +103,7 @@ Shader "MyRP/HairShadow/HairShadow"
 				o.positionWS = positionInputs.positionWS;
 
 				#if _IsFace
-				o.posNDCw = positionInputs.positionWS.w;
+				o.posNDCw = positionInputs.positionNDC.w;
 				o.positionSS = ComputeScreenPos(positionInputs.positionCS);
 				o.positionOS = v.positionOS;
 				#endif
