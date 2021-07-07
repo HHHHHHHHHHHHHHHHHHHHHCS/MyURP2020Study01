@@ -1,0 +1,5 @@
+#ifndef  __GERSTNER_WAVE_LIB_INCLUDE__
+#define __GERSTNER_WAVE_LIB_INCLUDE__
+
+
+#endif

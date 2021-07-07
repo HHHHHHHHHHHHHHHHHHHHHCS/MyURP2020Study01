@@ -103,6 +103,7 @@ Shader "MyRP/HairShadow/FaceWithHairShadow"
 				o.positionWS = positionInputs.positionWS;
 
 				#if _IsFace
+				//记录w   根据记录来进行阴影距离移动长度
 				o.posNDCw = positionInputs.positionNDC.w;
 				o.positionSS = ComputeScreenPos(positionInputs.positionCS);
 				o.positionOS = v.positionOS;
@@ -142,6 +143,7 @@ Shader "MyRP/HairShadow/FaceWithHairShadow"
 				//"heightCorrect" is a easy mask which used to deal with some extreme view angles,
 				//you can delete it if you think it's unnecessary.
 				//you also can use it to adjust the shadow length, if you want.
+				// 这是一个简单的mask 作用于极端的视角   当然可以删除
 				float heightCorrect = smoothstep(_HeightCorrectMax, _HeightCorrectMin, i.positionWS.y);
 
 				//In DirectX, z/w from [0, 1], and use reversed Z
