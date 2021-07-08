@@ -6,8 +6,7 @@
 #define __GERSTNER_WAVE_TESSELLATION_INCLUDE__
 
 
-float _TessellationUniform;
-float _TessellationEdgeLength;
+
 
 struct a2v
 {
@@ -92,7 +91,6 @@ struct v2f
     float4 scrPos: TEXCOORD4;
     float heightOS: TEXCOORD5;
     float fogFactor: TEXCOORD6;
-    float4 color: COLOR;
 };
 
 v2f vert(a2v v);
