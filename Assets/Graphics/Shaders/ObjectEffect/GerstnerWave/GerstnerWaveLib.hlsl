@@ -8,7 +8,7 @@ float3 GerstnerWave(float4 wave, float3 p, inout float3 tangent, inout float3 bi
     float k = TWO_PI / waveLength;
     float c = sqrt(9.8 / k);
     float2 d = normalize(wave.xy) * _Frequency;
-    float f = k * (dot(p.xy, p.xz) - c * _Time.y * _Speed);
+    float f = k * (dot(d, p.xz) - c * _Time.y * _Speed);
     float a = stepness / k;
 
     tangent += float3(
@@ -45,7 +45,7 @@ half3 Highlights(half roughness, half3 normalWS, half3 viewDirectionWS)
     //GGX
     half d = NoH * NoH * (roughness2 - 1) + 1.0001;
     half LoH2 = LoH * LoH;
-    half specularTerm = roughness2 / (d * d * max(0.1, LoH2) * (roughness + 0.5) * 4);
+    half specularTerm = roughness2 / ((d * d) * max(0.1, LoH2) * (roughness + 0.5) * 4);
     specularTerm = min(specularTerm, 10);
 
     return specularTerm * mainLight.color * mainLight.distanceAttenuation;

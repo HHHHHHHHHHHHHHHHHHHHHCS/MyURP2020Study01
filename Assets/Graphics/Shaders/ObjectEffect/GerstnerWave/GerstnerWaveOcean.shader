@@ -1,10 +1,9 @@
 // https://github.com/FlowingCrescent/GerstnerWaveOcean_URP
-Shader "MyRP/GerstnerWave/GerstnerWaveOcean"
+Shader "MyRP/ObjectEffect/GerstnerWaveOcean"
 {
 	Properties
 	{
 		[Header(BaseShading)]
-		_BaseMap ("Example Texture", 2D) = "white" { }
 		[HDR]_BaseColor ("Base Colour", Color) = (0, 0.66, 0.73, 1)
 		_WaterFogColor ("Water Fog Colour", Color) = (0, 0.66, 0.73, 1)
 		_FogDensity ("Fog Density", range(0, 1)) = 0.1
@@ -64,7 +63,7 @@ Shader "MyRP/GerstnerWave/GerstnerWaveOcean"
 	{
 		Tags
 		{
-			"RenderType" = "Transparent" "RenderPipeline" = "UniversalRenderPipeline" "RenderQueue" = "Transparent"
+			"RenderType" = "Transparent" "Queue" = "Transparent" "RenderPipeline" = "UniversalRenderPipeline"
 		}
 
 		Pass
@@ -79,6 +78,7 @@ Shader "MyRP/GerstnerWave/GerstnerWaveOcean"
 
 			HLSLPROGRAM
 			#pragma target 4.6
+			#pragma enable_d3d11_debug_symbols
 
 			#pragma vertex tessVert
 			#pragma hull tessHull
@@ -90,7 +90,7 @@ Shader "MyRP/GerstnerWave/GerstnerWaveOcean"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
 			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareOpaqueTexture.hlsl"
 
-			#pragma shader_feature _TESSELLATION_EDGE
+			#pragma shader_feature _ _TESSELLATION_EDGE
 
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
 			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
@@ -109,14 +109,12 @@ Shader "MyRP/GerstnerWave/GerstnerWaveOcean"
 			//for waveLib
 			float _Speed, _Frequency, _NormalScale, _AirRefractiveIndex, _WaterRefractiveIndex, _FresnelPower;
 			//for tessellation
-			float _TessellationUniform,_TessellationEdgeLength;
+			float _TessellationUniform, _TessellationEdgeLength;
 			CBUFFER_END
 
 			#include "GerstnerWaveLib.hlsl"
 			#include "GerstnerWaveTessellation.hlsl"
 
-			TEXTURECUBE(_BaseMap);
-			SAMPLER(sampler_BaseMap);
 			TEXTURE2D(_FoamNoiseTex);
 			SAMPLER(sampler_FoamNoiseTex);
 			TEXTURE2D(_CausticTex);
@@ -155,7 +153,7 @@ Shader "MyRP/GerstnerWave/GerstnerWaveOcean"
 				o.normalWS = vertexNormalInput.normalWS;
 				o.tangentWS = vertexNormalInput.tangentWS;
 				o.scrPos = ComputeScreenPos(o.positionCS);
-				o.uv = TRANSFORM_TEX(v.uv, _BaseMap);
+				o.uv = v.uv;
 				o.fogFactor = ComputeFogFactor(positionInputs.positionCS.z);
 
 				return o;
@@ -192,7 +190,7 @@ Shader "MyRP/GerstnerWave/GerstnerWaveOcean"
 				float offsetPosDepth = SampleSceneDepth(offsetPos);
 				offsetPosDepth = LinearEyeDepth(offsetPosDepth, _ZBufferParams);
 				offsetPos = scrPos + uvOffset * step(surfaceDepth, offsetPosDepth);
-				float4 refractCol = float4(SampleSceneColor(offsetPos),1.0);
+				float4 refractCol = float4(SampleSceneColor(offsetPos), 1.0);
 
 				//caustic--------------------
 				float depthFactor = depth / surfaceDepth;
@@ -211,7 +209,7 @@ Shader "MyRP/GerstnerWave/GerstnerWaveOcean"
 				fogFactor = saturate(fogFactor * light.shadowAttenuation);
 				float4 waterCol = lerp(_WaterFogColor, _BaseColor, fogFactor);
 				refractCol = lerp(waterCol, waterCol * refractCol, fogFactor);
-				refractCol += caustic * pow(1 - saturate(fogFactor), 10);
+				refractCol += caustic * pow(1 - fogFactor, 10);
 
 				//specular--------------
 				float3 specular = Highlights(_Shininess, normalWS, viewDirectionWS);

@@ -5,15 +5,12 @@
 #ifndef  __GERSTNER_WAVE_TESSELLATION_INCLUDE__
 #define __GERSTNER_WAVE_TESSELLATION_INCLUDE__
 
-
-
-
 struct a2v
 {
     float4 positionOS:POSITION;
-    float2 uv: TEXCOORD0;
-    float3 normal:NORMAL;
     float4 color:COLOR;
+    float3 normal:NORMAL;
+    float2 uv: TEXCOORD0;
 };
 
 struct v2h
@@ -102,16 +99,15 @@ float3 barycentricCoordinates: SV_DomainLocation)
 {
     a2v data;
         
-    #define MY_DOMAIN_PROGRAM_INTERPOLATE(fieldName) data.fieldName = \
+    #define DOMAIN_PROGRAM_INTERPOLATE(fieldName) data.fieldName = \
         patch[0].fieldName * barycentricCoordinates.x + \
         patch[1].fieldName * barycentricCoordinates.y + \
         patch[2].fieldName * barycentricCoordinates.z;
         
-        
-    MY_DOMAIN_PROGRAM_INTERPOLATE(positionOS)
-    MY_DOMAIN_PROGRAM_INTERPOLATE(color)
-    MY_DOMAIN_PROGRAM_INTERPOLATE(normal)
-    MY_DOMAIN_PROGRAM_INTERPOLATE(uv)
+    DOMAIN_PROGRAM_INTERPOLATE(positionOS)
+    DOMAIN_PROGRAM_INTERPOLATE(color)
+    DOMAIN_PROGRAM_INTERPOLATE(normal)
+    DOMAIN_PROGRAM_INTERPOLATE(uv)
         
     return vert(data);
 }

@@ -112,6 +112,7 @@ Shader "MyRP/ScreenSpaceSubsurfaceScattering/TemplateLit"
 
 			void surf(Input IN, inout SurfaceOutputStandardSSSS o)
 			{
+				o = (SurfaceOutputStandardSSSS)0;
 			}
 
 			v2f vert(a2v IN)
@@ -134,6 +135,8 @@ Shader "MyRP/ScreenSpaceSubsurfaceScattering/TemplateLit"
 
 				OUTPUT_LIGHTMAP_UV(input.lightmapUV, unity_LightmapST, o.lightmapUV);
 				OUTPUT_SH(tbn.normalWS.xyz, o.vertexSH);
+
+				return o;
 			}
 
 			void frag(v2f IN,
@@ -160,7 +163,11 @@ Shader "MyRP/ScreenSpaceSubsurfaceScattering/TemplateLit"
 				worldN = normalize(worldN);
 				o.Normal = worldN;
 
-				UnityGIInput giInput;
+				// UnityGIInput giInput;
+				outGBuffer0 = 0;
+				outGBuffer1 = 0;
+				outGBuffer2 = 0;
+				outGBuffer3 = 0;
 			}
 			ENDHLSL
 		}
