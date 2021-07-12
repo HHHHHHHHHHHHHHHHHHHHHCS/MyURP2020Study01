@@ -1,0 +1,97 @@
+using System;
+using System.Diagnostics;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+
+namespace Graphics.Scripts.TAA
+{
+	public enum Pattern
+	{
+		Still,
+		Uniform2,
+		Uniform4,
+		Uniform4_Helix,
+		Uniform4_DoubleHelix,
+		SkewButterfly,
+		Rotated4,
+		Rotated4_Helix,
+		Rotated4_Helix2,
+		Poisson10,
+		Pentagram,
+		Halton_2_3_X8,
+		Halton_2_3_X16,
+		Halton_2_3_X32,
+		Halton_2_3_X256,
+		MotionPerp2,
+	}
+
+	public enum NeighborMaxSupport
+	{
+		TileSize10,
+		TileSize20,
+		TileSize40,
+	}
+
+	public enum Neighborhood
+	{
+		MinMax3x3,
+		MinMax3x3Rounded,
+		MinMax4TapVarying,
+	}
+
+	[Serializable, DebuggerDisplay(k_DebuggerDisplay)]
+	public sealed class EnumParameter<T> : VolumeParameter<T>
+		where T : Enum
+	{
+		public EnumParameter(T value, bool overrideState = false)
+			: base(value, overrideState)
+		{
+		}
+	}
+
+
+	[Serializable, VolumeComponentMenu("My/TAA")]
+	public class TAAPostProcess : VolumeComponent, IPostProcessComponent
+	{
+		public BoolParameter enableEffect = new BoolParameter(false);
+
+		[Header("FrustumJitter")]
+		public EnumParameter<Pattern> pattern = new EnumParameter<Pattern>(Pattern.Halton_2_3_X16);
+
+		public FloatParameter patternScale = new FloatParameter(1.0f);
+
+		public Vector4Parameter
+			activeSample = new Vector4Parameter(Vector4.zero); // xy = current sample, zw = previous sample
+
+		public IntParameter activeIndex = new IntParameter(-1);
+
+
+		[Header("VelocityBuffer")] public BoolParameter neighborMaxGen = new BoolParameter(false);
+
+		public EnumParameter<NeighborMaxSupport> neighborMaxSupport =
+			new EnumParameter<NeighborMaxSupport>(NeighborMaxSupport.TileSize20);
+
+
+		[Header("TemporalReprojection")] public EnumParameter<Neighborhood>
+			neighborhood = new EnumParameter<Neighborhood>(Neighborhood.MinMax3x3Rounded);
+
+		public BoolParameter unjitterColorSamples = new BoolParameter(true);
+		public BoolParameter unjitterNeighborhood = new BoolParameter(false);
+		public BoolParameter unjitterReprojection = new BoolParameter(false);
+		public BoolParameter useYCoCg = new BoolParameter(false);
+		public BoolParameter useClipping = new BoolParameter(true);
+		public BoolParameter useDilation = new BoolParameter(true);
+		public BoolParameter useMotionBlur = new BoolParameter(true);
+		public BoolParameter useOptimizations = new BoolParameter(true);
+		public ClampedFloatParameter feedbackMin = new ClampedFloatParameter(0.88f, 0f, 1f);
+		public ClampedFloatParameter feedbackMax = new ClampedFloatParameter(0.97f, 0f, 1f);
+		public FloatParameter motionBlurStrength = new FloatParameter(1f);
+		public BoolParameter motionBlurIgnoreFF = new BoolParameter(false);
+
+
+		public bool IsActive() => enableEffect.value;
+
+		public bool IsTileCompatible() => false;
+	}
+}

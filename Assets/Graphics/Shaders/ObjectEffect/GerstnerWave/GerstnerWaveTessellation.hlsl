@@ -1,4 +1,4 @@
-// https://zhuanlan.zhihu.com/p/42550699
+//https://zhuanlan.zhihu.com/p/42550699
 //https://zhuanlan.zhihu.com/p/359999755
 //这里用了自动的曲面细分 hull和domain
 //还可以手动添加点 geom
