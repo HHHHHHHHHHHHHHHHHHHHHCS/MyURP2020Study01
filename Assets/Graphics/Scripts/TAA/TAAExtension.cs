@@ -121,6 +121,28 @@ public static class CameraExtension
 		return Matrix4x4Extension.GetPerspectiveProjection(xm, xp, ym, yp, cn, cf);
 	}
 
+	public static Matrix4x4 GetPerspectiveProjectionQuick(this Camera camera)
+	{
+		if (camera == null)
+			return Matrix4x4.identity;
+
+		float tanHalfFov = Mathf.Tan(0.5f * Mathf.Deg2Rad * camera.fieldOfView);
+		float aspect = camera.aspect;
+		float far = camera.farClipPlane;
+		float near = camera.nearClipPlane;
+
+		Matrix4x4 mat = Matrix4x4.zero;
+
+		mat[0, 0] = 1.0f / (aspect * tanHalfFov);
+		mat[1, 1] = 1.0f / (tanHalfFov);
+		mat[2, 2] = -(far + near) / (far - near);
+		mat[2, 3] = -(2.0f * far * near) / (far - near);
+		mat[3, 2] = -1;
+
+
+		return mat;
+	}
+
 	public static Vector4 GetPerspectiveProjectionCornerRay(this Camera camera)
 	{
 		return GetPerspectiveProjectionCornerRay(camera, 0f, 0f);
