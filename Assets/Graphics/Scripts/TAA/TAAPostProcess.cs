@@ -6,25 +6,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace Graphics.Scripts.TAA
 {
-	public enum Pattern
-	{
-		Still,
-		Uniform2,
-		Uniform4,
-		Uniform4_Helix,
-		Uniform4_DoubleHelix,
-		SkewButterfly,
-		Rotated4,
-		Rotated4_Helix,
-		Rotated4_Helix2,
-		Poisson10,
-		Pentagram,
-		Halton_2_3_X8,
-		Halton_2_3_X16,
-		Halton_2_3_X32,
-		Halton_2_3_X256,
-		MotionPerp2,
-	}
+	
 
 	public enum NeighborMaxSupport
 	{
@@ -61,10 +43,10 @@ namespace Graphics.Scripts.TAA
 
 		public FloatParameter patternScale = new FloatParameter(1.0f);
 
-		public Vector4Parameter
-			activeSample = new Vector4Parameter(Vector4.zero); // xy = current sample, zw = previous sample
-
-		public IntParameter activeIndex = new IntParameter(-1);
+		// public Vector4Parameter
+		// 	activeSample = new Vector4Parameter(Vector4.zero); // xy = current sample, zw = previous sample
+		//
+		// public IntParameter activeIndex = new IntParameter(-1);
 
 
 		[Header("VelocityBuffer")] public BoolParameter neighborMaxGen = new BoolParameter(false);
