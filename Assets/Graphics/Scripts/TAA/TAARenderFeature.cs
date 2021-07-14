@@ -6,14 +6,32 @@ namespace Graphics.Scripts.TAA
 {
 	public class TAARenderFeature : ScriptableRendererFeature
 	{
+		public Shader velocityBufferShader;
+
+		private Material velocityBufferMaterial;
+
+		private bool isCreate;
 		private TAAFrustumJitterRenderPass taaFrustumJitterRenderPass;
+		private TAAVelocityBufferRenderPass taaVelocityBufferRenderPass;
+
 
 		public override void Create()
 		{
+			isCreate = false;
+			if (!MaterialCheck(ref velocityBufferMaterial, ref velocityBufferShader))
+			{
+				return;
+			}
+
 			taaFrustumJitterRenderPass = new TAAFrustumJitterRenderPass
 			{
 				renderPassEvent = RenderPassEvent.BeforeRenderingOpaques
 			};
+			taaVelocityBufferRenderPass = new TAAVelocityBufferRenderPass(velocityBufferMaterial)
+			{
+				renderPassEvent = RenderPassEvent.BeforeRenderingOpaques
+			};
+			isCreate = true;
 		}
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -28,6 +46,11 @@ namespace Graphics.Scripts.TAA
 				return;
 			}
 
+			if (!isCreate || !renderingData.postProcessingEnabled)
+			{
+				return;
+			}
+
 			var settings = VolumeManager.instance.stack.GetComponent<TAAPostProcess>();
 			if (!settings.IsActive())
 			{
@@ -36,6 +59,28 @@ namespace Graphics.Scripts.TAA
 
 			taaFrustumJitterRenderPass.Setup(settings);
 			renderer.EnqueuePass(taaFrustumJitterRenderPass);
+		}
+
+		public bool MaterialCheck(ref Material mat, ref Shader shader)
+		{
+			if (shader == null)
+			{
+				if (mat != null)
+				{
+					CoreUtils.Destroy(mat);
+				}
+
+				mat = null;
+				return false;
+			}
+
+			if (mat.shader != shader)
+			{
+				CoreUtils.Destroy(mat);
+				mat = CoreUtils.CreateEngineMaterial(shader);
+			}
+
+			return true;
 		}
 	}
 }

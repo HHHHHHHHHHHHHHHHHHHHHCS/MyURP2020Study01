@@ -334,7 +334,7 @@ namespace Graphics.Scripts.TAA
 					activeSample.x = sample.x;
 					activeSample.y = sample.y;
 
-					camera.projectionMatrix = camera.GetPerspectiveProjection(sample.x, sample.y);
+					cmd.SetProjectionMatrix(camera.GetPerspectiveProjection(sample.x, sample.y));
 				}
 
 				context.ExecuteCommandBuffer(cmd);

@@ -139,7 +139,6 @@ public static class CameraExtension
 		mat[2, 3] = -(2.0f * far * near) / (far - near);
 		mat[3, 2] = -1;
 
-
 		return mat;
 	}
 

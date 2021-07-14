@@ -6,15 +6,6 @@ using UnityEngine.Rendering.Universal;
 
 namespace Graphics.Scripts.TAA
 {
-	
-
-	public enum NeighborMaxSupport
-	{
-		TileSize10,
-		TileSize20,
-		TileSize40,
-	}
-
 	public enum Neighborhood
 	{
 		MinMax3x3,

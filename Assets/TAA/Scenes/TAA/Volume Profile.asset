@@ -15,21 +15,17 @@ MonoBehaviour:
   active: 1
   m_AdvancedMode: 0
   enableEffect:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 1
   pattern:
     m_OverrideState: 0
     m_Value: 12
   patternScale:
     m_OverrideState: 0
     m_Value: 1
-  activeSample:
+  neighborMaxGen:
     m_OverrideState: 0
-    m_Value: {x: 0, y: 0, z: 0, w: 0}
-  activeIndex:
-    m_OverrideState: 0
-    m_Value: -1
-  neighborMaxGen: 0
+    m_Value: 0
   neighborMaxSupport:
     m_OverrideState: 0
     m_Value: 1
