@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -18,7 +19,7 @@ namespace Graphics.Scripts.TAA
 		public override void Create()
 		{
 			isCreate = false;
-			if (!MaterialCheck(ref velocityBufferMaterial, ref velocityBufferShader))
+			if (!CreateMaterial(ref velocityBufferShader, ref velocityBufferMaterial))
 			{
 				return;
 			}
@@ -61,20 +62,25 @@ namespace Graphics.Scripts.TAA
 			renderer.EnqueuePass(taaFrustumJitterRenderPass);
 		}
 
-		public bool MaterialCheck(ref Material mat, ref Shader shader)
+		public bool CreateMaterial(ref Shader shader, ref Material mat)
 		{
 			if (shader == null)
 			{
 				if (mat != null)
 				{
 					CoreUtils.Destroy(mat);
+					mat = null;
 				}
 
-				mat = null;
+				Debug.LogError("Shader is null,can't create!");
 				return false;
 			}
 
-			if (mat.shader != shader)
+			if (mat == null)
+			{
+				mat = CoreUtils.CreateEngineMaterial(shader);
+			}
+			else if (mat.shader != shader)
 			{
 				CoreUtils.Destroy(mat);
 				mat = CoreUtils.CreateEngineMaterial(shader);

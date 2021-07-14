@@ -109,6 +109,7 @@ namespace Graphics.Scripts.TAA
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
+				//可以用mpb 也可以直接material.set
 				context.ExecuteCommandBuffer(cmd);
 				cmd.Clear();
 			}

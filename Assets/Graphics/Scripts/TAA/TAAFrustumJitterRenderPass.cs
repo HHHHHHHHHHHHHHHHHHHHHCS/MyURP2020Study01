@@ -29,7 +29,7 @@ namespace Graphics.Scripts.TAA
 	{
 		private const string k_tag = "TAA_FrustumJitter";
 
-		static bool _initialized = false;
+		private static readonly bool _initialized = false;
 
 		static TAAFrustumJitterRenderPass()
 		{
