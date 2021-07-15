@@ -17,8 +17,16 @@ namespace Graphics.Scripts.TAA
 		[NonSerialized, HideInInspector] public bool useSkinnedMesh = false;
 		private SkinnedMeshRenderer skinnedMesh = null;
 
-		private void Start()
+		private void OnEnable()
 		{
+			if (useSkinnedMesh && mesh != null)
+			{
+				Destroy(mesh);
+			}
+			
+			useSkinnedMesh = false;
+			mesh = null;
+			
 			var smr = GetComponent<SkinnedMeshRenderer>();
 			if (smr)
 			{
@@ -33,6 +41,7 @@ namespace Graphics.Scripts.TAA
 				if (mf == null)
 				{
 					enabled = false;
+					return;
 				}
 
 				useSkinnedMesh = false;
@@ -41,10 +50,7 @@ namespace Graphics.Scripts.TAA
 
 			localToWorldCurr = transform.localToWorldMatrix;
 			localToWorldPrev = localToWorldCurr;
-		}
-
-		private void OnEnable()
-		{
+			
 			TAAVelocityBufferRenderPass.activeObjects.Add(this);
 		}
 

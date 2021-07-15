@@ -60,6 +60,8 @@ namespace Graphics.Scripts.TAA
 
 			taaFrustumJitterRenderPass.Setup(settings);
 			renderer.EnqueuePass(taaFrustumJitterRenderPass);
+			// taaVelocityBufferRenderPass.Setup(settings);
+			// renderer.EnqueuePass(taaVelocityBufferRenderPass);
 		}
 
 		public bool CreateMaterial(ref Shader shader, ref Material mat)

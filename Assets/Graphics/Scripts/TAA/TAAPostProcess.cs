@@ -34,11 +34,9 @@ namespace Graphics.Scripts.TAA
 
 		public FloatParameter patternScale = new FloatParameter(1.0f);
 
-		// public Vector4Parameter
-		// 	activeSample = new Vector4Parameter(Vector4.zero); // xy = current sample, zw = previous sample
-		//
-		// public IntParameter activeIndex = new IntParameter(-1);
-
+		//代码传入settings  传给其它类用
+		[NonSerialized, HideInInspector]
+		public Vector4 activeSample = Vector4.zero; // xy = current sample, zw = previous sample
 
 		[Header("VelocityBuffer")] public BoolParameter neighborMaxGen = new BoolParameter(false);
 

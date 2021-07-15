@@ -249,7 +249,7 @@ namespace Graphics.Scripts.TAA
 
 		private TAAPostProcess settings;
 
-		public Vector4 activeSample = Vector4.zero; // xy = current sample, zw = previous sample
+		public static Vector4 activeSample = Vector4.zero; // xy = current sample, zw = previous sample
 		public int activeIndex = -1;
 
 		private float3 focalMotionPos = float3.zero;
@@ -264,6 +264,7 @@ namespace Graphics.Scripts.TAA
 		public void Setup(TAAPostProcess _settings)
 		{
 			settings = _settings;
+			settings.activeSample = Vector4.zero;
 		}
 
 		public Vector2 Sample(Pattern pattern, int index)
@@ -292,6 +293,7 @@ namespace Graphics.Scripts.TAA
 			{
 				activeSample = Vector4.zero;
 				activeIndex = -1;
+				// settings.activeSample = activeSample;
 				return;
 			}
 
@@ -333,7 +335,7 @@ namespace Graphics.Scripts.TAA
 					activeSample.w = activeSample.y;
 					activeSample.x = sample.x;
 					activeSample.y = sample.y;
-
+					settings.activeSample = activeSample;
 					cmd.SetProjectionMatrix(camera.GetPerspectiveProjection(sample.x, sample.y));
 				}
 
