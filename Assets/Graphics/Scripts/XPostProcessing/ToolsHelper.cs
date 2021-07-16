@@ -47,5 +47,21 @@ namespace Graphics.Scripts.XPostProcessing
 
 			return true;
 		}
+
+		public static Material GetCreateMaterial(ref Shader shader, ref Material material)
+		{
+			CreateMaterial(ref shader, ref material);
+			return material;
+		}
+
+
+		public static void DestroyMaterial(ref Material mat)
+		{
+			if (mat != null)
+			{
+				CoreUtils.Destroy(mat);
+				mat = null;
+			}
+		}
 	}
 }

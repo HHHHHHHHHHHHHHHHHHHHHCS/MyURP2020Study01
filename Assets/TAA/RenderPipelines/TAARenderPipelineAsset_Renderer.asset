@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: TAARenderFeature
   m_EditorClassIdentifier: 
   m_Active: 1
+  velocityBufferShader: {fileID: 4800000, guid: a3ea6532bd91dc14087839b7796de558, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -261,10 +261,11 @@ namespace Graphics.Scripts.TAA
 		}
 
 
-		public void Setup(TAAPostProcess _settings)
+		public void Setup(TAAPostProcess _settings, Camera _camera)
 		{
 			settings = _settings;
 			settings.activeSample = Vector4.zero;
+			_camera.ResetProjectionMatrix();
 		}
 
 		public Vector2 Sample(Pattern pattern, int index)
@@ -294,6 +295,7 @@ namespace Graphics.Scripts.TAA
 				activeSample = Vector4.zero;
 				activeIndex = -1;
 				// settings.activeSample = activeSample;
+
 				return;
 			}
 
@@ -336,7 +338,9 @@ namespace Graphics.Scripts.TAA
 					activeSample.x = sample.x;
 					activeSample.y = sample.y;
 					settings.activeSample = activeSample;
-					cmd.SetProjectionMatrix(camera.GetPerspectiveProjection(sample.x, sample.y));
+					var proj = camera.GetPerspectiveProjection(sample.x, sample.y);
+					cmd.SetProjectionMatrix(proj);
+					camera.projectionMatrix = proj;
 				}
 
 				context.ExecuteCommandBuffer(cmd);

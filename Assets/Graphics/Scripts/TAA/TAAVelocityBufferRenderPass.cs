@@ -80,14 +80,13 @@ namespace Graphics.Scripts.TAA
 		private const int k_TileMax = 3;
 		private const int k_NeighborMax = 4;
 
-		private const string k_TILESIZE_10 = "TILESIZE_10";
-		private const string k_TILESIZE_20 = "TILESIZE_20";
-		private const string k_TILESIZE_40 = "TILESIZE_40";
-
 		private static readonly int Corner_ID = Shader.PropertyToID("_Corner");
 		private static readonly int CurrV_ID = Shader.PropertyToID("_CurrV");
 		private static readonly int CurrVP_ID = Shader.PropertyToID("_CurrVP");
-		private static readonly int PreVP_ID = Shader.PropertyToID("_PreVP");
+		private static readonly int PrevVP_ID = Shader.PropertyToID("_PrevVP");
+		private static readonly int CurrM_ID = Shader.PropertyToID("_CurrM");
+		private static readonly int PrevM_ID = Shader.PropertyToID("_PrevM");
+		private static readonly int TileMaxLoop_ID = Shader.PropertyToID("_TileMaxLoop");
 
 		private static readonly int VelocityTex_ID = Shader.PropertyToID("_VelocityTex");
 		private static readonly int VelocityBufferTex_ID = Shader.PropertyToID("_VelocityBufferTex");
@@ -116,9 +115,7 @@ namespace Graphics.Scripts.TAA
 		private TAAPostProcess settings;
 		private Matrix4x4? velocityViewMatrix;
 		private RenderTextureDescriptor neighborDesc;
-
-		private static readonly int CurrM_ID = Shader.PropertyToID("_CurrM");
-		private static readonly int PrevM_ID = Shader.PropertyToID("_PrevM");
+		private int tileSize;
 
 
 		public TAAVelocityBufferRenderPass(Material mat)
@@ -142,7 +139,7 @@ namespace Graphics.Scripts.TAA
 			{
 				neighborDesc = desc;
 
-				int tileSize = 1;
+				tileSize = 1;
 				switch (settings.neighborMaxSupport.value)
 				{
 					case NeighborMaxSupport.TileSize10:
@@ -188,14 +185,15 @@ namespace Graphics.Scripts.TAA
 
 				velocityViewMatrix ??= cameraV;
 
+				cmd.SetProjectionMatrix(cameraP);
 				CoreUtils.SetRenderTarget(cmd, VelocityBufferTex_RTI, ClearFlag.All, Color.black);
 
-				//0.pre pass
+				//0.prev pass
 				var jitterSample = settings.activeSample;
 				material.SetVector(Corner_ID, camera.GetPerspectiveProjectionCornerRay(jitterSample.x, jitterSample.y));
 				material.SetMatrix(CurrV_ID, cameraV);
 				material.SetMatrix(CurrVP_ID, cameraVP);
-				material.SetMatrix(PreVP_ID, cameraP * velocityViewMatrix.Value);
+				material.SetMatrix(PrevVP_ID, cameraP * velocityViewMatrix.Value);
 				CoreUtils.DrawFullScreen(cmd, material, null, k_Prepass);
 				velocityViewMatrix = cameraV;
 
@@ -205,8 +203,8 @@ namespace Graphics.Scripts.TAA
 				//1 + 2: vertices + vertices skinned
 				foreach (var item in activeObjects)
 				{
-					material.SetMatrix(CurrM_ID, item.localToWorldCurr);
-					material.SetMatrix(PrevM_ID, item.localToWorldPrev);
+					cmd.SetGlobalMatrix(CurrM_ID, item.localToWorldCurr);
+					cmd.SetGlobalMatrix(PrevM_ID, item.localToWorldPrev);
 					int pass = item.useSkinnedMesh ? k_VerticesSkinned : k_Vertices;
 					for (int i = 0; i < item.mesh.subMeshCount; i++)
 					{
@@ -221,13 +219,7 @@ namespace Graphics.Scripts.TAA
 				// 3 + 4: tilemax + neighbormax
 				if (settings.neighborMaxGen.value)
 				{
-					CoreUtils.SetKeyword(material, k_TILESIZE_10,
-						settings.neighborMaxSupport.value == NeighborMaxSupport.TileSize10);
-					CoreUtils.SetKeyword(material, k_TILESIZE_20,
-						settings.neighborMaxSupport.value == NeighborMaxSupport.TileSize20);
-					CoreUtils.SetKeyword(material, k_TILESIZE_40,
-						settings.neighborMaxSupport.value == NeighborMaxSupport.TileSize40);
-
+					// material.SetInt(TileMaxLoop_ID, tileSize);
 					cmd.GetTemporaryRT(VelocityTileMaxTex_ID, neighborDesc, FilterMode.Point);
 
 					CoreUtils.SetRenderTarget(cmd, VelocityTileMaxTex_RTI, ClearFlag.None);

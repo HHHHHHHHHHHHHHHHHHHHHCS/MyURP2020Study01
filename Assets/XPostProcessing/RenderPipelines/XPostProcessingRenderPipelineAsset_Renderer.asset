@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: abd5a5a81b8ef9444bc6effd9305ebd3, type: 3}
   m_Name: ImageProcessImageRenderFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   renderPassEvent: 550
   sharpenV1Shader: {fileID: 4800000, guid: 937f0b44aa6b92746af626f817ffee62, type: 3}
 --- !u!114 &11400000
@@ -28,9 +28,8 @@ MonoBehaviour:
   m_Name: XPostProcessingRenderPipelineAsset_Renderer
   m_EditorClassIdentifier: 
   m_RendererFeatures:
-  - {fileID: -1646074994844089296}
   - {fileID: 2322216587504152847}
-  m_RendererFeatureMap: 3044aa7283f727e90f71b4c5ae2b3a20
+  m_RendererFeatureMap: 0f71b4c5ae2b3a20
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   xrSystemData: {fileID: 11400000, guid: 60e1133243b97e347b653163a8c01b64, type: 2}
   shaders:
@@ -72,3 +71,7 @@ MonoBehaviour:
   m_Name: XPostProcessingFeature
   m_EditorClassIdentifier: 
   m_Active: 1
+  renderPassEvent: 550
+  assets:
+    blitShader: {fileID: 4800000, guid: 4a3e32a72ff3a5f43b5341cbe14bb6c3, type: 3}
+    sharpenV1Shader: {fileID: 4800000, guid: 937f0b44aa6b92746af626f817ffee62, type: 3}

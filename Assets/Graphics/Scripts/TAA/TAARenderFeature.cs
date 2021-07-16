@@ -30,7 +30,7 @@ namespace Graphics.Scripts.TAA
 			};
 			taaVelocityBufferRenderPass = new TAAVelocityBufferRenderPass(velocityBufferMaterial)
 			{
-				renderPassEvent = RenderPassEvent.BeforeRenderingOpaques
+				renderPassEvent = RenderPassEvent.AfterRenderingOpaques + 1
 			};
 			isCreate = true;
 		}
@@ -58,10 +58,10 @@ namespace Graphics.Scripts.TAA
 				return;
 			}
 
-			taaFrustumJitterRenderPass.Setup(settings);
+			taaFrustumJitterRenderPass.Setup(settings, cam);
 			renderer.EnqueuePass(taaFrustumJitterRenderPass);
-			// taaVelocityBufferRenderPass.Setup(settings);
-			// renderer.EnqueuePass(taaVelocityBufferRenderPass);
+			taaVelocityBufferRenderPass.Setup(settings);
+			renderer.EnqueuePass(taaVelocityBufferRenderPass);
 		}
 
 		public bool CreateMaterial(ref Shader shader, ref Material mat)

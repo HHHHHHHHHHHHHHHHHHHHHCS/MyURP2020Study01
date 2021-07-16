@@ -19,20 +19,22 @@ namespace Graphics.Scripts.XPostProcessing
 
 		private static readonly RenderTargetIdentifier TempRT1_RTI = new RenderTargetIdentifier(TempRT1_ID);
 
-		private static int src, dest;
-		private static int width, height;
-		private static RenderTextureDescriptor descriptor;
+		private int src, dest;
+		private int width, height;
+		private RenderTextureDescriptor descriptor;
 
-		public static void SetupTempRT(int _width, int _height, RenderTextureDescriptor _desc)
+		public static RenderTargetIdentifier Final_RTI => cameraColorTex_RTI;
+
+		public void SetupTempRT(RenderTextureDescriptor _desc)
 		{
 			src = -1;
 			dest = -1;
-			width = _width;
-			height = _height;
 			descriptor = _desc;
+			width = _desc.width;
+			height = _desc.height;
 		}
 
-		public static void ReleaseTempRT(CommandBuffer cmd)
+		public void ReleaseTempRT(CommandBuffer cmd)
 		{
 			if (src != -1)
 			{
@@ -47,7 +49,7 @@ namespace Graphics.Scripts.XPostProcessing
 			}
 		}
 
-		public static RenderTargetIdentifier GetSrc(CommandBuffer cmd)
+		public RenderTargetIdentifier GetSrc(CommandBuffer cmd)
 		{
 			if (src == -1)
 			{
@@ -57,7 +59,7 @@ namespace Graphics.Scripts.XPostProcessing
 			return src == TempRT0_ID ? TempRT0_RTI : TempRT1_RTI;
 		}
 
-		public static RenderTargetIdentifier GetDest(CommandBuffer cmd)
+		public RenderTargetIdentifier GetDest(CommandBuffer cmd)
 		{
 			// return BuiltinRenderTextureType.CameraTarget;
 			if (dest == -1)
@@ -80,14 +82,15 @@ namespace Graphics.Scripts.XPostProcessing
 		}
 
 
-		private static void SwapRT()
+		public void SwapRT()
 		{
 			CoreUtils.Swap(ref src, ref dest);
 		}
 
-		private static bool SrcIsFinal(CommandBuffer cmd) => GetSrc(cmd) == cameraColorTex_RTI;
+		public bool SrcIsFinal(CommandBuffer cmd) => GetSrc(cmd) == cameraColorTex_RTI;
 
-		private static RenderTextureDescriptor GetRenderDescriptor(int _width, int _height, GraphicsFormat _format)
+
+		private RenderTextureDescriptor GetRenderDescriptor(int _width, int _height, GraphicsFormat _format)
 		{
 			var desc = descriptor;
 
@@ -100,15 +103,16 @@ namespace Graphics.Scripts.XPostProcessing
 			return desc;
 		}
 
-		private static void DrawFullScreen(CommandBuffer cmd, RenderTargetIdentifier dest,
+		public static void DrawFullScreen(CommandBuffer cmd, RenderTargetIdentifier dest,
 			Material mat, int pass = 0)
 		{
-			cmd.SetRenderTarget(dest, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+			cmd.SetRenderTarget(dest, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store,
+				RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
 			CoreUtils.DrawFullScreen(cmd, mat, null, pass);
 		}
 
-		private static void DrawFullScreen(CommandBuffer cmd, RenderTargetIdentifier src, RenderTargetIdentifier dest,
-			Material mat, int pass)
+		public static void DrawFullScreen(CommandBuffer cmd, RenderTargetIdentifier src, RenderTargetIdentifier dest,
+			Material mat, int pass = 0)
 		{
 			cmd.SetGlobalTexture(SrcTex_ID, src);
 			DrawFullScreen(cmd, dest, mat, pass);

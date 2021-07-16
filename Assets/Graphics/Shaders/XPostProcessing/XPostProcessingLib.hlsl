@@ -14,6 +14,14 @@ struct v2f
     float2 uv: TEXCOORD0;
 };
 
+TEXTURE2D(_SrcTex);
+SAMPLER(sampler_SrcTex);
+
+half4 SampleSrcTex(float2 uv)
+{
+    return SAMPLE_TEXTURE2D(_SrcTex, sampler_SrcTex, uv);
+}
+
 half4 DoEffect(v2f IN);
 
 v2f vert(a2v v)
