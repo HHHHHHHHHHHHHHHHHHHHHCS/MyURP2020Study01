@@ -1,6 +1,7 @@
 #ifndef __XPOSTPROCESSING_LIB_INCLUDE__
 #define __XPOSTPROCESSING_LIB_INCLUDE__
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
 struct a2v
@@ -15,11 +16,11 @@ struct v2f
 };
 
 TEXTURE2D(_SrcTex);
-SAMPLER(sampler_SrcTex);
+SAMPLER(sampler_Point_Clamp);
 
 half4 SampleSrcTex(float2 uv)
 {
-    return SAMPLE_TEXTURE2D(_SrcTex, sampler_SrcTex, uv);
+    return SAMPLE_TEXTURE2D(_SrcTex, sampler_Point_Clamp, uv);
 }
 
 half4 DoEffect(v2f IN);

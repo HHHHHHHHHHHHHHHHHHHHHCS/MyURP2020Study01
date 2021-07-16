@@ -22,6 +22,7 @@ namespace Graphics.Scripts.XPostProcessing
 
 		protected override void Dispose(bool disposing)
 		{
+			AbsXPostProcessingParameters.ClearSamplerDict();
 			assets.DestroyMaterials();
 		}
 

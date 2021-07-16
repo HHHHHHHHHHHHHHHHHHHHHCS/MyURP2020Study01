@@ -41,17 +41,17 @@ namespace Graphics.Scripts.XPostProcessing
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
-				foreach (var item in absXPostProcessingParameters)
-				{
-					var obj = (AbsXPostProcessingParameters) VolumeManager.instance.stack.GetComponent(item);
-					if (!obj.IsActive())
-					{
-						continue;
-					}
+				var effects = absXPostProcessingParameters
+					.Select(t => (AbsXPostProcessingParameters) VolumeManager.instance.stack.GetComponent(t))
+					.Where(cls => cls.IsActive())
+					.OrderBy(cls => cls.PriorityQueue());
 
-					using (new ProfilingScope(cmd, obj.profilingSampler))
+				foreach (var item in effects)
+				{
+
+					using (new ProfilingScope(cmd, item.profilingSampler))
 					{
-						obj.Execute(assets, rtHelper, cmd, context, ref renderingData, out var swapRT);
+						item.Execute(assets, rtHelper, cmd, context, ref renderingData, out var swapRT);
 
 						if (swapRT)
 						{
