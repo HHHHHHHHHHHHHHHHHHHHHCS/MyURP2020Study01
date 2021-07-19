@@ -117,6 +117,8 @@ namespace Graphics.Scripts.TAA
 		private RenderTextureDescriptor neighborDesc;
 		private int tileSize;
 
+		// public static int VelocityBufferTex => VelocityBufferTex_ID;
+		// public static int VelocityNeighborMaxTex => VelocityNeighborMaxTex_ID;
 
 		public TAAVelocityBufferRenderPass(Material mat)
 		{

@@ -286,7 +286,6 @@ namespace Graphics.Scripts.TAA
 					Vector2.right.SignedAngle(new Vector2(focalMotionDir.x, focalMotionDir.y)));
 		}
 
-
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
 			var camera = renderingData.cameraData.camera;

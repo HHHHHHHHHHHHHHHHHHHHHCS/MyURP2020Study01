@@ -6,13 +6,6 @@ using UnityEngine.Rendering.Universal;
 
 namespace Graphics.Scripts.TAA
 {
-	public enum Neighborhood
-	{
-		MinMax3x3,
-		MinMax3x3Rounded,
-		MinMax4TapVarying,
-	}
-
 	[Serializable, DebuggerDisplay(k_DebuggerDisplay)]
 	public sealed class EnumParameter<T> : VolumeParameter<T>
 		where T : Enum
