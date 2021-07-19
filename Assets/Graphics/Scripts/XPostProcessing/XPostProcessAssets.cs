@@ -9,6 +9,9 @@ namespace Graphics.Scripts.XPostProcessing
 	{
 		[SerializeField] private Shader blitShader;
 		
+		[Header("Glitch")]
+		[SerializeField] private Shader imageBlockShader;
+		
 		[Header("Vignette")]
 		[SerializeField] private Shader auroraVignetteShader;
 		[SerializeField] private Shader rapidVignetteShader;
@@ -20,6 +23,7 @@ namespace Graphics.Scripts.XPostProcessing
 
 		
 		private Material blitMaterial;
+		private Material imageBlockMaterial;
 		private Material auroratVignetteMaterial;
 		private Material rapidVignetteMaterial;
 		private Material sharpenV1Material;
@@ -28,6 +32,7 @@ namespace Graphics.Scripts.XPostProcessing
 
 
 		public Material BlitMat => ToolsHelper.GetCreateMaterial(ref blitShader, ref blitMaterial);
+		public Material ImageBlockMat => ToolsHelper.GetCreateMaterial(ref imageBlockShader, ref imageBlockMaterial);
 		public Material AuroraVignetteMat => ToolsHelper.GetCreateMaterial(ref auroraVignetteShader, ref auroratVignetteMaterial);
 		public Material rapidVignetteMat => ToolsHelper.GetCreateMaterial(ref rapidVignetteShader, ref rapidVignetteMaterial);
 
@@ -39,6 +44,7 @@ namespace Graphics.Scripts.XPostProcessing
 		public void DestroyMaterials()
 		{
 			ToolsHelper.DestroyMaterial(ref blitMaterial);
+			ToolsHelper.DestroyMaterial(ref imageBlockMaterial);
 			ToolsHelper.DestroyMaterial(ref auroratVignetteMaterial);
 			ToolsHelper.DestroyMaterial(ref rapidVignetteMaterial);
 			ToolsHelper.DestroyMaterial(ref sharpenV1Material);

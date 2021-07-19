@@ -31,6 +31,8 @@ namespace Graphics.Scripts.XPostProcessing.Vignette
 		public override int PriorityQueue() => priorityQueue.value;
 		public override bool IsTileCompatible() => false;
 
+		private float timer = 0;
+
 		public override void Execute(XPostProcessAssets assets, RTHelper rtHelper,
 			CommandBuffer cmd, ScriptableRenderContext context, ref RenderingData renderingData,
 			out bool swapRT)
@@ -42,14 +44,17 @@ namespace Graphics.Scripts.XPostProcessing.Vignette
 				return;
 			}
 
-			float t = Time.time / 100.0f;
-			t = 100.0f * (t - Mathf.Ceil(t));
+			timer += Time.deltaTime;
+			if (timer > 100f)
+			{
+				timer -= 100f;
+			}
 
 			material.SetFloat(VignetteArea_ID, vignetteArea.value);
 			material.SetFloat(VignetteSmothness_ID, vignetteSmothness.value);
 			material.SetFloat(ColorChange_ID, colorChange.value * 10f);
 			material.SetColor(ColorFactor_ID, colorFactor.value);
-			material.SetFloat(TimeX_ID, t * flowSpeed.value);
+			material.SetFloat(TimeX_ID, timer * flowSpeed.value);
 			material.SetFloat(VignetteFading_ID, vignetteFading.value);
 
 			RTHelper.DrawFullScreen(cmd, rtHelper.GetSrc(cmd), material);

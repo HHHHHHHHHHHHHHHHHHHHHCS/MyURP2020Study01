@@ -76,6 +76,79 @@ MonoBehaviour:
     m_Value: 1
     min: -2
     max: 2
+--- !u!114 &-855098735897673700
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fb51f7a047c65e4498b53efec3bd091, type: 3}
+  m_Name: ImageBlockPostProcess
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  enableEffect:
+    m_OverrideState: 1
+    m_Value: 0
+  priorityQueue:
+    m_OverrideState: 0
+    m_Value: 0
+  fade:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+    max: 1
+  speed:
+    m_OverrideState: 0
+    m_Value: 0.5
+    min: 0
+    max: 1
+  amount:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+    max: 10
+  blockLayer1_U:
+    m_OverrideState: 0
+    m_Value: 9
+    min: 0
+    max: 50
+  blockLayer1_V:
+    m_OverrideState: 0
+    m_Value: 9
+    min: 0
+    max: 50
+  blockLayer2_U:
+    m_OverrideState: 0
+    m_Value: 5
+    min: 0
+    max: 50
+  blockLayer2_V:
+    m_OverrideState: 0
+    m_Value: 5
+    min: 0
+    max: 50
+  blockLayer1_Intensity:
+    m_OverrideState: 0
+    m_Value: 8
+    min: 0
+    max: 50
+  blockLayer2_Intensity:
+    m_OverrideState: 0
+    m_Value: 4
+    min: 0
+    max: 50
+  rgbSplitIntensity:
+    m_OverrideState: 0
+    m_Value: 0.5
+    min: 0
+    max: 50
+  blockVisualizeDebug:
+    m_OverrideState: 0
+    m_Value: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -94,6 +167,7 @@ MonoBehaviour:
   - {fileID: -4071996502451392905}
   - {fileID: 319383973770424825}
   - {fileID: 4275619190832497546}
+  - {fileID: -855098735897673700}
 --- !u!114 &319383973770424825
 MonoBehaviour:
   m_ObjectHideFlags: 3

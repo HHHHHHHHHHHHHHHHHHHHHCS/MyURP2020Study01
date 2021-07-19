@@ -38,4 +38,17 @@ half4 frag(v2f IN):SV_Target
     return DoEffect(IN);
 }
 
+//Common Function
+//---------------------------
+
+float RandomNoise(float time, float2 seed)
+{
+    return frac(sin(dot(seed * floor(time * 30.0), float2(127.1, 311.7))) * 43758.5453123);
+}
+
+float RandomNoise(float time, float seed)
+{
+    return RandomNoise(time, float2(seed, 1.0));
+}
+
 #endif

@@ -130,10 +130,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 3456062778210621654, guid: 689b147584cc1b74dba55c40537f7cf3, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3456062778748790534, guid: 689b147584cc1b74dba55c40537f7cf3, type: 3}
       propertyPath: m_Name
       value: SceneAssets
@@ -144,7 +140,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3456062778748790535, guid: 689b147584cc1b74dba55c40537f7cf3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.4141097
+      value: -6.87
       objectReference: {fileID: 0}
     - target: {fileID: 3456062778748790535, guid: 689b147584cc1b74dba55c40537f7cf3, type: 3}
       propertyPath: m_LocalPosition.y
