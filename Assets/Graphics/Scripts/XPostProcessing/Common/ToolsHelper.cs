@@ -1,11 +1,10 @@
 using System;
 using System.Diagnostics;
 using UnityEngine;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using Debug = UnityEngine.Debug;
 
-namespace Graphics.Scripts.XPostProcessing
+namespace Graphics.Scripts.XPostProcessing.Common
 {
 	[Serializable, DebuggerDisplay(k_DebuggerDisplay)]
 	public sealed class EnumParameter<T> : VolumeParameter<T>

@@ -1,10 +1,9 @@
 using System;
 using System.Linq;
-using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace Graphics.Scripts.XPostProcessing
+namespace Graphics.Scripts.XPostProcessing.Common
 {
 	public class XPostProcessingPass : ScriptableRenderPass
 	{

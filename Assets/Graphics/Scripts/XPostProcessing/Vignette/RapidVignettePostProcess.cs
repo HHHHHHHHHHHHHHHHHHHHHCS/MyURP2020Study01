@@ -1,4 +1,5 @@
 using System;
+using Graphics.Scripts.XPostProcessing.Common;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;

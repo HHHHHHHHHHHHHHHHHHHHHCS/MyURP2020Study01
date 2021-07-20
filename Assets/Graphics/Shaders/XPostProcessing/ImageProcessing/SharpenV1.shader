@@ -41,6 +41,5 @@ Shader "MyRP/XPostProcessing/ImageProcessing/SharpenV1"
 			}
 			ENDHLSL
 		}
-
 	}
 }

@@ -38,7 +38,7 @@ namespace Graphics.Scripts.TAA
 			};
 			taaVelocityBufferRenderPass = new TAAVelocityBufferRenderPass(velocityBufferMaterial)
 			{
-				renderPassEvent = RenderPassEvent.AfterRenderingOpaques + 1
+				renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing - 2
 			};
 			taaReprojectionRenderPass = new TAAReprojectionRenderPass(reprojectionMaterial)
 			{

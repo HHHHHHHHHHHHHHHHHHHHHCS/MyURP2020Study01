@@ -6,6 +6,8 @@ namespace Graphics.Scripts.ScreenEffect
 {
 	public class ScreenEffectFeature : ScriptableRendererFeature
 	{
+		public static ScriptableRenderPass renderPass;
+		
 		private  ScriptableRenderPass screenEffectPass;
 
 		public override void Create()
@@ -37,7 +39,7 @@ namespace Graphics.Scripts.ScreenEffect
 			}
 			else
 			{
-				var pass = ScreenEffectMono.pass;
+				var pass = renderPass;
 				if (pass != null)
 				{
 					pass.renderPassEvent = settings.renderPassEvent.value;

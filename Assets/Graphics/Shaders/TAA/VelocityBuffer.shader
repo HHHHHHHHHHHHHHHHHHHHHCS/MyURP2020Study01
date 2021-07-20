@@ -1,7 +1,7 @@
 Shader "MyRP/TAA/VelocityBuffer"
 {
 	HLSLINCLUDE
-	#pragma enable_d3d11_debug_symbols
+	// #pragma enable_d3d11_debug_symbols
 	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
@@ -72,11 +72,13 @@ Shader "MyRP/TAA/VelocityBuffer"
 		float2 mv = 0.0;
 		float rmv = 0.0;
 
+		UNITY_UNROLL
 		for (int i = 0; i < support; i++)
 		{
+			UNITY_UNROLL
 			for (int j = 0; j < support; j++)
 			{
-				float2 v = SAMPLE_TEXTURE2D(_VelocityTex, sampler_Linear_Clamp, base + i*dv+j*du);
+				float2 v = SAMPLE_TEXTURE2D(_VelocityTex, sampler_Linear_Clamp, base + i*dv+j*du).xy;
 				float rv = dot(v, v);
 				if (rv > rmv)
 				{

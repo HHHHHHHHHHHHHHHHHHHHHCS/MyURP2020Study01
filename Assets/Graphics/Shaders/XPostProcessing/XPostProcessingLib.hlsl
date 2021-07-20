@@ -16,11 +16,12 @@ struct v2f
 };
 
 TEXTURE2D(_SrcTex);
-SAMPLER(sampler_Point_Clamp);
+// SAMPLER(sampler_Point_Clamp);
+SAMPLER(sampler_Linear_Clamp);
 
 half4 SampleSrcTex(float2 uv)
 {
-    return SAMPLE_TEXTURE2D(_SrcTex, sampler_Point_Clamp, uv);
+    return SAMPLE_TEXTURE2D(_SrcTex, sampler_Linear_Clamp, uv);
 }
 
 half4 DoEffect(v2f IN);

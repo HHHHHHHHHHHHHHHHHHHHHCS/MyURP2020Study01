@@ -123,8 +123,10 @@
 				points[7] = right * 48;
 				points[8] = down * 20;
 
+				UNITY_UNROLL
 				for (int i = 8; i >= 0; i--)
 				{
+					UNITY_UNROLL
 					for (int j = 0; j < i; j++)
 					{
 						points[j] = lerp(points[j], points[j + 1], t);

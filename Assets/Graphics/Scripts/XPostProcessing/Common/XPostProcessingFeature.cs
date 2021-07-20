@@ -1,8 +1,6 @@
-using System;
-using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
-namespace Graphics.Scripts.XPostProcessing
+namespace Graphics.Scripts.XPostProcessing.Common
 {
 	public class XPostProcessingFeature : ScriptableRendererFeature
 	{

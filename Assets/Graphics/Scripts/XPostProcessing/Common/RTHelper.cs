@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 
-namespace Graphics.Scripts.XPostProcessing
+namespace Graphics.Scripts.XPostProcessing.Common
 {
 	public class RTHelper
 	{

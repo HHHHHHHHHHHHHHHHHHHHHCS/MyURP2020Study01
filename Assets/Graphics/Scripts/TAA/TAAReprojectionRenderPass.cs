@@ -31,7 +31,7 @@ namespace Graphics.Scripts.TAA
 
 		private const string k_USE_OPTIMIZATIONS = "_USE_OPTIMIZATIONS";
 
-		// private static readonly int SrcTex_ID = Shader.PropertyToID("_SrcTex");
+		private static readonly int SrcTex_ID = Shader.PropertyToID("_SrcTex");
 		// private static readonly int VelocityBuffer_ID = Shader.PropertyToID("_VelocityBuffer");
 		// private static readonly int VelocityNeighborMax_ID = Shader.PropertyToID("_VelocityNeighborMax");
 		private static readonly int Corner_ID = Shader.PropertyToID("_Corner");
@@ -137,7 +137,7 @@ namespace Graphics.Scripts.TAA
 					int indexRead = reprojectionIndex;
 					int indexWrite = (reprojectionIndex + 1) % 2;
 
-					// cmd.SetGlobalTexture(SrcTex_ID, CameraColorTexture_ID);
+					cmd.SetGlobalTexture(SrcTex_ID, CameraColorTexture_ID);
 					// material.SetTexture(VelocityBuffer_ID, TAAVelocityBufferRenderPass.VelocityBufferTex);
 					// material.SetTexture(VelocityNeighborMax_ID, TAAVelocityBufferRenderPass.VelocityNeighborMaxTex);
 					material.SetVector(Corner_ID, new Vector4(oneExtentX, oneExtentY, 0f, 0f));
@@ -153,18 +153,18 @@ namespace Graphics.Scripts.TAA
 						                                  ? Mathf.Min(1f, 1f / timeScale)
 						                                  : 1f));
 
-					
 					// reproject frame n-1 into output + history buffer
-					CoreUtils.SetRenderTarget(cmd, CameraColorTexture_ID, ClearFlag.None);
+					CoreUtils.SetRenderTarget(cmd, reprojectionBuffer[indexWrite], ClearFlag.None);
 					CoreUtils.DrawFullScreen(cmd, material, null, 0);
 
 					context.ExecuteCommandBuffer(cmd);
 					cmd.Clear();
-					
-					CoreUtils.SetRenderTarget(cmd, reprojectionBuffer[indexWrite], ClearFlag.None);
+
+					cmd.SetGlobalTexture(SrcTex_ID, reprojectionBuffer[indexWrite]);
+					CoreUtils.SetRenderTarget(cmd, CameraColorTexture_ID, ClearFlag.None);
 					CoreUtils.DrawFullScreen(cmd, material, null, 1);
 
-					
+
 					reprojectionMatrix[indexWrite] = cameraVP;
 					reprojectionIndex = indexWrite;
 				}

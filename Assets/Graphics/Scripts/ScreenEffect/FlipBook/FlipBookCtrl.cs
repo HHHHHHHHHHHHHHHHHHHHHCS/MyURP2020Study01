@@ -74,7 +74,7 @@ namespace Graphics.Scripts.ScreenEffect.FlipBook
 			_flipBookPass.Init(_mesh, _shader, _pages);
 
 
-			ScreenEffectMono.pass = _flipBookPass;
+			ScreenEffectFeature.renderPass = _flipBookPass;
 		}
 
 		private void Update()

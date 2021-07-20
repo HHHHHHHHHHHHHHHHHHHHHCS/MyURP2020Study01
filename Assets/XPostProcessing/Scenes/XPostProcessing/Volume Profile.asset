@@ -168,6 +168,7 @@ MonoBehaviour:
   - {fileID: 319383973770424825}
   - {fileID: 4275619190832497546}
   - {fileID: -855098735897673700}
+  - {fileID: 2433842890578205567}
 --- !u!114 &319383973770424825
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -219,6 +220,48 @@ MonoBehaviour:
     m_Value: 1
     min: -2
     max: 2
+--- !u!114 &2433842890578205567
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff8d5b061103d674db2dbd05a78c5e93, type: 3}
+  m_Name: ScharrPostProcess
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  enableEffect:
+    m_OverrideState: 1
+    m_Value: 1
+  priorityQueue:
+    m_OverrideState: 0
+    m_Value: 0
+  edgeWidth:
+    m_OverrideState: 1
+    m_Value: 0.3
+    min: 0.05
+    max: 5
+  edgeColor:
+    m_OverrideState: 0
+    m_Value: {r: 0, g: 0, b: 0, a: 1}
+    hdr: 1
+    showAlpha: 0
+    showEyeDropper: 1
+  backgroundFade:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+    max: 1
+  backgroundColor:
+    m_OverrideState: 0
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    hdr: 1
+    showAlpha: 0
+    showEyeDropper: 1
 --- !u!114 &3578905114600056764
 MonoBehaviour:
   m_ObjectHideFlags: 3

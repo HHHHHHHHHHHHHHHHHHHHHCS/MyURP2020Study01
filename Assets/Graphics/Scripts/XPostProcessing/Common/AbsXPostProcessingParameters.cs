@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-namespace Graphics.Scripts.XPostProcessing
+namespace Graphics.Scripts.XPostProcessing.Common
 {
 	public abstract class AbsXPostProcessingParameters : VolumeComponent, IPostProcessComponent
 	{

@@ -74,6 +74,7 @@ MonoBehaviour:
   renderPassEvent: 550
   assets:
     blitShader: {fileID: 4800000, guid: 4a3e32a72ff3a5f43b5341cbe14bb6c3, type: 3}
+    scharrShader: {fileID: 4800000, guid: 19f1d2d8ea593a44b88077969014f799, type: 3}
     imageBlockShader: {fileID: 4800000, guid: 7ecf6080cb0f52e4d88011b914239937, type: 3}
     auroraVignetteShader: {fileID: 4800000, guid: a9afeeb32721f604c82c9f71ea0e48cf, type: 3}
     rapidVignetteShader: {fileID: 4800000, guid: a5a3902fa0dfd7047844b2e78f0ffffb, type: 3}
