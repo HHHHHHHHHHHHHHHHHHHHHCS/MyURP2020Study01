@@ -248,6 +248,14 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 				half3 originCol = SampleSrcTex(uv).rgb;
 
+				float whiteJunc, outlineJunc;
+				CalcJunction(uv, whiteJunc, outlineJunc);
+
+				if (whiteJunc > 0.001)
+				{
+					return half4(originCol, 1);
+				}
+
 				//line
 				//---------------
 				float2 dir = SafeNormalize(0.5 - _ExplodePoint);
@@ -274,17 +282,12 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 					outline3 = 0.4 + SampleSrcTex(uv - lineUVOffset).rgb;
 				}
 
-				float whiteJunc, outlineJunc;
-				CalcJunction(uv, whiteJunc, outlineJunc);
-
 				half3 outlineCol = min(outline1, outline2);
 				outlineCol = min(outlineCol, outline3);
 
 				outlineCol = lerp(outlineCol, _BackgroundColor, max(ctrl - 0.7, 0) * 3.333);
 
-				half3 OUT = lerp(outlineCol, originCol, ceil(whiteJunc));
-
-				return half4(OUT, 1);
+				return half4(outlineCol, 1);
 			}
 			ENDHLSL
 		}
