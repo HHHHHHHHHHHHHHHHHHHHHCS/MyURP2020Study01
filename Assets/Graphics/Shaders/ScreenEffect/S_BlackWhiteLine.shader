@@ -257,22 +257,25 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				half3 outline1 = SampleSrcTex(uv - lineUVOffset).rgb;
 
 				half3 outline2 = 1;
+				half3 outline3 = 1;
 				if (ctrl > 0.3)
 				{
 					lineUV = Rot(uv - dir - 0.5, dir.y, dir.x) + 0.5;
 					lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
 					lineUVOffset = lineNoise.xx * 0.45 * p2Ctrl + 200 * pixelSize * p2Ctrl;
 					outline2 = 0.2 + SampleSrcTex(uv - lineUVOffset).rgb;
+					
+					if (ctrl > 0.6)
+					{
+						lineUV = Rot(uv - 2 * dir - 0.5, dir.y, dir.x) + 0.5;
+						lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
+						lineUVOffset = lineNoise.xx * 0.8 * p2Ctrl + 150 * pixelSize * p2Ctrl;
+						outline3 = 0.4 + SampleSrcTex(uv - lineUVOffset).rgb;
+					}
 				}
 
-				half3 outline3 = 1;
-				if (ctrl > 0.6)
-				{
-					lineUV = Rot(uv - 2 * dir - 0.5, dir.y, dir.x) + 0.5;
-					lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
-					lineUVOffset = lineNoise.xx * 0.8 * p2Ctrl + 150 * pixelSize * p2Ctrl;
-					outline3 = 0.4 + SampleSrcTex(uv - lineUVOffset).rgb;
-				}
+				
+
 
 				float whiteJunc, outlineJunc;
 				CalcJunction(uv, whiteJunc, outlineJunc);
