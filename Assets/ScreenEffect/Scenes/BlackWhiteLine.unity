@@ -407,8 +407,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edd27fb5171f0704f878fb000a5c13c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outlineMat: {fileID: 2100000, guid: 28144c10f719d24489fbcba7b0fe3d80, type: 2}
-  explodeMat: {fileID: 2100000, guid: 36e85be9d0225e94fa2c384551b39021, type: 2}
+  effectMat: {fileID: 2100000, guid: 36e85be9d0225e94fa2c384551b39021, type: 2}
 --- !u!1001 &2029374038
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -7,14 +7,13 @@ namespace Graphics.Scripts.ScreenEffect.BlackWhiteLine
 	{
 		private const string k_tag = "BlackWhite";
 		
-		public Material outlineMat;
-		public Material explodeMat;
+		public Material effectMat;
 
 		private BlackWhiteLinePass blackWhiteLinePass;
 
 		private void Start()
 		{
-			blackWhiteLinePass = new BlackWhiteLinePass(outlineMat, explodeMat);
+			blackWhiteLinePass = new BlackWhiteLinePass(effectMat);
 			ScreenEffectFeature.renderPass = blackWhiteLinePass;
 		}
 	}
