@@ -93,7 +93,7 @@ Material:
     - _Opacity: 1
     - _OutlineCtrl: 0
     - _OutlineSoftness: 2
-    - _ProgressCtrl: 0.5
+    - _ProgressCtrl: 0.7
     - _TwirlStrength: 1
     m_Colors:
     - _3DOffset: {r: 0.3, g: 0, b: 0, a: 0}

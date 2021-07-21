@@ -282,7 +282,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 				outlineCol = lerp(outlineCol, _BackgroundColor, max(ctrl - 0.7, 0) * 3.333);
 
-				half3 OUT = lerp(outlineCol, originCol, whiteJunc);
+				half3 OUT = lerp(outlineCol, originCol, ceil(whiteJunc));
 
 				return half4(OUT, 1);
 			}
