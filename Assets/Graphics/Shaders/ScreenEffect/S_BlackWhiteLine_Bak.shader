@@ -1,4 +1,4 @@
-Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
+Shader "MyRP/ScreenEffect/S_BlackWhiteLine_Bak"
 {
 	Properties
 	{
@@ -241,23 +241,25 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				half isOutline1 = SampleSrcTex(uv - lineUVOffset).r;
 
 				half isOutline2 = 1;
+				half isOutline3 = 1;
 				if (ctrl > 0.3)
 				{
 					lineUV = Rot(uv - dir - 0.5, dir.y, dir.x) + 0.5;
 					lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
 					lineUVOffset = lineNoise.xx * 0.45 * p2Ctrl + 200 * pixelSize * p2Ctrl;
 					isOutline2 = 0.2 + SampleSrcTex(uv - lineUVOffset).r;
+					
+					if (ctrl > 0.6)
+					{
+						lineUV = Rot(uv - 2 * dir - 0.5, dir.y, dir.x) + 0.5;
+						lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
+						lineUVOffset = lineNoise.xx * 0.8 * p2Ctrl + 150 * pixelSize * p2Ctrl;
+						isOutline3 = 0.4 + SampleSrcTex(uv - lineUVOffset).r;
+					}
 				}
 
-				half isOutline3 = 1;
-				if (ctrl > 0.6)
-				{
-					lineUV = Rot(uv - 2 * dir - 0.5, dir.y, dir.x) + 0.5;
-					lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
-					lineUVOffset = lineNoise.xx * 0.8 * p2Ctrl + 150 * pixelSize * p2Ctrl;
-					isOutline3 = 0.4 + SampleSrcTex(uv - lineUVOffset).r;
-				}
-
+				
+				
 
 				//交界处
 				//-------------------------------
