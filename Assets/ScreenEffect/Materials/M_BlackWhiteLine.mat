@@ -84,7 +84,9 @@ Material:
     - _EdgeColor: 0.3
     - _EdgeWidth: 0.3
     - _Edge_Contrast: 1.2
+    - _ExplodeInterval: 1
     - _ExplodeOutline: 2
+    - _ExplodeScale: 0.1
     - _ExplodeSoftness: 0.2
     - _Hue_Shift: 0.3
     - _Interval: 1.25
@@ -93,16 +95,22 @@ Material:
     - _Opacity: 1
     - _OutlineCtrl: 0
     - _OutlineSoftness: 2
-    - _ProgressCtrl: 0.7
+    - _ProgressCtrl: 1
+    - _ReflectionIntensity: 0.1
+    - _ReflectionReflection: 0.1
+    - _ReflectionRefraction: 0.05
     - _TwirlStrength: 1
     m_Colors:
     - _3DOffset: {r: 0.3, g: 0, b: 0, a: 0}
     - _BackgroundColor: {r: 1, g: 1, b: 1, a: 1}
     - _CellCount: {r: 50, g: 200, b: 0, a: 0}
     - _EdgeColor: {r: 0, g: 0, b: 0, a: 1}
-    - _ExplodePoint: {r: 0, g: 0, b: 0, a: 0}
+    - _ExplodeIntensity: {r: 1, g: 1, b: 0.02, a: 0}
+    - _ExplodePoint: {r: 0.5, g: 0.5, b: 0, a: 0}
     - _FillColor: {r: 0.8, g: 0.7, b: 0.6, a: 1}
     - _PlayerPos: {r: 0.2, g: 0, b: 0, a: 0}
+    - _Reflection: {r: 0, g: 0, b: 0, a: 0}
+    - _ReflectionColor: {r: 0.6415094, g: 0.6021716, b: 0.6021716, a: 1}
     - _UVCenter: {r: 0.31, g: 0.33, b: 0, a: 0}
     - _UVOffset: {r: 0.6, g: 0.6, b: 0, a: 0}
   m_BuildTextureStacks: []
