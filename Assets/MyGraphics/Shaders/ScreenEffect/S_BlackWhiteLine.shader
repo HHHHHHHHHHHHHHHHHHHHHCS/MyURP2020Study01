@@ -101,53 +101,6 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 		return SAMPLE_TEXTURE2D(_SrcTex, s_linear_clamp_sampler, uv);
 	}
 
-	void CalcJunctionV1(float2 uv, out float whiteJunction, out float outlineJunction)
-	{
-		float2 explodePoint = _ExplodePoint;
-		// float aspect = _ScreenParams.x / _ScreenParams.y;
-		// uv.x *= aspect;
-		float ctrl = _ProgressCtrl; //* aspect
-		// explodePoint.x *= aspect;
-		float x = (uv.x - explodePoint.x);
-		float y = (uv.y - explodePoint.y);
-		float d = x * x + y * y;
-
-		//圆太规则了 , 制造出凹凸坑洼的效果
-		float sin_theta = y / max(sqrt(d), 1e-8); //d = r^2 同时避免NAN
-		float half_theta = asin(sin_theta) * (step(0, x) - 0.5); //根据x进行凹凸
-		float ang_theta = max(abs(sin(half_theta * 24)), 0.5);
-		float deformFactor = ctrl * 0.1 * ang_theta;
-
-		float maxLen = max(Sqr(1 - _ExplodePoint), Sqr(_ExplodePoint));
-		float junctionLen = maxLen * ctrl + deformFactor;
-		float nowLen = Sqr(uv - _ExplodePoint);
-		whiteJunction = smoothstep(junctionLen, junctionLen + _JunctionSoftness * ctrl, nowLen);
-		outlineJunction = smoothstep(junctionLen, junctionLen + _OutlineSoftness * ctrl, nowLen);
-	}
-
-	// void CalcJunctionV2(float2 uv, out float lerpJunction)
-	// {
-	// 	float2 explodePoint = _ExplodePoint;
-	// 	float aspect = _ScreenParams.x / _ScreenParams.y;
-	// 	uv.x *= aspect;
-	// 	float ctrl = _ProgressCtrl * aspect;
-	// 	// explodePoint.x *= aspect;
-	// 	float x = (uv.x - explodePoint.x);
-	// 	float y = (uv.y - explodePoint.y);
-	// 	float d = x * x + y * y;
-	//
-	// 	//圆太规则了 , 制造出凹凸坑洼的效果
-	// 	float sin_theta = y / max(sqrt(d), 1e-8); //d = r^2 同时避免NAN
-	// 	float half_theta = asin(sin_theta) * (step(0, x) - 0.5); //根据x进行凹凸
-	// 	float ang_theta = max(abs(sin(half_theta * 24)), 0.5);
-	// 	float deformFactor = ctrl * 0.1 * ang_theta;
-	//
-	// 	float maxLen = max(Sqr(1 - _ExplodePoint), Sqr(_ExplodePoint));
-	// 	float junctionLen = maxLen * ctrl + deformFactor;
-	// 	float nowLen = Sqr(uv - _ExplodePoint);
-	// 	lerpJunction = smoothstep(junctionLen, junctionLen + _JunctionSoftness * 10 * ctrl, nowLen);
-	// }
-
 	v2f vert(a2v IN)
 	{
 		v2f o;
@@ -234,6 +187,32 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 			// 	return noise;
 			// }
 
+
+			void CalcJunctionV1(float2 uv, out float whiteJunction, out float outlineJunction)
+			{
+				float2 explodePoint = _ExplodePoint;
+				// float aspect = _ScreenParams.x / _ScreenParams.y;
+				// uv.x *= aspect;
+				float ctrl = _ProgressCtrl; //* aspect
+				// explodePoint.x *= aspect;
+				float x = (uv.x - explodePoint.x);
+				float y = (uv.y - explodePoint.y);
+				float d = x * x + y * y;
+
+				//圆太规则了 , 制造出凹凸坑洼的效果
+				float sin_theta = y / max(sqrt(d), 1e-8); //d = r^2 同时避免NAN
+				float half_theta = asin(sin_theta) * (step(0, x) - 0.5); //根据x进行凹凸
+				float ang_theta = max(abs(sin(half_theta * 24)), 0.5);
+				float deformFactor = ctrl * 0.1 * ang_theta;
+
+				float maxLen = max(Sqr(1 - _ExplodePoint), Sqr(_ExplodePoint));
+				float junctionLen = maxLen * ctrl + deformFactor;
+				float nowLen = Sqr(uv - _ExplodePoint);
+				whiteJunction = smoothstep(junctionLen, junctionLen + _JunctionSoftness * ctrl, nowLen);
+				outlineJunction = smoothstep(junctionLen, junctionLen + _OutlineSoftness * ctrl, nowLen);
+			}
+
+
 			half4 frag(v2f IN) : SV_Target
 			{
 				float2 uv = IN.uv;
@@ -273,7 +252,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 			float CalcT(float x)
 			{
-				float t = lerp(30, 10, _ProgressCtrl) * (x - 0.075);
+				float t = lerp(30, 1, _ProgressCtrl) * (x - 0.075);
 				t = saturate(-(t * t) + 1);
 				return smoothstep(0, 1, t);
 			}
@@ -287,11 +266,11 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 			float AllWave(float2 position)
 			{
-				float t = _ProgressCtrl * lerp(15, .1, _ProgressCtrl);
+				float t = _ProgressCtrl * lerp(12, .1, _ProgressCtrl) + min(_ProgressCtrl * 100, 0.1);
 				float2 xy = _ScreenParams.zw - 1;
 				return (2 * Wave(position, _ExplodePoint.xy, t) +
-					1 * Wave(position, _ExplodePoint.xy + 20 * float2(0, xy.y), t) +
-					1 * Wave(position, _ExplodePoint.xy + 10 * float2(xy.x, 0) * xy, t));
+					1 * Wave(position, _ExplodePoint.xy + 40 * float2(0, xy.y), t) +
+					1 * Wave(position, _ExplodePoint.xy - 40 * float2(xy.x, 0), t));
 			}
 
 
@@ -304,8 +283,8 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 				//distort
 				//---------
-				const float2 dx = float2(0.01, 0);
-				const float2 dy = float2(0, 0.01);
+				const float2 dx = float2(10 * (_ScreenParams.z - 1), 0);
+				const float2 dy = float2(0, 10 * (_ScreenParams.w - 1));
 
 				float2 p = IN.uv; //* _ScreenParams.x / _ScreenParams.y;
 
@@ -317,48 +296,35 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				uv += duv;
 				float fr = pow(length(dw) * 3 * _ReflectionRefraction, 3);
 
-				// half4 c = SAMPLE_TEXTURE2D(_SrcTex, s_linear_clamp_sampler, IN.uv + duv);
-				// half3 cc = lerp(c, _ReflectionColor, fr);
-
-				// return half4(cc,1.0);
-
-				//origin space
-				//--------------
-				// half3 originCol = cc;//SampleSrcTex(uv).rgb;
-
-
-				// float whiteJunc, outlineJunc;
-				// CalcJunctionV1(uv, whiteJunc, outlineJunc);
-				//
-				// if (whiteJunc > 0.01)
-				// {
-				// 	return half4(originCol, 1);
-				// }
-
 				//line
 				//---------------
+				float2 uv0 = uv - 0.5 + _ExplodePoint;
+				float2 uv1 = 0.5 - _ExplodePoint;
+				float2 pixelOffset = pixelSize * p2Ctrl;
+
 				float2 dir = SafeNormalize(uv - _ExplodePoint);
-				float2 lineUV = Rot(uv - 0.5 + _ExplodePoint, dir.y, dir.x) + 0.5 - _ExplodePoint;
+				float2 signDir = sign(dir);
+
+				float2 lineUV = Rot(uv0, dir.y, dir.x) + uv0;
 				half lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).r;
-				float2 lineUVOffset = lineNoise.xx * sign(dir) * lerp(0.1, 0.8, p2Ctrl) * p2Ctrl
-					+ 100 * pixelSize * p2Ctrl;
+				float2 lineUVOffset = lineNoise.xx * signDir * lerp(0.1, 0.8, p2Ctrl) * p2Ctrl
+					+ 100 * pixelOffset;
 				half3 outline1 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
 
-				// return half4(lineNoise.x, 0, 0, 1);
 				half3 outline2 = 1;
 				half3 outline3 = 1;
 				if (ctrl > 0.3)
 				{
-					lineUV = Rot(uv - dir - 0.5 + _ExplodePoint, dir.y, dir.x) + 0.5 - _ExplodePoint;
+					lineUV = Rot(uv0 - dir, dir.y, dir.x) + uv1;
 					lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
-					lineUVOffset = lineNoise.xx * sign(dir) * 0.45 * p2Ctrl + 200 * pixelSize * p2Ctrl;
+					lineUVOffset = lineNoise.xx * signDir * 0.45 * p2Ctrl + 200 * pixelOffset;
 					outline2 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
 
 					if (ctrl > 0.6)
 					{
-						lineUV = Rot(uv - 2 * dir - 0.5 + _ExplodePoint, dir.y, dir.x) + 0.5 - _ExplodePoint;
+						lineUV = Rot(uv0 - 2 * dir, dir.y, dir.x) + uv1;
 						lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
-						lineUVOffset = lineNoise.xx * sign(dir) * 0.8 * p2Ctrl + 150 * pixelSize * p2Ctrl;
+						lineUVOffset = lineNoise.xx * signDir * 0.8 * p2Ctrl + 150 * pixelOffset;
 						outline3 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
 					}
 				}
@@ -367,9 +333,9 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				half3 outlineCol = min(outline1, outline2);
 				outlineCol = min(outlineCol, outline3);
 
-				outlineCol = lerp(outlineCol, _BackgroundColor, max(ctrl - 0.8, 0) * 5);
+				outlineCol = lerp(outlineCol, _BackgroundColor, saturate(15 * (ctrl - 0.8) - Sqr(uv - _ExplodePoint)));
 				outlineCol = lerp(outlineCol, _ReflectionColor, fr);
-				// return fr;
+
 				return half4(outlineCol, 1);
 			}
 			ENDHLSL
