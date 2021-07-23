@@ -150,7 +150,8 @@
 			alphaDetail = clamp(alphaDetail, 0, 1);
 		#endif
 		
-		outline = clamp(max(edgeDepth, edgeNormal), 0, 1);
+		// outline = clamp(max(edgeDepth, edgeNormal), 0, 1);
+		outline = max(edgeDepth, edgeNormal);
 	}
 	
 	float3 Outlines(float2 screenPosition, float outlineThickness, float outlineDepthSensitivity, float outlineNormalSensitivity)
