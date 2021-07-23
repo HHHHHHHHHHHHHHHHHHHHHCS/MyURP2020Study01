@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 
 namespace MyGraphics.Scripts.GPUDrivenTerrain
 {
-	[CreateAssetMenu(menuName = "GPUDrivenTerrainLearn/TerrainAsset")]
+	[CreateAssetMenu(menuName = "GPUDrivenTerrain/TerrainAsset")]
 	public class TerrainAsset : ScriptableObject
 	{
 		public const uint MAX_NODE_ID = 34124; //5x5+10x10+20x20+40x40+80x80+160x160 - 1
