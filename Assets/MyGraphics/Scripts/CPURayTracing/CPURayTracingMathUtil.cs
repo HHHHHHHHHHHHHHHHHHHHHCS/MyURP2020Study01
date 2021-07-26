@@ -120,7 +120,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 				float4 nb = coX * rDirX + coY * rDirY + coZ * rDirZ;
 				float4 c = coX * coX + coY * coY + coZ * coZ - sSqRadius;
 				float4 discr = nb * nb - c;
-				bool4 discrPos = discr > 0.0f; //如果有一个交点  也不算射中
+				bool4 discrPos = discr > 0.0f; //如果有一个交点,不算碰撞成功
 				//if ray hits any of the 4 spheres
 				if (any(discrPos))
 				{

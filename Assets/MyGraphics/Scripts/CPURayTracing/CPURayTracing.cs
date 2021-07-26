@@ -5,10 +5,12 @@
 // 46 spheres (2 emissive) when enabled; 9 spheres (1 emissive) when disabled
 #define DO_BIG_SCENE
 
+using System;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 using static Unity.Mathematics.math;
 using static MyGraphics.Scripts.CPURayTracing.CPURayTracingMathUtil;
 
@@ -24,6 +26,9 @@ namespace MyGraphics.Scripts.CPURayTracing
 			Dielectric
 		}
 
+		private static int GuidSpawn;
+
+		public int guid;
 		public Type type;
 		public float3 albedo;
 		public float3 emissive;
@@ -31,7 +36,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 		public float ri;
 
 		public Material(Type t, float3 a, float3 e, float r, float i)
-			=> (type, albedo, emissive, roughness, ri) = (t, a, e, r, i);
+			=> (guid, type, albedo, emissive, roughness, ri) = (GuidSpawn++, t, a, e, r, i);
 
 		public bool HasEmission => emissive.x > 0 || emissive.y > 0 || emissive.z > 0;
 	}
@@ -41,8 +46,8 @@ namespace MyGraphics.Scripts.CPURayTracing
 		private const int DO_SAMPLES_PER_PIXEL = 4;
 		private const float DO_ANIMATE_SMOOTHING = 0.5f;
 
-		private const float kMinT = 0.001f;
-		private const float kMaxT = 1.0e7f;
+		private const float kMinT = EPSILON; //0.001f;
+		private const float kMaxT = float.MaxValue; //1.0e7f;
 		private const int kMaxDepth = 10;
 
 		#region Data
@@ -188,9 +193,14 @@ namespace MyGraphics.Scripts.CPURayTracing
 				for (int j = 0; j < spheres.emissiveCount; ++j)
 				{
 					int i = spheres.emissives[j];
-					//TODO: if mat is self
+					//if mat is self then skip
 					//if(&mat == &smat)
 					//	continue;//skip self
+					if (mat.guid == materials[i].guid)
+					{
+						continue;
+					}
+
 					//var s = spheres[i];
 					float3 sCenter = new float3(spheres.centerX[i], spheres.centerY[i], spheres.centerZ[i]);
 					float sqRadius = spheres.sqRadius[i];
