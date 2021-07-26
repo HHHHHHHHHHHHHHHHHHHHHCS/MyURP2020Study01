@@ -12,6 +12,7 @@ using Unity.Mathematics;
 using static Unity.Mathematics.math;
 using static MyGraphics.Scripts.CPURayTracing.CPURayTracingMathUtil;
 
+//copyby https://github.com/aras-p/ToyPathTracer/tree/b076563906169aa2f9e6d7218ef85decf81f8f72
 namespace MyGraphics.Scripts.CPURayTracing
 {
 	public struct Material
@@ -21,7 +22,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 			Lambert,
 			Metal,
 			Dielectric
-		};
+		}
 
 		public Type type;
 		public float3 albedo;
