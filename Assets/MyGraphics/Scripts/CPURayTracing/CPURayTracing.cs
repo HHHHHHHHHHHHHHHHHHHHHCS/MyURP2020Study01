@@ -214,7 +214,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 					float eps2 = RandomFloat01(ref randState);
 					float cosA = eps1 * (1.0f - cosAMax);
 					float sinA = sqrt(1.0f - cosA * cosA);
-					float phi = 2 * kPI * eps2;
+					float phi = 2 * PI * eps2;
 					//随机半球   rec球朝向自发光球
 					float3 l = su * cos(phi) * sinA + sv * sin(phi) * sinA + sw * cosA;
 					l = normalize(l);
@@ -228,11 +228,11 @@ namespace MyGraphics.Scripts.CPURayTracing
 						//TODO:是否存在能量不守恒
 						//如  E * 2*kPI*(1-0)/kPI => E*2  超出范围了
 						//如  E * 2*kPI*(1-0.5)/kPI => E  一半角度的时候 已经满能量了
-						float omega = 2 * kPI * (1 - cosAMax);
+						float omega = 2 * PI * (1 - cosAMax);
 
 						float3 rdir = r_in.dir;
 						float3 nl = dot(rec.normal, rdir) < 0.0f ? rec.normal : -rec.normal;
-						outLightE += (mat.albedo * materials[i].emissive) * (max(0.0f, dot(l, nl)) * omega / kPI);
+						outLightE += (mat.albedo * materials[i].emissive) * (max(0.0f, dot(l, nl)) * omega / PI);
 					}
 				}
 #endif

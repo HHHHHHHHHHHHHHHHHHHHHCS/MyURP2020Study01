@@ -180,19 +180,19 @@ namespace MyGraphics.Scripts.CPURayTracing
 		private float lensRadius;
 
 		// vfov is top to bottom in degrees
-		//focusDist 可能是近平面
+		//aperture焦聚 聚焦虚焦用   focusDist是near distance
 		public Camera(float3 lookFrom, float3 lookAt, float3 vup, float vfov, float aspect, float aperture,
 			float focusDist)
 		{
 			lensRadius = aperture / 2;
-			float theta = vfov * CPURayTracingMathUtil.kPI / 180;
+			float theta = vfov * PI / 180;
 			float halfHeight = tan(theta / 2);
 			float halfWidth = aspect * halfHeight;
 			origin = lookFrom;
 			w = normalize(lookFrom - lookAt);
 			u = normalize(cross(vup, w));
 			v = cross(w, u);
-			lowerLeftCorner = origin - halfWidth * focusDist * u - halfHeight * focusDist * v - focusDist * w;
+			lowerLeftCorner = origin - focusDist * (halfWidth * u + halfHeight * v + w);
 
 			horizontal = 2 * halfWidth * focusDist * u;
 			vertical = 2 * halfHeight * focusDist * v;
@@ -208,7 +208,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 	}
 
 
-	public class CPURayTracingMathUtil
+	public static class CPURayTracingMathUtil
 	{
 		//Math
 		//----------------------------
@@ -239,10 +239,8 @@ namespace MyGraphics.Scripts.CPURayTracing
 		//Random
 		//-------------------
 
-		public static float kPI => 3.1415926f;
-
 		//生成随机数
-		static uint XorShift32(ref uint state)
+		private static uint XorShift32(ref uint state)
 		{
 			uint x = state;
 			x ^= x << 13;
@@ -408,7 +406,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 		public static float3 RandomUnitVector(ref uint state)
 		{
 			float z = RandomFloat01(ref state) * 2.0f - 1.0f;
-			float a = RandomFloat01(ref state) * 2.0f * kPI;
+			float a = RandomFloat01(ref state) * 2.0f * PI;
 			float r = sqrt(1.0f - z * z);
 			float x, y;
 			sincos(a, out x, out y);
