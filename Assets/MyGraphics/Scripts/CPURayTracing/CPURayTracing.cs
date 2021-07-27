@@ -196,10 +196,10 @@ namespace MyGraphics.Scripts.CPURayTracing
 					//if mat is self then skip
 					//if(&mat == &smat)
 					//	continue;//skip self
-					if (mat.guid == materials[i].guid)
-					{
-						continue;
-					}
+					// if (mat.guid == materials[i].guid)
+					// {
+					// 	// continue;
+					// }
 
 					//var s = spheres[i];
 					float3 sCenter = new float3(spheres.centerX[i], spheres.centerY[i], spheres.centerZ[i]);
@@ -301,14 +301,14 @@ namespace MyGraphics.Scripts.CPURayTracing
 				{
 					scattered = new Ray(rec.pos, normalize(refr));
 				}
+				return true;
 			}
 			else
 			{
-				attenuation = new float3(0, 0, 0);
+				attenuation = new float3(1, 0, 1);
 				scattered = default;
 				return false;
 			}
-
 			return false;
 		}
 

@@ -53,7 +53,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 			// set trailing data to "impossible sphere" state
 			for (int i = len; i < simdLen; ++i)
 			{
-				centerX[i] = centerY[i] = centerZ[i] = INFINITY;
+				centerX[i] = centerY[i] = centerZ[i] = float.MaxValue;
 				sqRadius[i] = 0.0f;
 				invRadius[i] = 0.0f;
 			}
@@ -132,7 +132,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 
 					// if t0 is above min, take it (since it's the earlier hit); else try t1.
 					float4 t = select(t1, t0, t0 > tMin4);
-					bool4 mask = discrPos & (t > tMin4) & (t < hitT) & (sCenterX != INFINITY);
+					bool4 mask = discrPos & (t > tMin4) & (t < hitT) & (sCenterX < float.MaxValue);
 					//if hit ,take it
 					id = select(id, curId, mask);
 					hitT = select(hitT, t, mask);
