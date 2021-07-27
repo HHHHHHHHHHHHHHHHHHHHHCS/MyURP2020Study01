@@ -1,0 +1,180 @@
+#pragma kernel TraverseQuadTree
+#pragma kernel BuildLodMap
+#pragma kernel BuildPatches
+
+#pragma multi_compile_local _ _REVERSE_Z
+#pragma multi_compile_local _ _ENABLE_FRUS_CULL
+#pragma multi_compile_local _ _ENABLE_HIZ_CULL
+#pragma multi_compile_local _ _BOUNDS_DEBUG
+#pragma multi_compile_local _ _ENABLE_SEAM
+
+#include "CommonInput.hlsl"
+
+Texture2D<float4> _MinMaxHeightTexture;
+Texture2D<float4> _HeightMap;
+RWTexture2D<float4> _LodMap;
+
+//consume类型结构相当于栈，所以取到的第一个末位置。
+ConsumeStructuredBuffer<uint2> _ConsumeNodeList;
+AppendStructuredBuffer<uint2> _AppendNodeList;
+AppendStructuredBuffer<uint3> _AppendFinalNodeList;
+//四叉树遍历完毕之后,合适的节点放这里
+StructuredBuffer<uint3> _FinalNodeList;
+
+//保存了Node的一些信息 通过NodeI来访问
+RWStructuredBuffer<NodeDescriptor> _NodeDescriptors;
+
+//表示TraverseQuadTree kernel执行的LOD级别
+uniform uint _PassLOD;
+uniform float3 _CameraPositionWS;
+
+//包围盒在高度方向留出冗余空间，应对MinMaxHeightTexture的精度不足
+uniform int _BoundsHeightRedundance;
+
+uniform float4 _NodeEvaluationC; //节点评价系数。x为距离系数
+
+//*******世界尺寸参数********//
+//世界大小
+uniform float3 _WorldSize;
+
+
+//
+/**
+记录了每个Lod级别的(nodeSize,patchExtent,nodeCount,sectorCountPerNode)
+
+其中:
+- nodeSize为Node的边长(米)
+- patchExtent等于nodeSize/16
+- nodeCount等于WorldSize/nodeSize
+- sectorCountPerNode等于2^lod
+**/
+uniform float4 _WorldLodParams[6];
+
+uniform uint _NodeIDOffsetOfLOD[6];
+
+//*****裁剪相关变量*******/
+uniform float4 _CameraFrustumPlanes[6];
+// ConsumeStructuredBuffer<RenderPatch> _PatchConsumeList;
+AppendStructuredBuffer<RenderPatch> _CulledPatchList;
+#if BOUNDS_DEBUG
+AppendStructuredBuffer<BoundsDebug> _PatchBoundsList;
+#endif
+
+uniform float _HizDepthBias;
+
+//****以下这些参数全由HizMapPass全局设置得到***//
+Texture2D<float4> _HizMap;
+uniform float4 _HizMapSize;
+uniform float4x4 _HizCameraMatrixVP;
+uniform float3 _HizCameraPositionWS;
+
+float GetNodeSize(uint lod)
+{
+    return _WorldLodParams[lod].x;
+}
+
+float GetNodeCount(uint lod)
+{
+    return _WorldLodParams[lod].z;
+}
+
+float GetPatchExtent(uint lod)
+{
+    return _WorldLodParams[lod].y;
+}
+
+uint GetSectorCountPerNode(uint lod)
+{
+    return (uint)_WorldLodParams[lod].w;
+}
+
+//计算在大长串Buffer中的位置
+uint GetNodeID(uint3 nodeLoc)
+{
+    return _NodeIDOffsetOfLOD[nodeLoc.z] + nodeLoc.y * GetNodeCount(nodeLoc.z) + nodeLoc.x;
+}
+
+uint GetNodeID(uint2 nodeLoc, uint mip)
+{
+    return GetNodeID(uint3(nodeLoc, mip));
+}
+
+float2 GetNodePositionWS2(uint2 nodeLoc, uint mip)
+{
+    float nodeMeterSize = GetNodeSize(mip);
+    float nodeCount = GetNodeCount(mip);
+    //居中是零点  所以向左下偏移
+    float2 nodePositionWS = ((float2)nodeLoc - (nodeCount - 1) * 0.5) * nodeMeterSize;
+    return nodePositionWS;
+}
+
+float3 GetNodePositionWS(uint2 nodeLoc, uint lod)
+{
+    float2 nodePositionWS = GetNodePositionWS2(nodeLoc, lod);
+    float2 minMaxHeight = _MinMaxHeightTexture.mips[lod + 3][nodeLoc].xy;
+    float y = (minMaxHeight.x + minMaxHeight.y) * 0.5 * _WorldSize.y;
+    return float3(nodePositionWS.x, y, nodePositionWS.y);
+}
+
+
+bool EvaluateNode(uint2 nodeLoc, uint lod)
+{
+    float3 positionWS = GetNodePositionWS(nodeLoc, lod);
+    float dis = distance(_CameraPositionWS, positionWS);
+    float nodeSize = GetNodeSize(lod);
+    //距离小于(格子尺寸*系数) 则要细分
+    float f = dis / (nodeSize * _NodeEvaluationC.x);
+    if (f < 1)
+    {
+        return true;
+    }
+    return false;
+}
+
+//细分部分---------------
+
+//遍历四叉树,进行节点评估,生成AppendFinalNodeList 和 NodeDescriptors
+[numthreads(1,1,1)]
+void TraverseQuadTree(uint3 id : SV_DispatchThreadID)
+{
+    uint2 nodeLoc = _ConsumeNodeList.Consume();
+    int branch;
+    if (_PassLOD > 0 && EvaluateNode(nodeLoc, _PassLOD))
+    {
+        _AppendNodeList.Append(nodeLoc * 2);
+        _AppendNodeList.Append(nodeLoc * 2 + uint2(1, 0));
+        _AppendNodeList.Append(nodeLoc * 2 + uint2(0, 1));
+        _AppendNodeList.Append(nodeLoc * 2 + uint2(1, 1));
+        branch = 1;
+    }
+    else
+    {
+        _AppendFinalNodeList.Append(uint3(nodeLoc, _PassLOD));
+        branch = 0;
+    }
+    uint nodeID = GetNodeID(nodeLoc, _PassLOD);
+    _NodeDescriptors[nodeID].branch = branch;
+}
+
+
+//LOD Map部分-------------
+
+[numthreads(8,8,1)]
+void BuildLodMap(uint3 id : SV_DispatchThreadID)
+{
+    uint2 sectorLoc = id.xy;
+    [unroll]
+    for (uint lod = MAX_TERRAIN_LOD; lod >= 0; lod --)
+    {
+        uint sectorCount = GetSectorCountPerNode(lod);
+        uint2 nodeLoc = sectorLoc / sectorCount;
+        uint nodeID = GetNodeID(nodeLoc, lod);
+        NodeDescriptor desc = _NodeDescriptors[nodeID];
+        if (desc.branch == 0)
+        {
+            _LodMap[sectorLoc] = lod * 1.0 / MAX_TERRAIN_LOD;
+            return;
+        }
+    }
+    _LodMap[sectorLoc] = 0;
+}

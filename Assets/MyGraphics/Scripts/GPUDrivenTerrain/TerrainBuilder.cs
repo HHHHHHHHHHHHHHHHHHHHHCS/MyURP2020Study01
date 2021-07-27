@@ -12,16 +12,16 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 			public static readonly int WorldSize_ID = Shader.PropertyToID("_WorldSize");
 			public static readonly int CameraPositionWS_ID = Shader.PropertyToID("_CameraPositionWS");
 			public static readonly int CameraFrustumPlanes_ID = Shader.PropertyToID("_CameraFrustumPlanes");
-			public static readonly int PassLOD_ID = Shader.PropertyToID("PassLOD");
-			public static readonly int AppendFinalNodeList_ID = Shader.PropertyToID("AppendFinalNodeList");
-			public static readonly int FinalNodeList_ID = Shader.PropertyToID("FinalNodeList");
+			public static readonly int PassLOD_ID = Shader.PropertyToID("_PassLOD");
+			public static readonly int AppendFinalNodeList_ID = Shader.PropertyToID("_AppendFinalNodeList");
+			public static readonly int FinalNodeList_ID = Shader.PropertyToID("_FinalNodeList");
 
-			public static readonly int AppendNodeList_ID = Shader.PropertyToID("AppendNodeList");
-			public static readonly int ConsumeNodeList_ID = Shader.PropertyToID("ConsumeNodeList");
+			public static readonly int AppendNodeList_ID = Shader.PropertyToID("_AppendNodeList");
+			public static readonly int ConsumeNodeList_ID = Shader.PropertyToID("_ConsumeNodeList");
 			public static readonly int NodeEvaluationC_ID = Shader.PropertyToID("_NodeEvaluationC");
-			public static readonly int WorldLodParams_ID = Shader.PropertyToID("WorldLodParams");
+			public static readonly int WorldLodParams_ID = Shader.PropertyToID("_WorldLodParams");
 
-			public static readonly int NodeDescriptors_ID = Shader.PropertyToID("NodeDescriptors");
+			public static readonly int NodeDescriptors_ID = Shader.PropertyToID("_NodeDescriptors");
 
 			public static readonly int LodMap_ID = Shader.PropertyToID("_LodMap");
 		}
@@ -86,7 +86,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 
 		public bool enableSeamDebug
 		{
-			set => CoreUtils.SetKeyword(_computeShader, "ENABLE_SEAM", value);
+			set => CoreUtils.SetKeyword(_computeShader, "_ENABLE_SEAM", value);
 		}
 
 		public float hizDepthBias
@@ -102,12 +102,12 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 
 		public bool isFrustumCullEnabled
 		{
-			set => CoreUtils.SetKeyword(_computeShader, "ENABLE_FRUS_CULL", value);
+			set => CoreUtils.SetKeyword(_computeShader, "_ENABLE_FRUS_CULL", value);
 		}
 
 		public bool isHizOcclusionCullingEnabled
 		{
-			set => CoreUtils.SetKeyword(_computeShader, "ENABLE_HIZ_CULL", value);
+			set => CoreUtils.SetKeyword(_computeShader, "_ENABLE_HIZ_CULL", value);
 		}
 
 
@@ -115,7 +115,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 		{
 			set
 			{
-				CoreUtils.SetKeyword(_computeShader, "BOUNDS_DEBUG", value);
+				CoreUtils.SetKeyword(_computeShader, "_BOUNDS_DEBUG", value);
 
 				_isBoundsBufferOn = value;
 			}
@@ -202,11 +202,11 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 
 		private void BindComputeShader(int kernelIndex)
 		{
-			_computeShader.SetTexture(kernelIndex, "QuadTreeTexture", _asset.quadTreeMap);
+			// _computeShader.SetTexture(kernelIndex, "_QuadTreeTexture", _asset.quadTreeMap);
 			if (kernelIndex == _kernelOfTraverseQuadTree)
 			{
 				_computeShader.SetBuffer(kernelIndex, ShaderConstants.AppendFinalNodeList_ID, _finalNodeListBuffer);
-				_computeShader.SetTexture(kernelIndex, "MinMaxHeightTexture", _asset.minMaxHeightMap);
+				_computeShader.SetTexture(kernelIndex, "_MinMaxHeightTexture", _asset.minMaxHeightMap);
 				_computeShader.SetBuffer(kernelIndex, ShaderConstants.NodeDescriptors_ID, _nodeDescriptors);
 			}
 			else if (kernelIndex == _kernelOfBuildLodMap)
@@ -217,10 +217,10 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 			else if (kernelIndex == _kernelOfBuildPatches)
 			{
 				_computeShader.SetTexture(kernelIndex, ShaderConstants.LodMap_ID, _lodMap);
-				_computeShader.SetTexture(kernelIndex, "MinMaxHeightTexture", _asset.minMaxHeightMap);
+				_computeShader.SetTexture(kernelIndex, "_MinMaxHeightTexture", _asset.minMaxHeightMap);
 				_computeShader.SetBuffer(kernelIndex, ShaderConstants.FinalNodeList_ID, _finalNodeListBuffer);
-				_computeShader.SetBuffer(kernelIndex, "CulledPatchList", _culledPatchBuffer);
-				_computeShader.SetBuffer(kernelIndex, "PatchBoundsList", _patchBoundsBuffer);
+				_computeShader.SetBuffer(kernelIndex, "_CulledPatchList", _culledPatchBuffer);
+				_computeShader.SetBuffer(kernelIndex, "_PatchBoundsList", _patchBoundsBuffer);
 			}
 		}
 
@@ -248,7 +248,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 				nodeIdOffset += (int) (worldLODParams[lod].z * worldLODParams[lod].z);
 			}
 
-			_computeShader.SetInts("NodeIDOffsetOfLOD", nodeIDOffsetLOD);
+			_computeShader.SetInts("_NodeIDOffsetOfLOD", nodeIDOffsetLOD);
 		}
 
 		private void ClearBufferCounter()
