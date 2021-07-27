@@ -205,9 +205,9 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				float ang_theta = max(abs(sin(half_theta * 24)), 0.5);
 				float deformFactor = ctrl * 0.1 * ang_theta;
 
-				float maxLen = max(Sqr(1 - _ExplodePoint), Sqr(_ExplodePoint));
+				float maxLen = max(Sqr(1 - explodePoint), Sqr(explodePoint));
 				float junctionLen = maxLen * ctrl + deformFactor;
-				float nowLen = Sqr(uv - _ExplodePoint);
+				float nowLen = Sqr(uv - explodePoint);
 				whiteJunction = smoothstep(junctionLen, junctionLen + _JunctionSoftness * ctrl, nowLen);
 				outlineJunction = smoothstep(junctionLen, junctionLen + _OutlineSoftness * ctrl, nowLen);
 			}
