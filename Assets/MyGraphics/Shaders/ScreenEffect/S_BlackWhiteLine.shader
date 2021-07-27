@@ -73,10 +73,10 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 		return dot(val, val);
 	}
 
-	inline float PDnrand(float2 n)
-	{
-		return frac(sin(dot(n.xy, float2(12.9898f, 78.233f))) * 43758.5453f);
-	}
+	// inline float PDnrand(float2 n)
+	// {
+	// 	return frac(sin(dot(n.xy, float2(12.9898f, 78.233f))) * 43758.5453f);
+	// }
 
 	float2 Rot(float2 uv, float angle)
 	{
@@ -188,7 +188,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 			// }
 
 
-			void CalcJunctionV1(float2 uv, out float whiteJunction, out float outlineJunction)
+			void CalcJunction(float2 uv, out float whiteJunction, out float outlineJunction)
 			{
 				float2 explodePoint = _ExplodePoint;
 				// float aspect = _ScreenParams.x / _ScreenParams.y;
@@ -220,9 +220,9 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				//交界处
 				//-------------------------------
 				float whiteJunc, outlineJunc;
-				CalcJunctionV1(uv, whiteJunc, outlineJunc);
+				CalcJunction(uv, whiteJunc, outlineJunc);
 
-				half isOutLine = Outline(uv);
+				half isOutline = Outline(uv);
 
 				//原图
 				//------------------
@@ -230,7 +230,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 
 				half3 col = lerp(_BackgroundColor, sceneColor, whiteJunc);
-				if (isOutLine < 0.5)
+				if (isOutline < 0.5)
 				{
 					col = lerp(_EdgeColor, col, smoothstep(0.7, 1, outlineJunc));
 				}
