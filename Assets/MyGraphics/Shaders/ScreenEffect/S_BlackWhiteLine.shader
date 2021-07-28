@@ -311,8 +311,8 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 					+ 100 * pixelOffset;
 				half3 outline1 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
 
-				half3 outline2 = 1;
-				half3 outline3 = 1;
+				half3 outline2 = _BackgroundColor;
+				half3 outline3 = _BackgroundColor;
 				if (ctrl > 0.3)
 				{
 					lineUV = Rot(uv0 - dir, dir.y, dir.x) + uv1;
