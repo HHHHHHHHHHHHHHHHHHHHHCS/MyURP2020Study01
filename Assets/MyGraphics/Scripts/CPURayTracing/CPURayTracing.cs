@@ -46,7 +46,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 		private const int DO_SAMPLES_PER_PIXEL = 4;
 		private const float DO_ANIMATE_SMOOTHING = 0.5f;
 
-		private const float kMinT = EPSILON; //0.001f;
+		private const float kMinT = 0.001f;
 		private const float kMaxT = float.MaxValue; //1.0e7f;
 		private const int kMaxDepth = 10;
 
@@ -196,10 +196,10 @@ namespace MyGraphics.Scripts.CPURayTracing
 					//if mat is self then skip
 					//if(&mat == &smat)
 					//	continue;//skip self
-					// if (mat.guid == materials[i].guid)
-					// {
-					// 	// continue;
-					// }
+					if (mat.guid == materials[i].guid)
+					{
+						continue;
+					}
 
 					//var s = spheres[i];
 					float3 sCenter = new float3(spheres.centerX[i], spheres.centerY[i], spheres.centerZ[i]);
@@ -222,7 +222,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 					float cosAMax = sqrt(max(0.0f, 1.0f - sqRadius / sqLen));
 					float eps1 = RandomFloat01(ref randState);
 					float eps2 = RandomFloat01(ref randState);
-					float cosA = eps1 * (1.0f - cosAMax);
+					float cosA = 1 - eps1 * (1 - cosAMax);
 					float sinA = sqrt(1.0f - cosA * cosA);
 					float phi = 2 * PI * eps2;
 					//随机半球   rec球朝向自发光球
@@ -419,7 +419,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 
 			Camera cam = new Camera(lookFrom, lookAt, new float3(0, 1, 0), 60,
 				(float) screenWidth / (float) screenHeight, aperture, distToFocus);
-#if DO_THREADED
+			
 			TraceRowJob job;
 			job.screenWidth = screenWidth;
 			job.screenHeight = screenHeight;
@@ -429,17 +429,19 @@ namespace MyGraphics.Scripts.CPURayTracing
 			job.rayCounter = new NativeArray<int>(1, Allocator.TempJob);
 			job.spheres = spheresSOA;
 			job.materials = new NativeArray<Material>(sphereMatsData, Allocator.TempJob);
+#if DO_THREADED
 			var fence = job.Schedule(screenHeight, 4);
 			fence.Complete();
-			rayCount = job.rayCounter[0];
-			job.rayCounter.Dispose();
-			job.materials.Dispose();
 #else
 			for (int y = 0; y < screenHeight; ++y)
 			{
-				rayCount += TraceRowJob(y, screenWidth, screenHeight, frameCount, backbuffer, ref cam);
+				job.Execute(y);
 			}
 #endif
+			rayCount = job.rayCounter[0];
+			job.rayCounter.Dispose();
+			job.materials.Dispose();
+			
 			outRayCount = rayCount;
 		}
 	}

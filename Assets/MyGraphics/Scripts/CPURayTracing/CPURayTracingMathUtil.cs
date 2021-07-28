@@ -264,6 +264,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 			// {
 			// 	p = 2.0f * new float3(RandomFloat01(ref state), RandomFloat01(ref state), 0) - new float3(1, 1, 0);
 			// } while (lengthsq(p) >= 1.0);
+			// return p;
 
 			var x = RandomFloat01(ref state);
 			var y = RandomFloat01(ref state);
@@ -324,6 +325,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 			// 	p = 2.0f * new float3(RandomFloat01(ref state), RandomFloat01(ref state), RandomFloat01(ref state)) -
 			// 	    new float3(1, 1, 1);
 			// } while (lengthsq(p) >= 1.0);
+			// return p;
 
 			var x = RandomFloat01(ref state);
 			var y = RandomFloat01(ref state);

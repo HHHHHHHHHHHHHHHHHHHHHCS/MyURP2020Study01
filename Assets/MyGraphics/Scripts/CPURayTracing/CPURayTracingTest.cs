@@ -29,7 +29,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 			int width = screenWidth; //Screen.width;
 			int height = screenHeight; // Screen.height;
 
-			backBufferTex = new Texture2D(width, height, TextureFormat.RGBAFloat, false);
+			backBufferTex = new Texture2D(width, height, TextureFormat.RGBAFloat, false, true);
 			backBuffer = new NativeArray<Color>(width * height, Allocator.Persistent);
 			for (int i = 0; i < backBuffer.Length; i++)
 			{
