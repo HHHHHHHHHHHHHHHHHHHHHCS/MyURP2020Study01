@@ -131,6 +131,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 					float4 t1 = nb + discrSq;
 
 					// if t0 is above min, take it (since it's the earlier hit); else try t1.
+					//如果t0>tmin4 那就试一试t1  如果t1还不行  mask也是失败
 					float4 t = select(t1, t0, t0 > tMin4);
 					bool4 mask = discrPos & (t > tMin4) & (t < hitT) & (sCenterX < float.MaxValue);
 					//if hit ,take it

@@ -1,5 +1,4 @@
 // #define DO_ANIMATE
-
 #define DO_LIGHT_SAMPLING
 #define DO_THREADED
 // 46 spheres (2 emissive) when enabled; 9 spheres (1 emissive) when disabled
@@ -360,7 +359,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 			public int screenWidth, screenHeight, frameCount;
 			public Camera cam;
 
-			[NativeDisableParallelForRestriction] public NativeArray<UnityEngine.Color> backbuffer;
+			[NativeDisableParallelForRestriction] public NativeArray<Color> backbuffer;
 			[NativeDisableParallelForRestriction] public NativeArray<int> rayCounter;
 			[NativeDisableParallelForRestriction] public SpheresSOA spheres;
 			[NativeDisableParallelForRestriction] public NativeArray<Material> materials;
@@ -391,7 +390,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 
 					UnityEngine.Color prev = backbuffer[backbufferIdx];
 					col = new float3(prev.r, prev.g, prev.b) * lerpFac + col * (1 - lerpFac);
-					backbuffer[backbufferIdx] = new UnityEngine.Color(col.x, col.y, col.z, 1);
+					backbuffer[backbufferIdx] = new Color(col.x, col.y, col.z, 1);
 					backbufferIdx++;
 				}
 
@@ -401,7 +400,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 		}
 
 		public void DoDraw(float time, int frameCount, int screenWidth, int screenHeight,
-			NativeArray<UnityEngine.Color> backbuffer, out int outRayCount)
+			NativeArray<Color> backbuffer, out int outRayCount)
 		{
 			int rayCount = 0;
 #if DO_ANIMATE
