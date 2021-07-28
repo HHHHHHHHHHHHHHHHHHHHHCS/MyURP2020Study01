@@ -283,8 +283,8 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 				//distort
 				//---------
-				const float2 dx = float2(10 * (_ScreenParams.z - 1), 0);
-				const float2 dy = float2(0, 10 * (_ScreenParams.w - 1));
+				const float2 dx = float2(10 * pixelSize.x, 0);
+				const float2 dy = float2(0, 10 * pixelSize.y);
 
 				float2 p = IN.uv; //* _ScreenParams.x / _ScreenParams.y;
 
@@ -305,7 +305,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				float2 dir = SafeNormalize(uv - _ExplodePoint);
 				float2 signDir = sign(dir);
 
-				float2 lineUV = Rot(uv0, dir.y, dir.x) + uv0;
+				float2 lineUV = Rot(uv0, dir.y, dir.x) + uv1;
 				half lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).r;
 				float2 lineUVOffset = lineNoise.xx * signDir * lerp(0.1, 0.8, p2Ctrl) * p2Ctrl
 					+ 100 * pixelOffset;
@@ -316,14 +316,14 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				if (ctrl > 0.3)
 				{
 					lineUV = Rot(uv0 - dir, dir.y, dir.x) + uv1;
-					lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
+					lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).r;
 					lineUVOffset = lineNoise.xx * signDir * 0.45 * p2Ctrl + 200 * pixelOffset;
 					outline2 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
 
 					if (ctrl > 0.6)
 					{
 						lineUV = Rot(uv0 - 2 * dir, dir.y, dir.x) + uv1;
-						lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).g;
+						lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).r;
 						lineUVOffset = lineNoise.xx * signDir * 0.8 * p2Ctrl + 150 * pixelOffset;
 						outline3 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
 					}
