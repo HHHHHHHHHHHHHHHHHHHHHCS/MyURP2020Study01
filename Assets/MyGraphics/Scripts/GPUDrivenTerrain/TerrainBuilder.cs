@@ -24,6 +24,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 			public static readonly int NodeDescriptors_ID = Shader.PropertyToID("_NodeDescriptors");
 
 			public static readonly int LodMap_ID = Shader.PropertyToID("_LodMap");
+			public static readonly int MinMaxHeightTexture_ID = Shader.PropertyToID("_MinMaxHeightTexture");
 		}
 
 		private const int PatchStripSize = 9 * 4;
@@ -206,7 +207,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 			if (kernelIndex == _kernelOfTraverseQuadTree)
 			{
 				_computeShader.SetBuffer(kernelIndex, ShaderConstants.AppendFinalNodeList_ID, _finalNodeListBuffer);
-				_computeShader.SetTexture(kernelIndex, "_MinMaxHeightTexture", _asset.minMaxHeightMap);
+				_computeShader.SetTexture(kernelIndex, ShaderConstants.MinMaxHeightTexture_ID, _asset.minMaxHeightMap);
 				_computeShader.SetBuffer(kernelIndex, ShaderConstants.NodeDescriptors_ID, _nodeDescriptors);
 			}
 			else if (kernelIndex == _kernelOfBuildLodMap)
@@ -217,7 +218,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 			else if (kernelIndex == _kernelOfBuildPatches)
 			{
 				_computeShader.SetTexture(kernelIndex, ShaderConstants.LodMap_ID, _lodMap);
-				_computeShader.SetTexture(kernelIndex, "_MinMaxHeightTexture", _asset.minMaxHeightMap);
+				_computeShader.SetTexture(kernelIndex, ShaderConstants.MinMaxHeightTexture_ID, _asset.minMaxHeightMap);
 				_computeShader.SetBuffer(kernelIndex, ShaderConstants.FinalNodeList_ID, _finalNodeListBuffer);
 				_computeShader.SetBuffer(kernelIndex, "_CulledPatchList", _culledPatchBuffer);
 				_computeShader.SetBuffer(kernelIndex, "_PatchBoundsList", _patchBoundsBuffer);
@@ -232,7 +233,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 			for (var lod = TerrainAsset.MAX_LOD; lod >= 0; lod--)
 			{
 				var nodeSize = wSize / nodeCount;
-				var patchExtent = nodeSize / 16;
+				var patchExtent = nodeSize / 16; //即 /8(node数量) /2 (halfSize)
 				var sectorCountPerNode = (int) Mathf.Pow(2, lod);
 				worldLODParams[lod] = new Vector4(nodeSize, patchExtent, nodeCount, sectorCountPerNode);
 				nodeCount *= 2;

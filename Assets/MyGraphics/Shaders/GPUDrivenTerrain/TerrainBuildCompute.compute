@@ -159,22 +159,146 @@ void TraverseQuadTree(uint3 id : SV_DispatchThreadID)
 
 //LOD Map部分-------------
 
+//确认lod map图
+//把地图一共分为 8*N(20)块
+//如果大格子 比如每32个为一组 没有子节点展开 则这个大格子lodmap 为 max_lod
+//如果有展开 则16个一组  找出没有展开的  为max_lod-1  否则继续循环
 [numthreads(8,8,1)]
 void BuildLodMap(uint3 id : SV_DispatchThreadID)
 {
     uint2 sectorLoc = id.xy;
+
     [unroll]
     for (uint lod = MAX_TERRAIN_LOD; lod >= 0; lod --)
     {
         uint sectorCount = GetSectorCountPerNode(lod);
         uint2 nodeLoc = sectorLoc / sectorCount;
         uint nodeID = GetNodeID(nodeLoc, lod);
-        NodeDescriptor desc = _NodeDescriptors[nodeID];
-        if (desc.branch == 0)
+        if (_NodeDescriptors[nodeID].branch == 0)
         {
             _LodMap[sectorLoc] = lod * 1.0 / MAX_TERRAIN_LOD;
             return;
         }
     }
     _LodMap[sectorLoc] = 0;
+}
+
+
+//裁剪部分--------------------
+
+RenderPatch CreatePatch(uint3 nodeLoc, uint2 pathchOffset)
+{
+    uint lod = nodeLoc.z;
+    float nodeMeterSize = GetNodeSize(lod);
+    //把每个patch分为8个小块(node)
+    float patchMeterSize = nodeMeterSize / PATCH_COUNT_PER_NODE;
+    float2 nodePositionWS = GetNodePositionWS2(nodeLoc.xy, lod);
+
+    //node 细分位置
+    uint2 pathchLoc = nodeLoc.xy * PATCH_COUNT_PER_NODE + pathchOffset;
+    //经过测试,当min max 相差较小的时候,RG32似乎还是存在精度问题
+    float2 minMaxHeight = _MinMaxHeightTexture.mips[lod][pathchLoc].rg * _WorldSize.y + float2(
+        -_BoundsHeightRedundance, _BoundsHeightRedundance);
+    RenderPatch patch;
+    patch.lod = lod;
+    patch.position = nodePositionWS + (pathchOffset - (PATCH_COUNT_PER_NODE - 1) * 0.5) * patchMeterSize;
+    patch.minMaxHeight = minMaxHeight;
+    patch.lodTrans = 0;
+    return patch;
+}
+
+Bounds GetPatchBounds(RenderPatch patch)
+{
+    float halfSize = GetPatchExtent(patch.lod);
+    #if _ENABLE_SEAM
+        halfSize *= 0.9;
+    #endif
+    Bounds bounds;
+    float3 boundsMin, boundsMax;
+    boundsMin.xz = patch.position - halfSize;
+    boundsMax.xz = patch.position + halfSize;
+    boundsMin.y = patch.minMaxHeight.x;
+    boundsMax.y = patch.minMaxHeight.y;
+    bounds.minPosition = boundsMin;
+    bounds.maxPosition = boundsMax;
+    return bounds;
+}
+
+//测试是否在平面的外侧
+//plane法向量指向零点  距离是负数
+bool IsOutSidePlane(float4 plane, float3 position)
+{
+    return dot(plane.xyz, position) + plane.w < 0;
+}
+
+bool IsAABBOutSidePlane(float4 plane, float3 boundsMin, float3 boundsMax)
+{
+    return IsOutSidePlane(plane, boundsMin) &&
+        IsOutSidePlane(plane, boundsMax) &&
+        IsOutSidePlane(plane, float3(boundsMin.x, boundsMin.y, boundsMax.z)) &&
+        IsOutSidePlane(plane, float3(boundsMin.x, boundsMax.y, boundsMin.z)) &&
+        IsOutSidePlane(plane, float3(boundsMin.x, boundsMax.y, boundsMax.z)) &&
+        IsOutSidePlane(plane, float3(boundsMax.x, boundsMin.y, boundsMax.z)) &&
+        IsOutSidePlane(plane, float3(boundsMax.x, boundsMax.y, boundsMin.z)) &&
+        IsOutSidePlane(plane, float3(boundsMax.x, boundsMin.y, boundsMin.z));
+}
+
+bool IsBoundsOutSidePlane(float4 plane, Bounds bounds)
+{
+    return IsAABBOutSidePlane(plane, bounds.minPosition, bounds.maxPosition);
+}
+
+//视锥裁剪
+bool FrustumCull(float4 planes[6], Bounds bounds)
+{
+    return IsBoundsOutSidePlane(planes[0], bounds) ||
+        IsBoundsOutSidePlane(planes[1], bounds) ||
+        IsBoundsOutSidePlane(planes[2], bounds) ||
+        IsBoundsOutSidePlane(planes[3], bounds) ||
+        IsBoundsOutSidePlane(planes[4], bounds) ||
+        IsBoundsOutSidePlane(planes[5], bounds);
+}
+
+bool Cull(Bounds bounds)
+{
+    #if ENABLE_FRUS_CULL
+    if(FrustumCull(_CameraFrustumPlanes,bounds))
+    {
+        return true;
+    }
+    #endif
+    #if ENABLE_HIZ_CULL
+    if(HizOcclusionCull(bounds))
+    {
+        return true;
+    }
+    #endif
+    return false;
+}
+
+//https://blog.csdn.net/a359877454/article/details/80275157
+//group>groupThread>dispatchThread
+//这里写8*8 是因为细分为8个小的node
+[numthreads(8,8,1)]
+void BuildPatches(uint3 id : SV_DispatchThreadID, uint3 groupID:SV_GroupID, uint3 groupThreadID:SV_GroupThreadID)
+{
+    uint3 nodeLoc = _FinalNodeList[groupID.x];
+    uint2 patchOffset = groupThreadID.xy;
+    //生成Patch
+    RenderPatch patch = CreatePatch(nodeLoc, patchOffset);
+
+    //裁剪
+    Bounds bounds = GetPatchBounds(patch);
+    if (Cull(bounds))
+    {
+        return;
+    }
+    SetLodTrans(patch, nodeLoc, patchOffset);
+    CulledPatchList.Append(patch);
+    #if BOUNDS_DEBUG
+    BoundsDebug boundsDebug;
+    boundsDebug.bounds = bounds;
+    boundsDebug.color = float4((bounds.minPosition + _WorldSize * 0.5) / _WorldSize,1);
+    PatchBoundsList.Append(boundsDebug);
+    #endif
 }
