@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/XPostProcessing/Scenes/XPostProcessing.unity
-    guid: b3f496ea234b8fa41877f2f6fba0647d
+    path: Assets/CPURayTracing/Scenes/CPURayTracing.unity
+    guid: 78db2273a7614d245a1ebc8f64d9d077
   m_configObjects: {}

@@ -283,18 +283,23 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 				//distort
 				//---------
-				const float2 dx = float2(10 * pixelSize.x, 0);
-				const float2 dy = float2(0, 10 * pixelSize.y);
+				float fr = 0;
+				if(ctrl < 0.3)
+				{
+					const float2 dx = float2(10 * pixelSize.x, 0);
+					const float2 dy = float2(0, 10 * pixelSize.y);
 
-				float2 p = IN.uv; //* _ScreenParams.x / _ScreenParams.y;
+					float2 p = IN.uv; //* _ScreenParams.x / _ScreenParams.y;
 
-				float w = AllWave(p);
+					float w = AllWave(p);
 
-				float2 dw = float2(AllWave(p + dx) - w, AllWave(p + dy) - w);
+					float2 dw = float2(AllWave(p + dx) - w, AllWave(p + dy) - w);
 
-				float2 duv = dw * _ExplodeIntensity.xy * 0.2 * _ExplodeIntensity.z;
-				uv += duv;
-				float fr = pow(length(dw) * 3 * _ReflectionRefraction, 3);
+					float2 duv = dw * _ExplodeIntensity.xy * 0.2 * _ExplodeIntensity.z;
+					uv += duv;
+					fr = pow(length(dw) * 3 * _ReflectionRefraction, 3);
+				}
+
 
 				//line
 				//---------------
