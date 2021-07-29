@@ -279,12 +279,11 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				float2 uv = IN.uv;
 				float2 pixelSize = _ScreenParams.zw - 1;
 				float ctrl = _ProgressCtrl;
-				float p2Ctrl = max(ctrl - 0.5, 0);
 
 				//distort
 				//---------
 				float fr = 0;
-				if(ctrl < 0.3)
+				if (ctrl < 0.3)
 				{
 					const float2 dx = float2(10 * pixelSize.x, 0);
 					const float2 dy = float2(0, 10 * pixelSize.y);
@@ -303,18 +302,23 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 
 				//line
 				//---------------
+				float p2Ctrl = max(ctrl - 0.5, 0);
+				float p3Ctrl = max(ctrl - 0.7, 0.0) * 3.34;
 				float2 uv0 = uv - 0.5 + _ExplodePoint;
 				float2 uv1 = 0.5 - _ExplodePoint;
 				float2 pixelOffset = pixelSize * p2Ctrl;
-
 				float2 dir = SafeNormalize(uv - _ExplodePoint);
 				float2 signDir = sign(dir);
+				float dist = Sqr(uv - _ExplodePoint);
+
+				float2 intensity = lerp(dist,1,p3Ctrl) * smoothstep( 0,pixelSize*20,abs(uv-_ExplodePoint));
 
 				float2 lineUV = Rot(uv0, dir.y, dir.x) + uv1;
 				half lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).r;
-				float2 lineUVOffset = lineNoise.xx * signDir * lerp(0.1, 0.8, p2Ctrl) * p2Ctrl
-					+ 100 * pixelOffset;
-				half3 outline1 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
+				float2 lineUVOffset = lineNoise.xx * lerp(0.1, 0.8, p2Ctrl) * p2Ctrl + 100 * pixelOffset;
+				lineUVOffset *= intensity * signDir;
+				half3 outline1 = 1000 * p2Ctrl * Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).
+					rgb;
 
 				half3 outline2 = _BackgroundColor;
 				half3 outline3 = _BackgroundColor;
@@ -322,15 +326,19 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 				{
 					lineUV = Rot(uv0 - dir, dir.y, dir.x) + uv1;
 					lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).r;
-					lineUVOffset = lineNoise.xx * signDir * 0.45 * p2Ctrl + 200 * pixelOffset;
-					outline2 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
+					lineUVOffset = lineNoise.xx * 0.45 * p2Ctrl + 200 * pixelOffset;
+					lineUVOffset *= intensity * signDir;
+					outline2 = 1250 * p2Ctrl * Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).
+						rgb;
 
 					if (ctrl > 0.6)
 					{
 						lineUV = Rot(uv0 - 2 * dir, dir.y, dir.x) + uv1;
 						lineNoise = SAMPLE_TEXTURE2D(_LineNoiseTex, s_linear_repeat_sampler, lineUV).r;
-						lineUVOffset = lineNoise.xx * signDir * 0.8 * p2Ctrl + 150 * pixelOffset;
-						outline3 = Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(uv - lineUVOffset).rgb;
+						lineUVOffset = lineNoise.xx * 0.8 * p2Ctrl + 150 * pixelOffset;
+						lineUVOffset *= intensity * signDir;
+						outline3 = 1500 * p2Ctrl * Sqr(lineUVOffset) * _BackgroundColor + SampleSrcTex(
+							uv - lineUVOffset).rgb;
 					}
 				}
 
