@@ -181,7 +181,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 		private float lensRadius;
 
 		// vfov is top to bottom in degrees
-		//aperture焦聚 聚焦虚焦用   focusDist是near distance
+		//aperture光圈大小 模糊用   focusDist是聚焦的距离
 		public Camera(float3 lookFrom, float3 lookAt, float3 vup, float vfov, float aspect, float aperture,
 			float focusDist)
 		{

@@ -388,7 +388,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 
 					col /= (float) DO_SAMPLES_PER_PIXEL;
 
-					UnityEngine.Color prev = backbuffer[backbufferIdx];
+					Color prev = backbuffer[backbufferIdx];
 					col = new float3(prev.r, prev.g, prev.b) * lerpFac + col * (1 - lerpFac);
 					backbuffer[backbufferIdx] = new Color(col.x, col.y, col.z, 1);
 					backbufferIdx++;
@@ -409,15 +409,15 @@ namespace MyGraphics.Scripts.CPURayTracing
 #endif
 			float3 lookFrom = new float3(0, 2, 3);
 			float3 lookAt = new float3(0, 0, 0);
-			float distToFocus = 3;
+			float distToFocus = 3f;
 			float aperture = 0.1f;
 #if DO_BIG_SCENE
 			aperture *= 0.2f;
 #endif
-			spheresSOA.Update(spheresData, sphereMatsData);
-
 			Camera cam = new Camera(lookFrom, lookAt, new float3(0, 1, 0), 60,
 				(float) screenWidth / (float) screenHeight, aperture, distToFocus);
+			
+			spheresSOA.Update(spheresData, sphereMatsData);
 			
 			TraceRowJob job;
 			job.screenWidth = screenWidth;
