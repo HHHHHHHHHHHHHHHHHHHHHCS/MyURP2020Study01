@@ -56,17 +56,19 @@ uniform uint _NodeIDOffsetOfLOD[6];
 uniform float4 _CameraFrustumPlanes[6];
 // ConsumeStructuredBuffer<RenderPatch> _PatchConsumeList;
 AppendStructuredBuffer<RenderPatch> _CulledPatchList;
-#if BOUNDS_DEBUG
+#if _BOUNDS_DEBUG
 AppendStructuredBuffer<BoundsDebug> _PatchBoundsList;
 #endif
 
 uniform float _HizDepthBias;
+SamplerState _point_clamp_sampler;
 
 //****以下这些参数全由HizMapPass全局设置得到***//
 Texture2D<float4> _HizMap;
 uniform float4 _HizMapSize;
 uniform float4x4 _HizCameraMatrixVP;
 uniform float3 _HizCameraPositionWS;
+
 
 float GetNodeSize(uint lod)
 {
@@ -231,6 +233,7 @@ bool IsOutSidePlane(float4 plane, float3 position)
     return dot(plane.xyz, position) + plane.w < 0;
 }
 
+//这里AABB 可能是写麻烦了 计算过多了
 bool IsAABBOutSidePlane(float4 plane, float3 boundsMin, float3 boundsMax)
 {
     return IsOutSidePlane(plane, boundsMin) &&
@@ -259,15 +262,112 @@ bool FrustumCull(float4 planes[6], Bounds bounds)
         IsBoundsOutSidePlane(planes[5], bounds);
 }
 
+
+uint GetHizMip(Bounds boundsUVD)
+{
+    float3 minP = boundsUVD.minPosition;
+    float3 maxP = boundsUVD.maxPosition;
+    float2 size = (maxP.xy - minP.xy) * _HizMapSize.x;
+    uint2 mip2 = ceil(log2(size));
+    uint mip = clamp(max(mip2.x, mip2.y), 1, _HizMapSize.z - 1);
+    return mip;
+}
+
+//将世界坐标转为uv+depth
+float3 TransformWorldToUVD(float3 positionWS)
+{
+    float4 positionHS = mul(_HizCameraMatrixVP, float4(positionWS, 1.0));
+    float3 uvd = positionHS.xyz / positionHS.w;
+    uvd.xy = (uvd.xy + 1) * 0.5;
+    //点可能跑到摄像机背后去，深度会变成负数，需要特殊处理一下
+    if (uvd.z < 0)
+    {
+        #if _REVERSE_Z
+        uvd.z = 1;
+        #else
+        uvd.z = 0;
+        #endif
+    }
+    return uvd;
+}
+
+Bounds GetBoundsUVD(Bounds boundsWS)
+{
+    Bounds boundsUVD;
+
+    float3 boundsMin = boundsWS.minPosition;
+    float3 boundsMax = boundsWS.maxPosition;
+
+    float3 p0 = TransformWorldToUVD(boundsMin);
+    float3 p1 = TransformWorldToUVD(boundsMax);
+    float3 p2 = TransformWorldToUVD(float3(boundsMin.x, boundsMin.y, boundsMax.z));
+    float3 p3 = TransformWorldToUVD(float3(boundsMin.x, boundsMax.y, boundsMin.z));
+    float3 p4 = TransformWorldToUVD(float3(boundsMin.x, boundsMax.y, boundsMax.z));
+    float3 p5 = TransformWorldToUVD(float3(boundsMax.x, boundsMin.y, boundsMax.z));
+    float3 p6 = TransformWorldToUVD(float3(boundsMax.x, boundsMax.y, boundsMin.z));
+    float3 p7 = TransformWorldToUVD(float3(boundsMax.x, boundsMin.y, boundsMin.z));
+
+    float3 min1 = min(min(p0, p1), min(p2, p3));
+    float3 min2 = min(min(p4, p5), min(p6, p7));
+    boundsUVD.minPosition = min(min1, min2);
+
+    float3 max1 = max(max(p0, p1), max(p2, p3));
+    float3 max2 = max(max(p4, p5), max(p6, p7));
+    boundsUVD.maxPosition = max(max1, max2);
+    return boundsUVD;
+}
+
+float SampleHiz(float2 uv, float mip, float mipTexSize)
+{
+    uint2 coord = floor(uv * mipTexSize);
+    coord = min(coord, round(mipTexSize) - 1);
+    return _HizMap.mips[mip][coord].r;
+}
+
+//Hiz Cull
+bool HizOcclusionCull(Bounds bounds)
+{
+    bounds.minPosition -= normalize(bounds.minPosition - _HizCameraPositionWS) * _HizDepthBias;
+    bounds.maxPosition -= normalize(bounds.maxPosition - _HizCameraPositionWS) * _HizDepthBias;
+
+    Bounds boundsUVD = GetBoundsUVD(bounds);
+
+    uint mip = GetHizMip(boundsUVD);
+
+    float3 minP = boundsUVD.minPosition;
+    float3 maxP = boundsUVD.maxPosition;
+
+    float d1 = _HizMap.SampleLevel(_point_clamp_sampler,minP.xy,mip).r;
+    float d2 = _HizMap.SampleLevel(_point_clamp_sampler,maxP.xy,mip).r;
+    float d3 = _HizMap.SampleLevel(_point_clamp_sampler,float2(minP.x,maxP.y),mip).r;
+    float d4 = _HizMap.SampleLevel(_point_clamp_sampler,float2(maxP.x,minP.y),mip).r;
+
+    //如果SampleLevel的mip参数不起效果
+    // float mipTexSize = round(_HizMapSize.x / pow(2, mip));
+    // float d1 = SampleHiz(minP.xy, mip, mipTexSize);
+    // float d2 = SampleHiz(maxP.xy, mip, mipTexSize);
+    // float d3 = SampleHiz(float2(minP.x, maxP.y), mip, mipTexSize);
+    // float d4 = SampleHiz(float2(maxP.x, minP.y), mip, mipTexSize);
+
+
+    #if _REVERSE_Z
+    float depth = maxP.z;
+    return d1 > depth && d2 > depth && d3 > depth && d4 > depth;
+    #else
+    float depth = minP.z;
+    return d1 < depth && d2 < depth && d3 < depth && d4 < depth;
+    #endif
+}
+
 bool Cull(Bounds bounds)
 {
-    #if ENABLE_FRUS_CULL
+    #if _ENABLE_FRUS_CULL
     if(FrustumCull(_CameraFrustumPlanes,bounds))
     {
         return true;
     }
     #endif
-    #if ENABLE_HIZ_CULL
+    #if _ENABLE_HIZ_CULL
     if(HizOcclusionCull(bounds))
     {
         return true;
@@ -275,6 +375,59 @@ bool Cull(Bounds bounds)
     #endif
     return false;
 }
+
+//返回一个node节点覆盖的Sector范围
+uint4 GetSectorBounds(uint3 nodeLoc)
+{
+    uint sectorCountPerNode = GetSectorCountPerNode(nodeLoc.z);
+    uint2 sectorMin = nodeLoc.xy * sectorCountPerNode;
+    return uint4(sectorMin, sectorMin + sectorCountPerNode - 1);
+}
+
+uint GetLOD(uint2 sectorLoc)
+{
+    if (sectorLoc.x < 0 || sectorLoc.y < 0
+        || sectorLoc.x >= SECTOR_COUNT_WORLD || sectorLoc.y >= SECTOR_COUNT_WORLD)
+    {
+        return 0;
+    }
+    return round(_LodMap[sectorLoc].r * MAX_TERRAIN_LOD);
+}
+
+//只需要处理LOD上升的情况，而无需处理LOD下降的情况
+//因为边缘需要更好的LOD图  避免出现裂缝
+void SetLODTrans(inout RenderPatch patch, uint3 nodeLoc, uint2 patchOffset)
+{
+    uint lod = nodeLoc.z;
+    uint4 sectorBounds = GetSectorBounds(nodeLoc);
+    int4 lodTrans = int4(0, 0, 0, 0);
+    if (patchOffset.x == 0)
+    {
+        //左边缘
+        lodTrans.x = GetLOD(sectorBounds.xy + int2(-1, 0)) - lod;
+    }
+
+    if (patchOffset.y == 0)
+    {
+        //下边缘
+        lodTrans.y = GetLOD(sectorBounds.xy + int2(0, -1)) - lod;
+    }
+
+    if (patchOffset.x == 7)
+    {
+        //右边缘
+        lodTrans.z = GetLOD(sectorBounds.zw + int2(1, 0)) - lod;
+    }
+
+    if (patchOffset.y == 7)
+    {
+        //上边缘
+        lodTrans.w = GetLOD(sectorBounds.zw + int2(0, 1)) - lod;
+    }
+
+    patch.lodTrans = (uint4)max(0, lodTrans);
+}
+
 
 //https://blog.csdn.net/a359877454/article/details/80275157
 //group>groupThread>dispatchThread
@@ -293,12 +446,12 @@ void BuildPatches(uint3 id : SV_DispatchThreadID, uint3 groupID:SV_GroupID, uint
     {
         return;
     }
-    SetLodTrans(patch, nodeLoc, patchOffset);
-    CulledPatchList.Append(patch);
-    #if BOUNDS_DEBUG
+    SetLODTrans(patch, nodeLoc, patchOffset);
+    _CulledPatchList.Append(patch);
+    #if _BOUNDS_DEBUG
     BoundsDebug boundsDebug;
     boundsDebug.bounds = bounds;
     boundsDebug.color = float4((bounds.minPosition + _WorldSize * 0.5) / _WorldSize,1);
-    PatchBoundsList.Append(boundsDebug);
+    _PatchBoundsList.Append(boundsDebug);
     #endif
 }
