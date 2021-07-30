@@ -54,7 +54,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 				material.SetTexture("_HeightMap", terrainAsset.heightMap);
 				material.SetTexture("_NormalMap", terrainAsset.normalMap);
 				material.SetTexture("_MainTex", terrainAsset.albedoMap);
-				material.SetBuffer("PatchList", _traverse.culledPatchBuffer);
+				material.SetBuffer("_PatchList", _traverse.culledPatchBuffer);
 				_terrainMaterial = material;
 				UpdateTerrainMaterialProeprties();
 			}
@@ -70,38 +70,38 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 			{
 				if (seamLess)
 				{
-					_terrainMaterial.EnableKeyword("ENABLE_LOD_SEAMLESS");
+					_terrainMaterial.EnableKeyword("_ENABLE_LOD_SEAMLESS");
 				}
 				else
 				{
-					_terrainMaterial.DisableKeyword("ENABLE_LOD_SEAMLESS");
+					_terrainMaterial.DisableKeyword("_ENABLE_LOD_SEAMLESS");
 				}
 
 				if (mipDebug)
 				{
-					_terrainMaterial.EnableKeyword("ENABLE_MIP_DEBUG");
+					_terrainMaterial.EnableKeyword("_ENABLE_MIP_DEBUG");
 				}
 				else
 				{
-					_terrainMaterial.DisableKeyword("ENABLE_MIP_DEBUG");
+					_terrainMaterial.DisableKeyword("_ENABLE_MIP_DEBUG");
 				}
 
 				if (this.patchDebug)
 				{
-					_terrainMaterial.EnableKeyword("ENABLE_PATCH_DEBUG");
+					_terrainMaterial.EnableKeyword("_ENABLE_PATCH_DEBUG");
 				}
 				else
 				{
-					_terrainMaterial.DisableKeyword("ENABLE_PATCH_DEBUG");
+					_terrainMaterial.DisableKeyword("_ENABLE_PATCH_DEBUG");
 				}
 
 				if (nodeDebug)
 				{
-					_terrainMaterial.EnableKeyword("ENABLE_NODE_DEBUG");
+					_terrainMaterial.EnableKeyword("_ENABLE_NODE_DEBUG");
 				}
 				else
 				{
-					_terrainMaterial.DisableKeyword("ENABLE_NODE_DEBUG");
+					_terrainMaterial.DisableKeyword("_ENABLE_NODE_DEBUG");
 				}
 
 				_terrainMaterial.SetVector("_WorldSize", terrainAsset.worldSize);
@@ -152,11 +152,11 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 				UpdateTerrainMaterialProeprties();
 			}
 
-			UnityEngine.Graphics.DrawMeshInstancedIndirect(TerrainAsset.patchMesh, 0, terrainMaterial,
+			Graphics.DrawMeshInstancedIndirect(TerrainAsset.patchMesh, 0, terrainMaterial,
 				new Bounds(Vector3.zero, Vector3.one * 10240), _traverse.patchIndirectArgs);
 			if (patchBoundsDebug)
 			{
-				UnityEngine.Graphics.DrawMeshInstancedIndirect(TerrainAsset.unitCubeMesh, 0,
+				Graphics.DrawMeshInstancedIndirect(TerrainAsset.unitCubeMesh, 0,
 					terrainAsset.boundsDebugMaterial,
 					new Bounds(Vector3.zero, Vector3.one * 10240), _traverse.boundsIndirectArgs);
 			}
