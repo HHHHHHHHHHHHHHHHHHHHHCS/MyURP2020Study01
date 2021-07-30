@@ -1,4 +1,5 @@
 // #define DO_ANIMATE
+
 #define DO_LIGHT_SAMPLING
 #define DO_THREADED
 // 46 spheres (2 emissive) when enabled; 9 spheres (1 emissive) when disabled
@@ -12,6 +13,7 @@ using Unity.Mathematics;
 using UnityEngine;
 using static Unity.Mathematics.math;
 using static MyGraphics.Scripts.CPURayTracing.CPURayTracingMathUtil;
+using float3 = Unity.Mathematics.float3;
 
 //copyby https://github.com/aras-p/ToyPathTracer/tree/b076563906169aa2f9e6d7218ef85decf81f8f72
 namespace MyGraphics.Scripts.CPURayTracing
@@ -300,14 +302,17 @@ namespace MyGraphics.Scripts.CPURayTracing
 				{
 					scattered = new Ray(rec.pos, normalize(refr));
 				}
+
 				return true;
 			}
 			else
 			{
+				//Bug标记
 				attenuation = new float3(1, 0, 1);
 				scattered = default;
 				return false;
 			}
+
 			return false;
 		}
 
@@ -320,13 +325,10 @@ namespace MyGraphics.Scripts.CPURayTracing
 			++inoutRayCount;
 			if (HitWorld(r, kMinT, kMaxT, ref rec, ref id, ref spheres))
 			{
-				Ray scattered;
-				float3 attenuation;
-				float3 lightE;
 				var mat = materials[id];
 				var matE = mat.emissive;
-				if (depth < kMaxDepth && Scatter(mat, r, rec, out attenuation, out scattered, out lightE,
-					ref inoutRayCount, ref spheres, materials, ref randState))
+				if (depth < kMaxDepth && Scatter(mat, r, rec, out float3 attenuation, out Ray scattered,
+					out float3 lightE, ref inoutRayCount, ref spheres, materials, ref randState))
 				{
 #if DO_LIGHT_SAMPLING
 					if (!doMaterialE)
@@ -336,8 +338,15 @@ namespace MyGraphics.Scripts.CPURayTracing
 
 					doMaterialE = (mat.type != Material.Type.Lambert);
 #endif
-					return matE + lightE + attenuation * Trace(scattered, depth + 1, ref inoutRayCount, ref spheres,
-						materials, ref randState, doMaterialE);
+					if (all(attenuation == float3.zero))
+					{
+						return matE + lightE;
+					}
+					else
+					{
+						return matE + lightE + attenuation * Trace(scattered, depth + 1, ref inoutRayCount, ref spheres,
+							materials, ref randState, doMaterialE);
+					}
 				}
 				else
 				{
@@ -416,9 +425,9 @@ namespace MyGraphics.Scripts.CPURayTracing
 #endif
 			Camera cam = new Camera(lookFrom, lookAt, new float3(0, 1, 0), 60,
 				(float) screenWidth / (float) screenHeight, aperture, distToFocus);
-			
+
 			spheresSOA.Update(spheresData, sphereMatsData);
-			
+
 			TraceRowJob job;
 			job.screenWidth = screenWidth;
 			job.screenHeight = screenHeight;
@@ -440,7 +449,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 			rayCount = job.rayCounter[0];
 			job.rayCounter.Dispose();
 			job.materials.Dispose();
-			
+
 			outRayCount = rayCount;
 		}
 	}
