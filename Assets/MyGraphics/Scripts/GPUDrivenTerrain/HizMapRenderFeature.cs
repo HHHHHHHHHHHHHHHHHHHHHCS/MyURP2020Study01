@@ -28,7 +28,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 		{
 			if (hizMapRenderPass != null)
 			{
-				CoreUtils.Destroy(hizMapRenderPass.HiZMap);
+				CoreUtils.Destroy(HizMapRenderPass.HiZMap);
 			}
 		}
 

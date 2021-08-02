@@ -43,7 +43,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 		private ComputeShader computeShader;
 		private RenderTexture hizmap;
 
-		public RenderTexture HiZMap => hizmap;
+		public static RenderTexture HiZMap ;
 
 		public HizMapRenderPass(ComputeShader cs)
 		{
@@ -95,6 +95,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 
 			var mipCount = (int) Mathf.Log(preferMapSize, 2) + 1;
 			hizmap = GetTempHizMapTexture(preferMapSize, mipCount);
+			HiZMap = hizmap;
 			return hizmap;
 		}
 

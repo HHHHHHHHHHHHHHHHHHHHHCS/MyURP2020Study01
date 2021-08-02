@@ -36,6 +36,8 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 
 			public static readonly int BoundsHeightRedundance_ID = Shader.PropertyToID("_BoundsHeightRedundance");
 			public static readonly int HizDepthBias_ID = Shader.PropertyToID("_HizDepthBias");
+
+			public static readonly int HizMap_ID = Shader.PropertyToID("_HizMap");
 		}
 
 		private const int PatchStripSize = 9 * 4;
@@ -156,7 +158,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 			_culledPatchBuffer = new ComputeBuffer(_maxNodeBufferSize * 64, PatchStripSize, ComputeBufferType.Append);
 
 			_patchIndirectArgs = new ComputeBuffer(5, 4, ComputeBufferType.IndirectArguments);
-			_patchBoundsBuffer.SetData(new uint[] {TerrainAsset.patchMesh.GetIndexCount(0), 0, 0, 0, 0});
+			_patchIndirectArgs.SetData(new uint[] {TerrainAsset.patchMesh.GetIndexCount(0), 0, 0, 0, 0});
 
 			_patchBoundsIndirectArgs = new ComputeBuffer(5, 4, ComputeBufferType.IndirectArguments);
 			_patchBoundsIndirectArgs.SetData(new uint[] {TerrainAsset.unitCubeMesh.GetIndexCount(0), 0, 0, 0, 0});
@@ -291,7 +293,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 		{
 			var data = new uint[5];
 			_patchIndirectArgs.GetData(data);
-			Debug.Log(data[1]);
+			Debug.Log(data[0] + "|||" + data[1] + "|||" + data[2] + "|||" + data[3] + "|||" + data[4]);
 		}
 
 		public void Dispatch()
@@ -355,7 +357,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 				_commandBuffer.CopyCounterValue(_patchBoundsBuffer, _patchBoundsIndirectArgs, 4);
 			}
 
-			UnityEngine.Graphics.ExecuteCommandBuffer(_commandBuffer);
+			Graphics.ExecuteCommandBuffer(_commandBuffer);
 
 			// this.LogPatchArgs();
 		}

@@ -39,11 +39,66 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 
 		private bool _isTerrainMaterialDirty = false;
 
-		void Start()
+		private void Start()
 		{
 			_traverse = new TerrainBuilder(terrainAsset);
-			terrainAsset.boundsDebugMaterial.SetBuffer("BoundsList", _traverse.patchBoundsBuffer);
+			terrainAsset.boundsDebugMaterial.SetBuffer("_BoundsList", _traverse.patchBoundsBuffer);
 			ApplySettings();
+		}
+
+		void OnValidate()
+		{
+			ApplySettings();
+		}
+
+		private void ApplySettings()
+		{
+			if (_traverse != null)
+			{
+				_traverse.isFrustumCullEnabled = this.isFrustumCullEnabled;
+				_traverse.isBoundsBufferOn = this.patchBoundsDebug;
+				_traverse.isHizOcclusionCullingEnabled = this.isHizOcclusionCullingEnabled;
+				_traverse.boundsHeightRedundance = this.boundsHeightRedundance;
+				_traverse.enableSeamDebug = this.patchDebug;
+				_traverse.nodeEvalDistance = this.distanceEvaluation;
+				_traverse.hizDepthBias = this.hizDepthBias;
+			}
+
+			_isTerrainMaterialDirty = true;
+		}
+
+		void OnDestroy()
+		{
+			_traverse.Dispose();
+		}
+
+		void Update()
+		{
+			// if (Input.GetKeyDown(KeyCode.Space))
+			// {
+			// 	_traverse.Dispatch();
+			// }
+
+			if (isHizOcclusionCullingEnabled == true && HizMapRenderPass.HiZMap == null)
+			{
+				return;
+			}
+
+			_traverse.Dispatch();
+			var terrainMaterial = EnsureTerrainMaterial();
+			if (_isTerrainMaterialDirty)
+			{
+				UpdateTerrainMaterialProeprties();
+			}
+
+			Graphics.DrawMeshInstancedIndirect(TerrainAsset.patchMesh, 0, terrainMaterial,
+				new Bounds(Vector3.zero, Vector3.one * 10240), _traverse.patchIndirectArgs);
+			if (patchBoundsDebug)
+			{
+				Graphics.DrawMeshInstancedIndirect(TerrainAsset.unitCubeMesh, 0,
+					terrainAsset.boundsDebugMaterial,
+					new Bounds(Vector3.zero, Vector3.one * 10240), _traverse.boundsIndirectArgs);
+			}
 		}
 
 		private Material EnsureTerrainMaterial()
@@ -86,7 +141,7 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 					_terrainMaterial.DisableKeyword("_ENABLE_MIP_DEBUG");
 				}
 
-				if (this.patchDebug)
+				if (patchDebug)
 				{
 					_terrainMaterial.EnableKeyword("_ENABLE_PATCH_DEBUG");
 				}
@@ -107,58 +162,6 @@ namespace MyGraphics.Scripts.GPUDrivenTerrain
 				_terrainMaterial.SetVector("_WorldSize", terrainAsset.worldSize);
 				_terrainMaterial.SetMatrix("_WorldToNormalMapMatrix",
 					Matrix4x4.Scale(this.terrainAsset.worldSize).inverse);
-			}
-		}
-
-
-		void OnValidate()
-		{
-			ApplySettings();
-		}
-
-		private void ApplySettings()
-		{
-			if (_traverse != null)
-			{
-				_traverse.isFrustumCullEnabled = this.isFrustumCullEnabled;
-				_traverse.isBoundsBufferOn = this.patchBoundsDebug;
-				_traverse.isHizOcclusionCullingEnabled = this.isHizOcclusionCullingEnabled;
-				_traverse.boundsHeightRedundance = this.boundsHeightRedundance;
-				_traverse.enableSeamDebug = this.patchDebug;
-				_traverse.nodeEvalDistance = this.distanceEvaluation;
-				_traverse.hizDepthBias = this.hizDepthBias;
-			}
-
-			_isTerrainMaterialDirty = true;
-		}
-
-		void OnDestroy()
-		{
-			_traverse.Dispose();
-		}
-
-
-		void Update()
-		{
-			// if (Input.GetKeyDown(KeyCode.Space))
-			// {
-			// 	_traverse.Dispatch();
-			// }
-
-			_traverse.Dispatch();
-			var terrainMaterial = EnsureTerrainMaterial();
-			if (_isTerrainMaterialDirty)
-			{
-				UpdateTerrainMaterialProeprties();
-			}
-
-			Graphics.DrawMeshInstancedIndirect(TerrainAsset.patchMesh, 0, terrainMaterial,
-				new Bounds(Vector3.zero, Vector3.one * 10240), _traverse.patchIndirectArgs);
-			if (patchBoundsDebug)
-			{
-				Graphics.DrawMeshInstancedIndirect(TerrainAsset.unitCubeMesh, 0,
-					terrainAsset.boundsDebugMaterial,
-					new Bounds(Vector3.zero, Vector3.one * 10240), _traverse.boundsIndirectArgs);
 			}
 		}
 	}
