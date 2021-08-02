@@ -1,6 +1,6 @@
 // #define DO_ANIMATE
 
-#define DO_LIGHT_SAMPLING
+// #define DO_LIGHT_SAMPLING
 #define DO_THREADED
 // 46 spheres (2 emissive) when enabled; 9 spheres (1 emissive) when disabled
 #define DO_BIG_SCENE
@@ -13,7 +13,6 @@ using Unity.Mathematics;
 using UnityEngine;
 using static Unity.Mathematics.math;
 using static MyGraphics.Scripts.CPURayTracing.CPURayTracingMathUtil;
-using float3 = Unity.Mathematics.float3;
 
 //copyby https://github.com/aras-p/ToyPathTracer/tree/b076563906169aa2f9e6d7218ef85decf81f8f72
 namespace MyGraphics.Scripts.CPURayTracing
@@ -260,7 +259,6 @@ namespace MyGraphics.Scripts.CPURayTracing
 			{
 				float3 outWN; //out world normal
 				float3 rdir = r_in.dir;
-				float3 refl = reflect(rdir, rec.normal);
 				float nint;
 				attenuation = new float3(1, 1, 1);
 				float3 refr;
@@ -293,9 +291,10 @@ namespace MyGraphics.Scripts.CPURayTracing
 					reflProb = 1;
 				}
 
-				//越光滑  
+				//菲涅尔
 				if (RandomFloat01(ref randState) < reflProb)
 				{
+					float3 refl = reflect(rdir, rec.normal);
 					scattered = new Ray(rec.pos, normalize(refl));
 				}
 				else
@@ -338,7 +337,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 
 					doMaterialE = (mat.type != Material.Type.Lambert);
 #endif
-					if (all(attenuation == float3.zero))
+					if (all(attenuation == 0))
 					{
 						return matE + lightE;
 					}

@@ -47,37 +47,37 @@ namespace MyGraphics.Scripts.CPURayTracing
 			backBuffer.Dispose();
 			rayTracing.Dispose();
 		}
-
-		private void UpdateLoop()
-		{
-			stopWatch.Start();
-			int rayCount;
-			rayTracing.DoDraw(Time.timeSinceLevelLoad, frameCounter++, backBufferTex.width, backBufferTex.height,
-				backBuffer, out rayCount);
-			stopWatch.Stop();
-			updateCounter++;
-			rayCounter += rayCount;
-		}
-
+		
 		private void Update()
 		{
 			UpdateLoop();
-			if (updateCounter == 10)
-			{
-				var s = (float) ((double) stopWatch.ElapsedTicks / Stopwatch.Frequency) / updateCounter;
-				var ms = s * 1000.0f;
-				//1.0e-6f 百万
-				var mrayS = (float) rayCounter / updateCounter / s * 1.0e-6f;
-				var mrayFr = (float) rayCounter / updateCounter * 1.0e-6f;
-				uiPrefText.text =
-					$"{ms:F2}ms ({1.0f / s:F2}FPS) {mrayS:F2}Mrays/s {mrayFr:F2}Mrays/frame {frameCounter} frames";
-				updateCounter = 0;
-				rayCounter = 0;
-				stopWatch.Reset();
-			}
+			// if (updateCounter == 10)
+			// {
+			// 	var s = (float) ((double) stopWatch.ElapsedTicks / Stopwatch.Frequency) / updateCounter;
+			// 	var ms = s * 1000.0f;
+			// 	//1.0e-6f 百万
+			// 	var mrayS = (float) rayCounter / updateCounter / s * 1.0e-6f;
+			// 	var mrayFr = (float) rayCounter / updateCounter * 1.0e-6f;
+			// 	uiPrefText.text =
+			// 		$"{ms:F2}ms ({1.0f / s:F2}FPS) {mrayS:F2}Mrays/s {mrayFr:F2}Mrays/frame {frameCounter} frames";
+			// 	updateCounter = 0;
+			// 	rayCounter = 0;
+			// 	stopWatch.Reset();
+			// }
 
 			backBufferTex.LoadRawTextureData(backBuffer);
 			backBufferTex.Apply();
+		}
+		
+		private void UpdateLoop()
+		{
+			// stopWatch.Start();
+			int rayCount;
+			rayTracing.DoDraw(Time.timeSinceLevelLoad, frameCounter++, backBufferTex.width, backBufferTex.height,
+				backBuffer, out rayCount);
+			// stopWatch.Stop();
+			// updateCounter++;
+			// rayCounter += rayCount;
 		}
 	}
 }

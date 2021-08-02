@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Terrain
   m_Shader: {fileID: 4800000, guid: b2cfe80bef9ba014fb5c514e1ba3813b, type: 3}
-  m_ShaderKeywords: _ENABLE_LOD_SEAMLESS _ENABLE_PATCH_DEBUG
+  m_ShaderKeywords: _ENABLE_LOD_SEAMLESS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
