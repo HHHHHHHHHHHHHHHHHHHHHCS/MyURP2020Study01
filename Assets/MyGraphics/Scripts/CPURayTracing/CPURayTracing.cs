@@ -1,6 +1,6 @@
 // #define DO_ANIMATE
 
-// #define DO_LIGHT_SAMPLING
+#define DO_LIGHT_SAMPLING
 #define DO_THREADED
 // 46 spheres (2 emissive) when enabled; 9 spheres (1 emissive) when disabled
 #define DO_BIG_SCENE
@@ -218,14 +218,15 @@ namespace MyGraphics.Scripts.CPURayTracing
 					float3 su = normalize(cross(abs(sw.x) > 0.01f ? new float3(0, 1, 0) : new float3(1, 0, 0), sw));
 					float3 sv = cross(sw, su);
 					//sample sphere by solid anglePI
-					//发光球的半径越大或者两球距离过小  球越会朝向发光球  为了准确性
+					//为了准确性   发光球的半径越小或者两球距离过大  射线越会朝向发光球
+					//否则  发光球的半径越大或者两球距离过小  采样会分散一点 射线越会偏离发光球
 					float cosAMax = sqrt(max(0.0f, 1.0f - sqRadius / sqLen));
 					float eps1 = RandomFloat01(ref randState);
 					float eps2 = RandomFloat01(ref randState);
 					float cosA = 1 - eps1 * (1 - cosAMax);
 					float sinA = sqrt(1.0f - cosA * cosA);
 					float phi = 2 * PI * eps2;
-					//随机半球   rec球朝向自发光球
+					// 碰撞点朝向自发光球 做 随机半球偏离  
 					float3 l = su * cos(phi) * sinA + sv * sin(phi) * sinA + sw * cosA;
 					l = normalize(l);
 
@@ -379,7 +380,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 				float invHeight = 1.0f / screenHeight;
 				float lerpFac = ((float) frameCount / (frameCount + 1));
 #if DO_ANIMATE
-				lerpFac = saturate(lerpFac * DO_ANIMATE_SMOOTHING);
+				lerpFac = lerpFac * DO_ANIMATE_SMOOTHING;//saturate(lerpFac * DO_ANIMATE_SMOOTHING);
 #endif
 				uint state = (uint) (y * 9781 + frameCount * 6271) | 1;
 				int rayCount = 0;
