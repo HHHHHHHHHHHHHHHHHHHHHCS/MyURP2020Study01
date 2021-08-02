@@ -196,7 +196,7 @@ Shader "MyRP/AtmosphericScattering/Terrain"
 					LODDitheringTransition(IN.clipPos.xyz, unity_LODFade.x);
 				#endif
 
-				APPLY_SCATTERING(color, inputData.positionWS, IN.clipPos / _ScreenParams.xy);
+				APPLY_SCATTERING(color, inputData.positionWS, IN.clipPos.xy / _ScreenParams.xy);
 
 				return half4(color);
 			}

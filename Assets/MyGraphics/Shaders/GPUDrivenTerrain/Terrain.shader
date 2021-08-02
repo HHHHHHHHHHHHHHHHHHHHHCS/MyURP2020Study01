@@ -10,7 +10,7 @@ Shader "MyRP/GPUDrivenTerrain/Terrain"
 	{
 		Tags
 		{
-			"RenderType" = "Opaque" "LightMode" = "UniversalForwad"
+			"RenderType" = "Opaque" "LightMode" = "UniversalForward"
 		}
 
 		Pass
