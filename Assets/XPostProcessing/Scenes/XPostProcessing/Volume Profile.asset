@@ -1,5 +1,103 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-7570886785219885545
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08ade50f97f5ba94ca5c5354d282d269, type: 3}
+  m_Name: ImageBlockV4PostProcess
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  enableEffect:
+    m_OverrideState: 1
+    m_Value: 0
+  priorityQueue:
+    m_OverrideState: 0
+    m_Value: 0
+  speed:
+    m_OverrideState: 0
+    m_Value: 10
+    min: 0
+    max: 50
+  blockSize:
+    m_OverrideState: 0
+    m_Value: 8
+    min: 0
+    max: 50
+  maxRGBSplitX:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+    max: 25
+  maxRGBSplitY:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+    max: 25
+--- !u!114 &-6718710368385113888
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88034432271459745b24209030c08077, type: 3}
+  m_Name: ImageBlockV2PostProcess
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  enableEffect:
+    m_OverrideState: 1
+    m_Value: 0
+  priorityQueue:
+    m_OverrideState: 0
+    m_Value: 0
+  fade:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+    max: 1
+  speed:
+    m_OverrideState: 0
+    m_Value: 0.5
+    min: 0
+    max: 1
+  amount:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+    max: 10
+  blockLayer1_U:
+    m_OverrideState: 0
+    m_Value: 2
+    min: 0
+    max: 50
+  blockLayer1_V:
+    m_OverrideState: 0
+    m_Value: 16
+    min: 0
+    max: 50
+  blockLayer1_Intensity:
+    m_OverrideState: 0
+    m_Value: 8
+    min: 0
+    max: 50
+  rgbSplitIntensity:
+    m_OverrideState: 0
+    m_Value: 2
+    min: 0
+    max: 50
+  blockVisualizeDebug:
+    m_OverrideState: 0
+    m_Value: 0
 --- !u!114 &-4071996502451392905
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -25,6 +123,39 @@ MonoBehaviour:
     m_Value: 1
     min: 0
     max: 1
+--- !u!114 &-2665553308841446472
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1a3a8674e81ee94bb5976bfe8131ce4, type: 3}
+  m_Name: RGBSplitV5PostProcess
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  enableEffect:
+    m_OverrideState: 1
+    m_Value: 1
+  priorityQueue:
+    m_OverrideState: 0
+    m_Value: 0
+  amplitude:
+    m_OverrideState: 0
+    m_Value: 3
+    min: 0
+    max: 5
+  speed:
+    m_OverrideState: 0
+    m_Value: 0.1
+    min: 0
+    max: 1
+  noiseTex:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: 304987f9860c5544fb6fd361fd00d0c8, type: 3}
 --- !u!114 &-2633232229274798094
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -112,38 +243,38 @@ MonoBehaviour:
     min: 0
     max: 10
   blockLayer1_U:
-    m_OverrideState: 0
-    m_Value: 9
+    m_OverrideState: 1
+    m_Value: 17.3
     min: 0
     max: 50
   blockLayer1_V:
-    m_OverrideState: 0
-    m_Value: 9
+    m_OverrideState: 1
+    m_Value: 9.5
     min: 0
     max: 50
   blockLayer2_U:
-    m_OverrideState: 0
-    m_Value: 5
+    m_OverrideState: 1
+    m_Value: 10.7
     min: 0
     max: 50
   blockLayer2_V:
-    m_OverrideState: 0
-    m_Value: 5
+    m_OverrideState: 1
+    m_Value: 15.4
     min: 0
     max: 50
   blockLayer1_Intensity:
-    m_OverrideState: 0
-    m_Value: 8
+    m_OverrideState: 1
+    m_Value: 2.4
     min: 0
     max: 50
   blockLayer2_Intensity:
-    m_OverrideState: 0
+    m_OverrideState: 1
     m_Value: 4
     min: 0
     max: 50
   rgbSplitIntensity:
-    m_OverrideState: 0
-    m_Value: 0.5
+    m_OverrideState: 1
+    m_Value: 2.6
     min: 0
     max: 50
   blockVisualizeDebug:
@@ -169,6 +300,9 @@ MonoBehaviour:
   - {fileID: 4275619190832497546}
   - {fileID: -855098735897673700}
   - {fileID: 2433842890578205567}
+  - {fileID: -6718710368385113888}
+  - {fileID: -7570886785219885545}
+  - {fileID: -2665553308841446472}
 --- !u!114 &319383973770424825
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -236,7 +370,7 @@ MonoBehaviour:
   m_AdvancedMode: 0
   enableEffect:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   priorityQueue:
     m_OverrideState: 0
     m_Value: 0

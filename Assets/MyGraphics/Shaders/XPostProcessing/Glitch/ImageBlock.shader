@@ -59,7 +59,7 @@ Shader "MyRP/XPostProcessing/Glitch/ImageBlock"
 				half4 colorG = SampleSrcTex(uv + float2(lineNoise * 0.05 * RandomNoise(timeX, 7.0), 0));
 				half4 colorB = SampleSrcTex(uv - float2(lineNoise * 0.05 * RandomNoise(timeX, 23.0), 0));
 
-				half4 result = half4(half3(colorR.r, colorG.g, colorB.b), 0.333333 * (colorR.a + colorG.a + colorB.a));
+				half4 result = half4(half3(colorR.r, colorG.g, colorB.b), 1);//0.333333 * (colorR.a + colorG.a + colorB.a));
 				result = lerp(colorR, result,_Fade);
 
 				return result;

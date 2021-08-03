@@ -212,6 +212,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 	public static class CPURayTracingMathUtil
 	{
 		//Math
+		//https://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
 		//----------------------------
 
 		public static bool Refract(float3 v, float3 n, float nint, out float3 outRefracted)

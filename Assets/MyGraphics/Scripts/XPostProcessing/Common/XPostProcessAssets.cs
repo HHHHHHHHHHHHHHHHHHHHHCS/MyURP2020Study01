@@ -11,7 +11,11 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 		private Shader scharrShader;
 
 		[Header("Glitch")] [SerializeField] private Shader imageBlockShader;
+		[SerializeField] private Shader imageBlockV2Shader;
+		[SerializeField] private Shader imageBlockV4Shader;
+		[SerializeField] private Shader rgbSplitV5Shader;
 
+		
 		[Header("Vignette")] [SerializeField] private Shader auroraVignetteShader;
 		[SerializeField] private Shader rapidVignetteShader;
 
@@ -29,6 +33,9 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 
 		//Glitch-----------
 		private Material imageBlockMaterial;
+		private Material imageBlockV2Material;
+		private Material imageBlockV4Material;
+		private Material rgbSplitV5Material;
 
 		//Vignette-----------
 		private Material auroratVignetteMaterial;
@@ -48,6 +55,9 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 
 		//Glitch-----------
 		public Material ImageBlockMat => ToolsHelper.GetCreateMaterial(ref imageBlockShader, ref imageBlockMaterial);
+		public Material ImageBlockV2Mat => ToolsHelper.GetCreateMaterial(ref imageBlockV2Shader, ref imageBlockV2Material);
+		public Material ImageBlockV4Mat => ToolsHelper.GetCreateMaterial(ref imageBlockV4Shader, ref imageBlockV4Material);
+		public Material RGBSplitV5Mat => ToolsHelper.GetCreateMaterial(ref rgbSplitV5Shader, ref rgbSplitV5Material);
 
 		//Vignette-----------
 		public Material AuroraVignetteMat =>
@@ -67,6 +77,8 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 			ToolsHelper.DestroyMaterial(ref blitMaterial);
 			ToolsHelper.DestroyMaterial(ref scharrMaterial);
 			ToolsHelper.DestroyMaterial(ref imageBlockMaterial);
+			ToolsHelper.DestroyMaterial(ref imageBlockV2Material);
+			ToolsHelper.DestroyMaterial(ref imageBlockV4Material);
 			ToolsHelper.DestroyMaterial(ref auroratVignetteMaterial);
 			ToolsHelper.DestroyMaterial(ref rapidVignetteMaterial);
 			ToolsHelper.DestroyMaterial(ref sharpenV1Material);
