@@ -38,7 +38,7 @@ namespace MyGraphics.Scripts.XPostProcessing.Vignette
 			CommandBuffer cmd, ScriptableRenderContext context, ref RenderingData renderingData,
 			out bool swapRT)
 		{
-			var material = assets.rapidVignetteMat;
+			var material = assets.RapidVignetteMat;
 			if (material == null)
 			{
 				swapRT = false;

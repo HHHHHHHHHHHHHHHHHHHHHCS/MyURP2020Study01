@@ -14,8 +14,9 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 		[SerializeField] private Shader imageBlockV2Shader;
 		[SerializeField] private Shader imageBlockV4Shader;
 		[SerializeField] private Shader rgbSplitV5Shader;
+		[SerializeField] private Shader waveJitterShader;
 
-		
+
 		[Header("Vignette")] [SerializeField] private Shader auroraVignetteShader;
 		[SerializeField] private Shader rapidVignetteShader;
 
@@ -36,6 +37,7 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 		private Material imageBlockV2Material;
 		private Material imageBlockV4Material;
 		private Material rgbSplitV5Material;
+		private Material waveJitterMaterial;
 
 		//Vignette-----------
 		private Material auroratVignetteMaterial;
@@ -55,15 +57,21 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 
 		//Glitch-----------
 		public Material ImageBlockMat => ToolsHelper.GetCreateMaterial(ref imageBlockShader, ref imageBlockMaterial);
-		public Material ImageBlockV2Mat => ToolsHelper.GetCreateMaterial(ref imageBlockV2Shader, ref imageBlockV2Material);
-		public Material ImageBlockV4Mat => ToolsHelper.GetCreateMaterial(ref imageBlockV4Shader, ref imageBlockV4Material);
+
+		public Material ImageBlockV2Mat =>
+			ToolsHelper.GetCreateMaterial(ref imageBlockV2Shader, ref imageBlockV2Material);
+
+		public Material ImageBlockV4Mat =>
+			ToolsHelper.GetCreateMaterial(ref imageBlockV4Shader, ref imageBlockV4Material);
+
 		public Material RGBSplitV5Mat => ToolsHelper.GetCreateMaterial(ref rgbSplitV5Shader, ref rgbSplitV5Material);
+		public Material WaveJitterMat => ToolsHelper.GetCreateMaterial(ref waveJitterShader, ref waveJitterMaterial);
 
 		//Vignette-----------
 		public Material AuroraVignetteMat =>
 			ToolsHelper.GetCreateMaterial(ref auroraVignetteShader, ref auroratVignetteMaterial);
 
-		public Material rapidVignetteMat =>
+		public Material RapidVignetteMat =>
 			ToolsHelper.GetCreateMaterial(ref rapidVignetteShader, ref rapidVignetteMaterial);
 
 		//ImageProcessing-----------
@@ -79,6 +87,8 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 			ToolsHelper.DestroyMaterial(ref imageBlockMaterial);
 			ToolsHelper.DestroyMaterial(ref imageBlockV2Material);
 			ToolsHelper.DestroyMaterial(ref imageBlockV4Material);
+			ToolsHelper.DestroyMaterial(ref rgbSplitV5Material);
+			ToolsHelper.DestroyMaterial(ref waveJitterMaterial);
 			ToolsHelper.DestroyMaterial(ref auroratVignetteMaterial);
 			ToolsHelper.DestroyMaterial(ref rapidVignetteMaterial);
 			ToolsHelper.DestroyMaterial(ref sharpenV1Material);

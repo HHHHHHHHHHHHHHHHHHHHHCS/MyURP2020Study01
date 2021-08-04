@@ -7,8 +7,8 @@ namespace MyGraphics.Scripts.ScreenEffect
 	public class ScreenEffectFeature : ScriptableRendererFeature
 	{
 		public static ScriptableRenderPass renderPass;
-		
-		private  ScriptableRenderPass screenEffectPass;
+
+		private ScriptableRenderPass screenEffectPass;
 
 		public override void Create()
 		{
@@ -18,7 +18,7 @@ namespace MyGraphics.Scripts.ScreenEffect
 		{
 			var settings = VolumeManager.instance.stack.GetComponent<ScreenEffectPostProcess>();
 
-			if (settings == null)
+			if (settings == null || !settings.IsActive())
 			{
 				screenEffectPass = null;
 				return;
@@ -33,6 +33,7 @@ namespace MyGraphics.Scripts.ScreenEffect
 					pass.Init();
 					screenEffectPass = pass;
 				}
+
 				pass.Setup(settings);
 				pass.renderPassEvent = settings.renderPassEvent.value;
 				renderer.EnqueuePass(pass);

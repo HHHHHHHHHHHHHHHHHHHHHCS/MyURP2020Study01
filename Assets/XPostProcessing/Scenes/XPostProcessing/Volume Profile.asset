@@ -139,7 +139,7 @@ MonoBehaviour:
   m_AdvancedMode: 0
   enableEffect:
     m_OverrideState: 1
-    m_Value: 1
+    m_Value: 0
   priorityQueue:
     m_OverrideState: 0
     m_Value: 0
@@ -280,6 +280,52 @@ MonoBehaviour:
   blockVisualizeDebug:
     m_OverrideState: 0
     m_Value: 0
+--- !u!114 &-367905385451547729
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0984d6479cb3ec64daddf6c05c177b90, type: 3}
+  m_Name: WaveJitterPostProcess
+  m_EditorClassIdentifier: 
+  active: 1
+  m_AdvancedMode: 0
+  enableEffect:
+    m_OverrideState: 1
+    m_Value: 0
+  priorityQueue:
+    m_OverrideState: 0
+    m_Value: 0
+  jitterDirection:
+    m_OverrideState: 0
+    m_Value: 0
+  intervalType:
+    m_OverrideState: 0
+    m_Value: 2
+  frequency:
+    m_OverrideState: 0
+    m_Value: 5
+    min: 0
+    max: 50
+  rgbSplit:
+    m_OverrideState: 0
+    m_Value: 20
+    min: 0
+    max: 50
+  speed:
+    m_OverrideState: 0
+    m_Value: 0.25
+    min: 0
+    max: 1
+  amount:
+    m_OverrideState: 0
+    m_Value: 1
+    min: 0
+    max: 2
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -303,6 +349,7 @@ MonoBehaviour:
   - {fileID: -6718710368385113888}
   - {fileID: -7570886785219885545}
   - {fileID: -2665553308841446472}
+  - {fileID: -367905385451547729}
 --- !u!114 &319383973770424825
 MonoBehaviour:
   m_ObjectHideFlags: 3

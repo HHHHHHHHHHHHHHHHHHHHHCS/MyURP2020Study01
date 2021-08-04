@@ -5,8 +5,6 @@ namespace MyGraphics.Scripts.ScreenEffect.BlackWhiteLine
 {
 	public class BlackWhiteLineCtrl : MonoBehaviour
 	{
-		private const string k_tag = "BlackWhite";
-		
 		public Material effectMat;
 
 		private BlackWhiteLinePass blackWhiteLinePass;

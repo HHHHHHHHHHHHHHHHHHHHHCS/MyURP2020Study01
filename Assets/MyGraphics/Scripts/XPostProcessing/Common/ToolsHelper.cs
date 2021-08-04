@@ -49,6 +49,7 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 
 		public static Material GetCreateMaterial(ref Shader shader, ref Material material)
 		{
+			DestroyMaterial(ref material);
 			CreateMaterial(ref shader, ref material);
 			return material;
 		}
