@@ -169,7 +169,10 @@ namespace MyGraphics.Scripts.IrradianceVolume
 
 		private async void CaptureProbe(ProbeData data)
 		{
-			var go = new GameObject("Reflect");
+			var go = new GameObject("Reflect")
+			{
+				hideFlags = HideFlags.DontSave
+			};
 			var reflect = go.AddComponent<ReflectionProbe>();
 
 			reflect.nearClipPlane = 0.001f;
