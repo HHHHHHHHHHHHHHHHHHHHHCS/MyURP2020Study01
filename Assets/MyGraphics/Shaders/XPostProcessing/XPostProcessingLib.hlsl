@@ -41,6 +41,8 @@ half4 frag(v2f IN):SV_Target
 //Common Function
 //---------------------------
 
+//sample
+//---------------
 inline half4 SampleSrcTex(float2 uv)
 {
     return SAMPLE_TEXTURE2D(_SrcTex, sampler_Linear_Clamp, uv);
@@ -50,6 +52,9 @@ inline half4 SampleNoiseTex(float2 uv)
 {
     return SAMPLE_TEXTURE2D(_NoiseTex, sampler_NoiseTex, uv);
 }
+
+//random
+//-----------
 
 inline float RandomNoise(float time, float2 seed, float speed)
 {
@@ -71,9 +76,24 @@ inline float RandomNoise(float time, float seed)
     return RandomNoise(time, float2(seed, 1.0));
 }
 
+inline float RandomNoise(float2 seed)
+{
+    return frac(sin(dot(seed, float2(12.9898, 78.233))) * 43758.5453);
+}
+
+//func
+//---------
+
 inline float4 Pow4(float4 v, float p)
 {
     return float4(pow(v.x, p), pow(v.y, p), pow(v.z, p), v.w);
 }
+
+//类似于分段取整
+inline float Trunc(float x, float num_levels)
+{
+    return floor(x * num_levels) / num_levels;
+}
+
 
 #endif

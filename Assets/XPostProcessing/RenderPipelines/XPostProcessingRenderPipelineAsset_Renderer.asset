@@ -80,6 +80,7 @@ MonoBehaviour:
     imageBlockV4Shader: {fileID: 4800000, guid: f8c4744c36c313e4d832ef5686ccaed5, type: 3}
     rgbSplitV5Shader: {fileID: 4800000, guid: af83bacd27ac36e4284757dcb53e35c0, type: 3}
     waveJitterShader: {fileID: 4800000, guid: 5f736a6378987134f880d7a3b6206654, type: 3}
+    lineBlockShader: {fileID: 4800000, guid: 62dd611500a29a142bc0fc611e32ad3c, type: 3}
     auroraVignetteShader: {fileID: 4800000, guid: a9afeeb32721f604c82c9f71ea0e48cf, type: 3}
     rapidVignetteShader: {fileID: 4800000, guid: a5a3902fa0dfd7047844b2e78f0ffffb, type: 3}
     sharpenV1Shader: {fileID: 4800000, guid: 937f0b44aa6b92746af626f817ffee62, type: 3}

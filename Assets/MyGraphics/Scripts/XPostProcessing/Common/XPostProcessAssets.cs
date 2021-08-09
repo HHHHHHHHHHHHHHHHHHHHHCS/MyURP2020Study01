@@ -15,6 +15,7 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 		[SerializeField] private Shader imageBlockV4Shader;
 		[SerializeField] private Shader rgbSplitV5Shader;
 		[SerializeField] private Shader waveJitterShader;
+		[SerializeField] private Shader lineBlockShader;
 
 
 		[Header("Vignette")] [SerializeField] private Shader auroraVignetteShader;
@@ -38,6 +39,7 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 		private Material imageBlockV4Material;
 		private Material rgbSplitV5Material;
 		private Material waveJitterMaterial;
+		private Material lineBlockMaterial;
 
 		//Vignette-----------
 		private Material auroratVignetteMaterial;
@@ -66,6 +68,7 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 
 		public Material RGBSplitV5Mat => ToolsHelper.GetCreateMaterial(ref rgbSplitV5Shader, ref rgbSplitV5Material);
 		public Material WaveJitterMat => ToolsHelper.GetCreateMaterial(ref waveJitterShader, ref waveJitterMaterial);
+		public Material LineBlockMat => ToolsHelper.GetCreateMaterial(ref lineBlockShader, ref lineBlockMaterial);
 
 		//Vignette-----------
 		public Material AuroraVignetteMat =>
@@ -89,6 +92,7 @@ namespace MyGraphics.Scripts.XPostProcessing.Common
 			ToolsHelper.DestroyMaterial(ref imageBlockV4Material);
 			ToolsHelper.DestroyMaterial(ref rgbSplitV5Material);
 			ToolsHelper.DestroyMaterial(ref waveJitterMaterial);
+			ToolsHelper.DestroyMaterial(ref lineBlockMaterial);
 			ToolsHelper.DestroyMaterial(ref auroratVignetteMaterial);
 			ToolsHelper.DestroyMaterial(ref rapidVignetteMaterial);
 			ToolsHelper.DestroyMaterial(ref sharpenV1Material);

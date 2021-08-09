@@ -33,12 +33,12 @@ float mod289(float x)
 	return x - floor(x * NOISE_SIMPLEX_1_DIV_289) * 289.0;
 }
 
-float2 mod289(float2 x)
+float2 Mod289(float2 x)
 {
 	return x - floor(x * NOISE_SIMPLEX_1_DIV_289) * 289.0;
 }
 
-float3 mod289(float3 x)
+float3 Mod289(float3 x)
 {
 	return x - floor(x * NOISE_SIMPLEX_1_DIV_289) * 289.0;
 }
@@ -64,9 +64,9 @@ float permute(float x)
 	return mod289(x * x * 34.0 + x);
 }
 
-float3 permute(float3 x)
+float3 Permute(float3 x)
 {
-	return mod289(x * x * 34.0 + x);
+	return Mod289(x * x * 34.0 + x);
 }
 
 float4 permute(float4 x)
@@ -74,7 +74,7 @@ float4 permute(float4 x)
 	return mod289(x * x * 34.0 + x);
 }
 
-float3 taylorInvSqrt(float3 r)
+float3 TaylorInvSqrt(float3 r)
 {
 	return 1.79284291400159 - 0.85373472095314 * r;
 }
@@ -154,8 +154,8 @@ float snoise(float2 v)
 	float2 x2 = x0 + C.zz;
 	
 	// Permutations
-	i = mod289(i); // Avoid truncation effects in permutation
-	float3 p = permute(permute(i.y + float3(0.0, i1.y, 1.0))
+	i = Mod289(i); // Avoid truncation effects in permutation
+	float3 p = Permute(Permute(i.y + float3(0.0, i1.y, 1.0))
 	+ i.x + float3(0.0, i1.x, 1.0));
 	
 	float3 m = max(0.5 - float3(dot(x0, x0), dot(x1, x1), dot(x2, x2)), 0.0);
@@ -170,7 +170,7 @@ float snoise(float2 v)
 	float3 a0 = x - ox;
 	
 	// Normalise gradients implicitly by scaling m
-	m *= taylorInvSqrt(a0 * a0 + h * h);
+	m *= TaylorInvSqrt(a0 * a0 + h * h);
 	
 	// Compute final noise value at P
 	float3 g;
@@ -201,8 +201,8 @@ float3 snoise_grad(float2 v)
 	float2 x2 = x0 + C.zz;
 	
 	// Permutations
-	i = mod289(i); // Avoid truncation effects in permutation
-	float3 p = permute(permute(i.y + float3(0.0, i1.y, 1.0))
+	i = Mod289(i); // Avoid truncation effects in permutation
+	float3 p = Permute(Permute(i.y + float3(0.0, i1.y, 1.0))
 	+ i.x + float3(0.0, i1.x, 1.0));
 	
 	float3 m = max(0.5 - float3(dot(x0, x0), dot(x1, x1), dot(x2, x2)), 0.0);
@@ -218,7 +218,7 @@ float3 snoise_grad(float2 v)
 	float3 a0 = x - ox;
 	
 	// Normalise gradients
-	float3 norm = taylorInvSqrt(a0 * a0 + h * h);
+	float3 norm = TaylorInvSqrt(a0 * a0 + h * h);
 	float2 g0 = float2(a0.x, h.x) * norm.x;
 	float2 g1 = float2(a0.y, h.y) * norm.y;
 	float2 g2 = float2(a0.z, h.z) * norm.z;
@@ -258,7 +258,7 @@ float snoise(float3 v)
 	float3 x3 = x0 - 0.5;
 	
 	// Permutations
-	i = mod289(i); // Avoid truncation effects in permutation
+	i = Mod289(i); // Avoid truncation effects in permutation
 	float4 p = permute(permute(permute(i.z + float4(0.0, i1.z, i2.z, 1.0))
 	+ i.y + float4(0.0, i1.y, i2.y, 1.0))
 	+ i.x + float4(0.0, i1.x, i2.x, 1.0));
@@ -330,7 +330,7 @@ float4 snoise_grad(float3 v)
 	float3 x3 = x0 - 0.5;
 	
 	// Permutations
-	i = mod289(i); // Avoid truncation effects in permutation
+	i = Mod289(i); // Avoid truncation effects in permutation
 	float4 p = permute(permute(permute(i.z + float4(0.0, i1.z, i2.z, 1.0))
 	+ i.y + float4(0.0, i1.y, i2.y, 1.0))
 	+ i.x + float4(0.0, i1.x, i2.x, 1.0));
@@ -590,8 +590,8 @@ float cnoise(float3 P)
 {
 	float3 Pi0 = floor(P); // Integer part for indexing
 	float3 Pi1 = Pi0 + (float3)1.0; // Integer part + 1
-	Pi0 = mod289(Pi0);
-	Pi1 = mod289(Pi1);
+	Pi0 = Mod289(Pi0);
+	Pi1 = Mod289(Pi1);
 	float3 Pf0 = frac(P); // Fractional part for interpolation
 	float3 Pf1 = Pf0 - (float3)1.0; // Fractional part - 1.0
 	float4 ix = float4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
@@ -661,8 +661,8 @@ float pnoise(float3 P, float3 rep)
 {
 	float3 Pi0 = mod(floor(P), rep); // Integer part, modulo period
 	float3 Pi1 = mod(Pi0 + (float3)1.0, rep); // Integer part + 1, mod period
-	Pi0 = mod289(Pi0);
-	Pi1 = mod289(Pi1);
+	Pi0 = Mod289(Pi0);
+	Pi1 = Mod289(Pi1);
 	float3 Pf0 = frac(P); // Fractional part for interpolation
 	float3 Pf1 = Pf0 - (float3)1.0; // Fractional part - 1.0
 	float4 ix = float4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
