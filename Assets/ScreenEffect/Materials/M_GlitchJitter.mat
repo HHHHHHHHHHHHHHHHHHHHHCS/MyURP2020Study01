@@ -101,12 +101,14 @@ Material:
     - _Amount: 0.5
     - _Amplitude: 3
     - _Blend: 0
+    - _BlockAmount: 0.1
     - _BlockLayer1_Intensity: 8
     - _BlockLayer1_U: 25
     - _BlockLayer1_V: 25
     - _BlockLayer2_Intensity: 16
     - _BlockLayer2_U: 12
     - _BlockLayer2_V: 12
+    - _BlockSpeed: 10
     - _BumpScale: 1
     - _CenterX: 0.5
     - _CenterY: 0.635
@@ -120,7 +122,7 @@ Material:
     - _DstBlend: 0
     - _EnvironmentReflections: 1
     - _Fade: 0.5
-    - _Frequency: 1
+    - _Frequency: -1
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
@@ -129,7 +131,7 @@ Material:
     - _NoiseTex: 0.5
     - _OcclusionStrength: 1
     - _Parallax: 0.005
-    - _ProgressCtrl: 0
+    - _ProgressCtrl: 0.5
     - _QueueOffset: 0
     - _RGBSplit: 200
     - _RGBSplitIntensity: 4

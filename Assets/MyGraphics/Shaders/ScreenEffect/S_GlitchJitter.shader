@@ -7,10 +7,15 @@ Shader "MyRP/ScreenEffect/S_GlitchJitter"
 		_GrainTex("Grain Texture",2D) = "grey"{}
 
 		//Jitter
-		_Frequency("Frequency",Range(0,50.0)) = 20
+		//+1右边拉伸  -1 左边拉伸
+		_Frequency("Frequency",Range(-3, 3)) = 1
 		_RGBSplit("RGBSplit", Range(0, 500.0)) = 20
 		_Speed("Speed", Range(0, 1.0)) = 0.25
 		_Amount("Amount", Range(0, 2.0)) = 1
+
+		//block red
+		_BlockSpeed("Block Speed",Range(0, 50)) = 10
+		_BlockAmount("Block Amount",Range(0, 5)) = 0.1
 
 		//dark
 		_Dark("Dark", Range(0, 2.0)) = 0.5
@@ -71,6 +76,9 @@ Shader "MyRP/ScreenEffect/S_GlitchJitter"
 			float _RGBSplit;
 			float _Speed;
 			float _Amount;
+
+			float _BlockSpeed;
+			float _BlockAmount;
 
 			float _Dark;
 
@@ -197,14 +205,23 @@ Shader "MyRP/ScreenEffect/S_GlitchJitter"
 
 			half4 frag(v2f IN) : SV_Target
 			{
-				float2 uv = IN.uv;
+				float2 oriUV = IN.uv;
+				float2 uv = oriUV;
 				float2 resolution = _ScreenParams.xy;
 				float time = _ProgressCtrl; //_Time.y;
 
 				//uv scale
 				//---------------------
 				float intensity = CalcUVScale(time);
-				uv.x = uv.x * (1 - intensity * _Frequency);
+				if (_Frequency > 0)
+				{
+					uv.x = uv.x * (1 - intensity * _Frequency); //右边拉伸
+				}
+				else
+				{
+					uv.x = uv.x - (1 - uv.x) * (intensity * _Frequency); //左边拉伸
+				}
+
 
 				//Jitter
 				//---------------------
@@ -223,7 +240,20 @@ Shader "MyRP/ScreenEffect/S_GlitchJitter"
 				half4 colorGB = SampleSrcTex(float2(uv_x, uv.y));
 				half4 colorR = SampleSrcTex(float2(uv_x + rgbSplit_uv_x, uv.y));
 
-				half4 col = half4(colorR.r, colorGB.g, colorGB.b, 1);
+
+				//block red
+				//------------------
+				float block_noise = SNoise(
+					float2(oriUV.y * resolution.y * 0.01 * _BlockAmount, time * _BlockSpeed * 10));
+				block_noise = step(0.5, block_noise);
+
+				float block_len = SNoise(float2((oriUV.x + sin(time * 10)) * resolution.x * 0.0001, 0.1));
+				block_len = step(0.5, block_len);
+				// return block_len;
+				block_noise = min(block_noise, block_len);
+				block_noise = min(block_noise * intensity * 2, 1);
+				block_noise = 1 - block_noise;
+				half4 col = half4(colorR.r, colorGB.g * block_noise, colorGB.b * block_noise, 1);
 
 				//FilmGrain
 				//------------------
