@@ -123,7 +123,7 @@ Material:
     - _NoiseTex: 0.5
     - _OcclusionStrength: 1
     - _Parallax: 0.005
-    - _ProgressCtrl: 0
+    - _ProgressCtrl: 0.5
     - _QueueOffset: 0
     - _RGBSplitIntensity: 4
     - _RGBSplit_Intensity: 0.5

@@ -6,7 +6,6 @@ Shader "MyRP/ScreenEffect/S_GlitchShake"
 		//色块分离
 		_Speed("Speed", Range(0, 1.0)) = 0.5
 		_Amount("Amount", Range(0, 10)) = 1
-		_Fade("Fade", Range(0, 1.0)) = 1
 		_BlockLayer1_U("BlockLayer1 U", Range(0, 50)) = 9
 		_BlockLayer1_V("BlockLayer1 V", Range(0, 50)) = 9
 		_BlockLayer1_Intensity("BlockLayer1 Intensity", Range(0, 50)) = 8
@@ -69,7 +68,6 @@ Shader "MyRP/ScreenEffect/S_GlitchShake"
 
 			float _Speed;
 			float _Amount;
-			float _Fade;
 			float _BlockLayer1_U;
 			float _BlockLayer1_V;
 			float _BlockLayer1_Intensity;
