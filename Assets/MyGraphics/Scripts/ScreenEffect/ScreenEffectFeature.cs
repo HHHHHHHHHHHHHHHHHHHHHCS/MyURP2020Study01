@@ -24,6 +24,11 @@ namespace MyGraphics.Scripts.ScreenEffect
 				return;
 			}
 
+			if (settings.onlyGameView.value && renderingData.cameraData.cameraType != CameraType.Game)
+			{
+				return;
+			}
+
 			if (settings.useCustom.value == false)
 			{
 				var pass = screenEffectPass as ScreenEffectPass;
