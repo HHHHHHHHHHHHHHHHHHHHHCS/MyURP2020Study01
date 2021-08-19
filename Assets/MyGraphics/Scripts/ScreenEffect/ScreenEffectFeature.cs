@@ -24,7 +24,8 @@ namespace MyGraphics.Scripts.ScreenEffect
 				return;
 			}
 
-			if (settings.onlyGameView.value && renderingData.cameraData.cameraType != CameraType.Game)
+			if (settings.onlyGameView.value && (renderingData.cameraData.cameraType != CameraType.Game ||
+			                                    renderingData.cameraData.camera.name == "Preview Camera"))
 			{
 				return;
 			}

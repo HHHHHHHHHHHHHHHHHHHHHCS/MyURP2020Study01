@@ -46,16 +46,16 @@ namespace MyGraphics.Scripts.ScreenEffect.MotionLine
 			if (rtB_0 == null)
 			{
 				pingpongFrame = 0;
-				var desc = cameraTextureDescriptor;
+				desc = cameraTextureDescriptor;
 				desc.msaaSamples = 1;
 				desc.depthBufferBits = 0;
 				desc.colorFormat = RenderTextureFormat.ARGBHalf;
 				desc.memoryless |= RenderTextureMemoryless.Depth;
 
-				rtB_0 = new RenderTexture(desc);
-				rtB_1 = new RenderTexture(desc);
-				rtD_0 = new RenderTexture(desc);
-				rtD_1 = new RenderTexture(desc);
+				rtB_0 = new RenderTexture(desc) {name = "RTB_0"};
+				rtB_1 = new RenderTexture(desc) {name = "RTB_1"};
+				rtD_0 = new RenderTexture(desc) {name = "RTD_0"};
+				rtD_1 = new RenderTexture(desc) {name = "RTD_1"};
 			}
 		}
 
@@ -71,14 +71,18 @@ namespace MyGraphics.Scripts.ScreenEffect.MotionLine
 			{
 				cmd.GetTemporaryRT(temp0RT_ID, desc);
 
+				context.ExecuteCommandBuffer(cmd);
+				cmd.Clear();
+
 				//A-----------------------
 				cmd.SetGlobalTexture(src0RT_ID, cameraColorTex_RTI);
 				cmd.SetRenderTarget(temp0RT_ID, RenderBufferLoadAction.DontCare
 					, RenderBufferStoreAction.Store);
 				CoreUtils.DrawFullScreen(cmd, effectMat, null, 0);
+				context.ExecuteCommandBuffer(cmd);
+				cmd.Clear();
 
 				RenderTargetIdentifier input, output;
-
 				//B------------------
 				if (pingpongFrame == 1)
 				{
@@ -101,13 +105,16 @@ namespace MyGraphics.Scripts.ScreenEffect.MotionLine
 				cmd.SetRenderTarget(output, RenderBufferLoadAction.DontCare
 					, RenderBufferStoreAction.Store);
 				CoreUtils.DrawFullScreen(cmd, effectMat, null, 1);
+				context.ExecuteCommandBuffer(cmd);
+				cmd.Clear();
 
 				//C------------------------------
 				cmd.SetGlobalTexture(src0RT_ID, output);
 				cmd.SetRenderTarget(temp0RT_ID, RenderBufferLoadAction.DontCare
 					, RenderBufferStoreAction.Store);
 				CoreUtils.DrawFullScreen(cmd, effectMat, null, 2);
-
+				context.ExecuteCommandBuffer(cmd);
+				cmd.Clear();
 
 				//D------------------
 				if (pingpongFrame == 1)
@@ -131,18 +138,19 @@ namespace MyGraphics.Scripts.ScreenEffect.MotionLine
 				cmd.SetRenderTarget(output, RenderBufferLoadAction.DontCare
 					, RenderBufferStoreAction.Store);
 				CoreUtils.DrawFullScreen(cmd, effectMat, null, 3);
+				context.ExecuteCommandBuffer(cmd);
+				cmd.Clear();
 
-
-				//D--------------------------
+				//E--------------------------
 				cmd.SetGlobalTexture(src0RT_ID, output);
 				cmd.SetRenderTarget(cameraColorTex_RTI, RenderBufferLoadAction.DontCare
 					, RenderBufferStoreAction.Store);
 				CoreUtils.DrawFullScreen(cmd, effectMat, null, 4);
-
-
-				pingpongFrame = (pingpongFrame % 2) + 1;
+				context.ExecuteCommandBuffer(cmd);
+				cmd.Clear();
 
 				cmd.ReleaseTemporaryRT(temp0RT_ID);
+				pingpongFrame = (pingpongFrame % 2) + 1;
 			}
 
 			context.ExecuteCommandBuffer(cmd);
