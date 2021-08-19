@@ -21,8 +21,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   useCustom:
-    m_OverrideState: 1
-    m_Value: 1
+    m_OverrideState: 0
+    m_Value: 0
   renderPassEvent:
     m_OverrideState: 0
     m_Value: 550
@@ -30,8 +30,8 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 1
   effectMat:
-    m_OverrideState: 0
-    m_Value: {fileID: 0}
+    m_OverrideState: 1
+    m_Value: {fileID: 2100000, guid: 3bce4b3ebb1a5b644bb4c1c3d5d1622e, type: 2}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

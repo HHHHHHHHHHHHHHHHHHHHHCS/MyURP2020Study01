@@ -1,3 +1,4 @@
+//https://www.shadertoy.com/view/3tl3z2
 Shader "MyRP/ScreenEffect/S_MotionLine"
 {
 	Properties
@@ -44,7 +45,6 @@ Shader "MyRP/ScreenEffect/S_MotionLine"
 		// return max(_ScreenParams.x,_ScreenParams.y);
 		return _ScreenParams.x;
 	}
-
 	ENDHLSL
 
 	SubShader
@@ -89,13 +89,15 @@ Shader "MyRP/ScreenEffect/S_MotionLine"
 			half4 frag(v2f IN) : SV_Target
 			{
 				float2 pos = IN.vertex.xy;
+				float2 uv = IN.uv.xy;
 				float size = MaxSize();
+				float invSize = 1.0 / size;
 				half4 col = 0;
 				for (float n = 0.0; n < size; n++)
 				{
-					half2 xn = LOAD_TEXTURE2D(_Src0Tex, int2(n+0.5,pos.y)).rg;
-					half2 yn = LOAD_TEXTURE2D(_Src1Tex, int2(pos.x,n+0.5)).ba;
-					half2 a = -TWO_PI * (pos - 0.5 - size / 2.0) * (n / size);
+					half2 xn = SAMPLE_TEXTURE2D(_Src0Tex, s_point_clamp_sampler, float2(n*invSize,uv.y)).rg;
+					half2 yn = SAMPLE_TEXTURE2D(_Src1Tex, s_point_clamp_sampler, float2(uv.x,n*invSize)).ba;
+					half2 a = -TWO_PI * _ScreenParams.xy * (uv - 0.5) * (n / size);
 
 					col.ba += ColMul(xn, a.x);
 					col.rg += ColMul(yn, a.y);
@@ -122,7 +124,6 @@ Shader "MyRP/ScreenEffect/S_MotionLine"
 
 				float2 dir = 2. * uv - 1.;
 				float s = sign(dot(dir, cos(.1 * _Time.y - float2(0, HALF_PI))));
-				s = 1;
 				temp = ColMul(temp, 3. * _Time.y * s); // 13: phase shift with time
 
 				return half4(temp, 0, 0);
@@ -142,14 +143,16 @@ Shader "MyRP/ScreenEffect/S_MotionLine"
 			half4 frag(v2f IN) : SV_Target
 			{
 				float2 pos = IN.vertex.xy;
+				float2 uv = IN.uv.xy;
 				float size = MaxSize();
+				float invSize = 1.0 / size;
 				half4 col = 0;
 				for (float n = 0.; n < size; n++)
 				{
-					float m = fmod(n + size / 2.0, size); // W to warp 0,0 to mid-window.
-					half2 xn = LOAD_TEXTURE2D(_Src0Tex, int2(m + 0.5, pos.y)).rg;
-					half2 yn = LOAD_TEXTURE2D(_Src1Tex, int2(pos.x, m + 0.5)).ba;
-					half2 a = TWO_PI * (pos - .5) * (n / size);
+					float m = frac(n * invSize + 0.5); // W to warp 0,0 to mid-window.
+					half2 xn = SAMPLE_TEXTURE2D(_Src0Tex, s_point_clamp_sampler, float2(m, uv.y)).rg;
+					half2 yn = SAMPLE_TEXTURE2D(_Src1Tex, s_point_clamp_sampler, float2(uv.x, m )).ba;
+					half2 a = TWO_PI * _ScreenParams.xy * uv * (n / size);
 
 					col.ba += ColMul(xn, a.x);
 					col.rg += ColMul(yn, a.y);
@@ -165,6 +168,8 @@ Shader "MyRP/ScreenEffect/S_MotionLine"
 		{
 			Name "E"
 
+			Blend SrcAlpha OneMinusSrcAlpha
+
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
@@ -172,7 +177,9 @@ Shader "MyRP/ScreenEffect/S_MotionLine"
 
 			half4 frag(v2f IN) : SV_Target
 			{
-				return 0.5 + 0.5 * SAMPLE_TEXTURE2D(_Src0Tex, s_linear_clamp_sampler, IN.uv).rrrr;
+				float c = SAMPLE_TEXTURE2D(_Src0Tex, s_linear_clamp_sampler, IN.uv).r;
+				c = 0.5 + 0.5 * c;
+				return half4(c.rrr, 0.5);
 			}
 			ENDHLSL
 		}
