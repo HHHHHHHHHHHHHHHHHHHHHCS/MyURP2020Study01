@@ -31,7 +31,7 @@ MonoBehaviour:
     m_Value: 1
   effectMat:
     m_OverrideState: 1
-    m_Value: {fileID: 2100000, guid: 3bce4b3ebb1a5b644bb4c1c3d5d1622e, type: 2}
+    m_Value: {fileID: 2100000, guid: 5b079267e4fcad94ba2b0f13fed58eb4, type: 2}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -12,9 +12,6 @@ Shader "MyRP/ScreenEffect/S_MotionLineV2"
 			"RenderPipeline" = "UniversalPipeline"
 		}
 
-
-
-
 		Pass
 		{
 			Name "MotionLineV2"
