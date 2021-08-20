@@ -84,7 +84,7 @@ Material:
     - _OutlineCtrl: 0
     - _ProgressCtrl: 1
     - _Range: 16
-    - _SampleNum: 9
+    - _SampleNum: 3.42
     - _Step: 2
     - _TwirlStrength: 10
     m_Colors:
