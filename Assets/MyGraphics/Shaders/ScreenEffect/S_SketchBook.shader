@@ -74,11 +74,6 @@ Shader "MyRP/ScreenEffect/S_SketchBook"
 				return min(lerp(c1, 0.7, 1.8 * d), .7);
 			}
 
-			half4 GetColHT(float2 pos)
-			{
-				return smoothstep(0.795, 1.05, GetCol(pos) * .8 + .2 + 1.0);
-			}
-
 			float GetVal(float2 pos)
 			{
 				half4 c = GetCol(pos);
@@ -136,55 +131,62 @@ Shader "MyRP/ScreenEffect/S_SketchBook"
 			{
 				float2 uv = IN.uv;
 				float2 pos = uv * _ScreenParams.xy;
-				half3 col = 0;
+				float isline = 0;
 				// half3 col2 = 0;
 				// float sum = 0;
 
+				float angleStep = TWO_PI / _AngleNum;
+				float dy = _ScreenParams.y / 920.0;
+
+				UNITY_LOOP
 				for (float i = 0; i < _AngleNum; i++)
 				{
-					float ang = (TWO_PI / _AngleNum) * (i + 0.8);
+					float ang = angleStep * (i + 0.8);
 					float2 v = float2(cos(ang), sin(ang));
+					float2 invV = v.yx * float2(1, -1);
+					UNITY_LOOP
 					for (float j = 0; j < _SampleNum; j++)
 					{
-						float dy = _ScreenParams.y / 920.0;
-						float2 dpos = v.yx * float2(1, -1) * j * dy;
-						float2 dpos2 = 5.0 * (0.5 * v.xy * dy * j * j / _SampleNum);
+						float dyj = dy * j;
+						float2 dpos = invV * dyj;
+						float2 dpos2 = 5.0 * (0.5 * v.xy * dyj * j / _SampleNum);
 
 						float s = 3.5;
 
 						float2 pos2 = pos + s * dpos + dpos2;
 						float2 g = GetGrad(pos2, 0.08);
-						float fact = dot(g, v) - 0.5 * abs(dot(g, v.yx * float2(1, -1)));
+						float fact = dot(g, v) - 0.5 * abs(dot(g, invV));
 						// float fact2 = dot(normalize(g + float2(0.0001, 0.0001)), v.yx * float2(1, -1));
 
 						fact = clamp(fact, 0.0, 0.05);
 						// fact2 = abs(fact2);
 
 						fact *= 1.0 - (j / _SampleNum);
-						col += fact;
+						isline += fact;
 						// col2 += fact2;
 						// sum += fact2;
 					}
 				}
-
-				col /= _SampleNum * _AngleNum * 0.65 / sqrt(_ScreenParams.y);
+				isline /= _SampleNum * _AngleNum * 0.65 / sqrt(_ScreenParams.y);
 				// col2 /= sum;
-				col.x *= 1.6;
-				col.x = 1.0 - col.x;
-				col.x *= col.x * col.x;
+				isline *= 1.6;
+				isline = 1.0 - isline;
+				isline *= isline * isline;
+				// return isline;
 
-				float2 s = sin(pos.xy * 0.1 / sqrt(_ScreenParams.y / 720.0));
+				float2 s2 = sin(pos.xy * 0.1 / sqrt(_ScreenParams.y / 720.0));
 				float3 karo = 1;
-				karo -= 0.75755 * float3(0.25, 0.1, 0.1) * dot(exp(-s * s * 80.0), float2(1, 1));
+				karo -= 0.75755 * float3(0.25, 0.1, 0.1) * dot(exp(-s2 * s2 * 80.0), float2(1, 1));
 				float r = length(pos - _ScreenParams.xy * 0.5) / _ScreenParams.x;
 				float vign = 1.0 - r * r * r;
-				half3 color = half3(col.x /* * col2 */ * karo * vign);
+				// karo = 1;
+				// vign = 1;
+				half3 color = half3(isline.x /* * col2 */ * karo * vign);
 				half3 origCol = SampleSrcTex(uv).rgb;
 				half3 overlayCol = half3(0.3755, 0.05, 0.0) * origCol;
 
 				color = SetLum(1.25 * overlayCol.rgb, Luminance(color));
 				color -= 0.75 - clamp(origCol.r + origCol.g + origCol.b, 0.0, 0.75);
-
 
 				return half4(color, 1.0);
 			}

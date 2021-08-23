@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-5194826735813208325
+--- !u!114 &-241726881487241436
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -21,8 +21,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: 1
   useCustom:
-    m_OverrideState: 1
-    m_Value: 1
+    m_OverrideState: 0
+    m_Value: 0
   renderPassEvent:
     m_OverrideState: 0
     m_Value: 550
@@ -31,7 +31,7 @@ MonoBehaviour:
     m_Value: 1
   effectMat:
     m_OverrideState: 1
-    m_Value: {fileID: 2100000, guid: 3155210b75102824fa9a64493e40f8b4, type: 2}
+    m_Value: {fileID: 2100000, guid: 3bce4b3ebb1a5b644bb4c1c3d5d1622e, type: 2}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -45,4 +45,4 @@ MonoBehaviour:
   m_Name: Volume Profile
   m_EditorClassIdentifier: 
   components:
-  - {fileID: -5194826735813208325}
+  - {fileID: -241726881487241436}
