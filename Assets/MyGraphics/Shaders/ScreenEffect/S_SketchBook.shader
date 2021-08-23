@@ -115,7 +115,7 @@ Shader "MyRP/ScreenEffect/S_SketchBook"
 			{
 				float d = l - Luminance(c);
 				c = c + d;
-				return ClipColor(.85 * c);
+				return ClipColor(.85 * c) ;//+ step(d, 0.01) * 0;// *0 is dark color
 			}
 
 
@@ -184,7 +184,7 @@ Shader "MyRP/ScreenEffect/S_SketchBook"
 				half3 color = half3(isline.x /* * col2 */ * karo * vign);
 				half3 origCol = SampleSrcTex(uv).rgb;
 				half3 overlayCol = half3(0.3755, 0.05, 0.0) * origCol;
-
+				// overlayCol = origCol;
 				color = SetLum(1.25 * overlayCol.rgb, Luminance(color));
 				color -= 0.75 - clamp(origCol.r + origCol.g + origCol.b, 0.0, 0.75);
 
