@@ -63,21 +63,22 @@ Shader "MyRP/ScreenEffect/S_SketchBook"
 				return SAMPLE_TEXTURE2D(_SrcTex, s_linear_clamp_sampler, uv);
 			}
 
-			half4 GetCol(float2 pos)
+			half3 GetCol(float2 pos)
 			{
 				// take aspect ratio into account
 				float2 uv = pos / _ScreenParams.xy;
-				half4 c1 = SampleSrcTex(uv);
-				float4 e = smoothstep(-0.05, 0.0, float4(uv, 1 - uv));
-				c1 = lerp(float4(1, 1, 1, 0), c1, e.x * e.y * e.z * e.w);
-				float d = clamp(dot(c1.xyz, float3(-0.5, 1., -0.5)), 0.0, 1.0);
-				return min(lerp(c1, 0.7, 1.8 * d), .7);
+				half3 c1 = SampleSrcTex(uv).rgb;
+				// 影响不大
+				// float4 e = smoothstep(-0.05, 0.0, float4(uv, 1 - uv));
+				// c1 = lerp(1, c1, e.x * e.y * e.z * e.w);
+				float d = clamp(dot(c1.rgb, float3(-0.5, 1., -0.5)), 0.0, 1.0);
+				return min(lerp(c1, 0.7, 1.8 * d), 0.7);
 			}
 
 			float GetVal(float2 pos)
 			{
-				half4 c = GetCol(pos);
-				return 0.33333 * (c.x + c.y + c.z);
+				half3 c = GetCol(pos);
+				return 0.33333 * (c.r + c.g + c.b);
 			}
 
 			float2 GetGrad(float2 pos, float eps)
@@ -115,7 +116,7 @@ Shader "MyRP/ScreenEffect/S_SketchBook"
 			{
 				float d = l - Luminance(c);
 				c = c + d;
-				return ClipColor(.85 * c) ;//+ step(d, 0.01) * 0;// *0 is dark color
+				return ClipColor(.85 * c); //+ step(d, 0.01) * 0;// *0 is dark color
 			}
 
 
@@ -148,26 +149,30 @@ Shader "MyRP/ScreenEffect/S_SketchBook"
 					for (float j = 0; j < _SampleNum; j++)
 					{
 						float dyj = dy * j;
+						float weight = j / _SampleNum;
+						
 						float2 dpos = invV * dyj;
-						float2 dpos2 = 5.0 * (0.5 * v.xy * dyj * j / _SampleNum);
+						float2 dpos2 = 5.0 * 0.5 * v.xy * dyj * weight;
 
 						float s = 3.5;
 
 						float2 pos2 = pos + s * dpos + dpos2;
 						float2 g = GetGrad(pos2, 0.08);
+						//越靠近g方向 权重越高
 						float fact = dot(g, v) - 0.5 * abs(dot(g, invV));
 						// float fact2 = dot(normalize(g + float2(0.0001, 0.0001)), v.yx * float2(1, -1));
 
 						fact = clamp(fact, 0.0, 0.05);
 						// fact2 = abs(fact2);
 
-						fact *= 1.0 - (j / _SampleNum);
+						fact *= 1.0 - weight;
 						isline += fact;
 						// col2 += fact2;
 						// sum += fact2;
 					}
 				}
 				isline /= _SampleNum * _AngleNum * 0.65 / sqrt(_ScreenParams.y);
+				// return isline;
 				// col2 /= sum;
 				isline *= 1.6;
 				isline = 1.0 - isline;
