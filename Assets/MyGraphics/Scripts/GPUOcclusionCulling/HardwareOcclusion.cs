@@ -7,6 +7,8 @@ using UnityEngine.Rendering;
 
 namespace MyGraphics.Scripts.GPUOcclusionCulling
 {
+	//其实是和SRP不兼容的  而且效果不是很好
+	//https://github.com/przemyslawzaworski/Unity-GPU-Based-Occlusion-Culling
 	public class HardwareOcclusion : MonoBehaviour
 	{
 		struct Cuboid
@@ -14,6 +16,13 @@ namespace MyGraphics.Scripts.GPUOcclusionCulling
 			public Vector3 center;
 			public Vector3 scale;
 		};
+
+		private static readonly int Reader_ID = Shader.PropertyToID("_Reader");
+		private static readonly int Writer_ID = Shader.PropertyToID("_Writer");
+		private static readonly int Debug_ID = Shader.PropertyToID("_Debug");
+		private static readonly int AABB_ID = Shader.PropertyToID("_AABB");
+		private static readonly int Intersection_ID = Shader.PropertyToID("_Intersection");
+		private static readonly int Point_ID = Shader.PropertyToID("_Point");
 
 		public GameObject[] targets;
 		public Shader hardwareOcclusionShader;
@@ -56,6 +65,7 @@ namespace MyGraphics.Scripts.GPUOcclusionCulling
 			}
 
 			vertices = new List<Vector4>();
+			//设置让这个RT 可以随机写入
 			Graphics.ClearRandomWriteTargets();
 			Graphics.SetRandomWriteTarget(1, writer, false);
 			for (int i = 0; i < targets.Length; i++)
@@ -70,12 +80,13 @@ namespace MyGraphics.Scripts.GPUOcclusionCulling
 
 			reader = new ComputeBuffer(vertices.Count, 16, ComputeBufferType.Default);
 			reader.SetData(vertices.ToArray());
-			material.SetBuffer("_Reader", reader);
-			material.SetBuffer("_Writer", writer);
-			material.SetInt("_Debug", debug ? 1 : 0);
+			material.SetBuffer(Reader_ID, reader);
+			material.SetBuffer(Writer_ID, writer);
+			material.SetInt(Debug_ID, debug ? 1 : 0);
 			aabb = new ComputeBuffer(cuboids.Length, 24, ComputeBufferType.Default);
-			intersectionShader.SetBuffer(0, "_AABB", aabb);
-			intersectionShader.SetBuffer(0, "_Intersection", intersection);
+			intersection = new ComputeBuffer(1, 4, ComputeBufferType.Default);
+			intersectionShader.SetBuffer(0, AABB_ID, aabb);
+			intersectionShader.SetBuffer(0, Intersection_ID, intersection);
 			aabb.SetData(cuboids);
 			reset = new int[1] {-1};
 			coroutine = StartCoroutine(UpdateAsync());
@@ -122,6 +133,9 @@ namespace MyGraphics.Scripts.GPUOcclusionCulling
 				System.Array.Clear(elements, 0, elements.Length);
 				writer.SetData(elements);
 			}
+
+			// material.SetPass(0);
+			// Graphics.DrawProceduralNow(MeshTopology.Triangles, vertices.Count, 1);
 		}
 
 		private void OnDisable()
@@ -140,7 +154,6 @@ namespace MyGraphics.Scripts.GPUOcclusionCulling
 			}
 		}
 
-		//TODO:改到SRP
 		private void OnRenderObject()
 		{
 			material.SetPass(0);
@@ -152,7 +165,7 @@ namespace MyGraphics.Scripts.GPUOcclusionCulling
 			while (true)
 			{
 				Vector3 p = Camera.main.transform.position;
-				intersectionShader.SetVector("_Point", new Vector4(p.x, p.y, p.z, 0.0f));
+				intersectionShader.SetVector(Point_ID, new Vector4(p.x, p.y, p.z, 0.0f));
 				intersection.SetData(reset);
 				int threadGroupX = (int) Mathf.Ceil(cuboids.Length / 8.0f);
 				intersectionShader.Dispatch(0, threadGroupX, 1, 1);
@@ -226,16 +239,16 @@ namespace MyGraphics.Scripts.GPUOcclusionCulling
 			cube.transform.position = parent.transform.position + bc.center;
 			cube.transform.localScale = bc.size;
 			Mesh mesh = cube.GetComponent<MeshFilter>().sharedMesh;
-			Vector4[] vertices = new Vector4[mesh.triangles.Length];
-			for (int i = 0; i < vertices.Length; i++)
+			Vector4[] verts = new Vector4[mesh.triangles.Length];
+			for (int i = 0; i < verts.Length; i++)
 			{
 				Vector3 p = cube.transform.TransformPoint(mesh.vertices[mesh.triangles[i]]);
-				vertices[i] = new Vector4(p.x, p.y, p.z, index);
+				verts[i] = new Vector4(p.x, p.y, p.z, index);
 			}
 
 			Destroy(bc);
 			Destroy(cube);
-			return vertices;
+			return verts;
 		}
 
 
