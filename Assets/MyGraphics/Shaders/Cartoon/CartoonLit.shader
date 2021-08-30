@@ -163,8 +163,7 @@ Shader "MyRP/Cartoon/CartoonLit"
 				inputData.fogCoord = i.fogFactorAndVertexLight.x;
 				inputData.vertexLighting = i.fogFactorAndVertexLight.yzw;
 				inputData.bakedGI = SAMPLE_GI(i.lightmapUV, i.sh, i.normalWS);
-				inputData.normalizedScreenSpaceUV = i.positionCS.xy;
-				
+				inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(i.positionCS.xy);
 				
 				float3 lightingColor = ToonLighting(i.positionWS, i.normalWS, i.viewDirectionWS, _ToonColorOffset, _ToonColorSpread, _ToonHighlightIntensity, _ToonColorSteps, _ToonShadedColor, _ToonLitColor, _ToonSpecularColor);
 				float3 outlineColor = Outlines(screenPosition, _OutlineThickness, _OutlineDepthSensitivity, _OutlineNormalSensitivity);

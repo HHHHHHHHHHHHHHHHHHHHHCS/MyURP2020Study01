@@ -1,11 +1,11 @@
 using System;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.Rendering;
+
 #if UNITY_EDITOR
 using System.Threading.Tasks;
 using UnityEditor;
-using UnityEngine.Rendering;
-
 #endif
 
 //copy from https://zhuanlan.zhihu.com/p/390648011
@@ -148,25 +148,7 @@ namespace MyGraphics.Scripts.IrradianceVolume
 
 			print("Bake Finish");
 		}
-#endif
-
-		private void SetValue()
-		{
-			if (datas == null || textures == null)
-			{
-				return;
-			}
-
-			for (int i = 0; i < this.textures.Length; i++)
-			{
-				Shader.SetGlobalTexture("_VolumeTex" + i, this.textures[i]);
-			}
-
-			Shader.SetGlobalVector("_VolumeSize", (Vector3) this.size);
-			Shader.SetGlobalVector("_VolumePosition", this.position);
-			Shader.SetGlobalFloat("_VolumeInterval", this.interval);
-		}
-
+		
 		private async void CaptureProbe(ProbeData data)
 		{
 			var go = new GameObject("Reflect")
@@ -221,6 +203,26 @@ namespace MyGraphics.Scripts.IrradianceVolume
 
 			this.progress++;
 		}
+#endif
+
+		private void SetValue()
+		{
+			if (datas == null || textures == null)
+			{
+				return;
+			}
+
+			for (int i = 0; i < this.textures.Length; i++)
+			{
+				Shader.SetGlobalTexture("_VolumeTex" + i, this.textures[i]);
+			}
+
+			Shader.SetGlobalVector("_VolumeSize", (Vector3) this.size);
+			Shader.SetGlobalVector("_VolumePosition", this.position);
+			Shader.SetGlobalFloat("_VolumeInterval", this.interval);
+		}
+
+		
 
 		private Vector3 GetProbePosition(ProbeData data)
 		{

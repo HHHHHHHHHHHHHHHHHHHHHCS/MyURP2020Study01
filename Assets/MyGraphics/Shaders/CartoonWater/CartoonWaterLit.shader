@@ -172,7 +172,7 @@ Shader "MyRP/CartoonWater/CartoonWaterLit"
 				inputData.fogCoord = i.fogFactorAndVertexLight.x;
 				inputData.vertexLighting = i.fogFactorAndVertexLight.yzw;
 				inputData.bakedGI = SAMPLE_GI(i.lightmapUV, i.sh, i.normalWS);
-				inputData.normalizedScreenSpaceUV = i.positionCS.xy;
+				inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(i.positionCS.xy);
 				
 				#if _AlphaClip
 					float alphaClipThreshold = 0.5;
