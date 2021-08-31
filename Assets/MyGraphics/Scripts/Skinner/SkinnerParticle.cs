@@ -209,7 +209,7 @@ namespace MyGraphics.Scripts.Skinner
 
 		private void LateUpdate()
 		{
-			if (Source == null || !Source.IsReady)
+			if (Source == null)// || !Source.IsReady)
 			{
 				return;
 			}

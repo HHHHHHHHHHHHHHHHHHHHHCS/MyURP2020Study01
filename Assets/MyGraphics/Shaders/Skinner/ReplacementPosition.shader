@@ -4,7 +4,7 @@ Shader "MyRP/Skinner/ReplacementPosition"
 	{
 		Tags
 		{
-			"Skinner" = "Source"
+			"RenderType" = "Opaque" "Queue" = "Geometry" "LightMode"="SkinnerSource"
 		}
 		Pass
 		{

@@ -33,7 +33,30 @@ Shader "MyRP/Skinner/TrailSurface"
 
 	// Line width modifier
 	half3 _LineWidth; // (max width, cutoff, speed-to-width / max width)
+
+	void GetPosAndNormal(float4 vertex, out float4 pos, out float3 nor, out float speed)
+	{
+		//fetch samples from the animation kernel
+		float2 uv = vertex.xy;
+		float3 p = SAMPLE_TEXTURE2D_LOD(_PositionBuffer, s_linear_clamp_sampler, uv, 0).xyz;
+		float3 v = SAMPLE_TEXTURE2D_LOD(_VelocityBuffer, s_linear_clamp_sampler, uv, 0).xyz;
+		float4 b = SAMPLE_TEXTURE2D_LOD(_OrthnormBuffer, s_linear_clamp_sampler, uv, 0);
+
+		// Extract normal/binormal vector from the orthnormal sample.
+		half3 normal = StereoInverseProjection(b.xy);
+		half3 binormal = StereoInverseProjection(b.zw);
+
+		speed = length(v);
+
+		half width = _LineWidth.x * vertex.z * (1 - vertex.y);
+		width *= saturate((speed - _LineWidth.y) * _LineWidth.z);
+
+		pos = float4(p + binormal * width, vertex.w);
+		nor = normal;
+		// pos = vertex;
+	}
 	ENDHLSL
+
 	SubShader
 	{
 		Tags
@@ -43,9 +66,33 @@ Shader "MyRP/Skinner/TrailSurface"
 
 		Pass
 		{
+			Name "ForwardLit"
+			Tags
+			{
+				"LightMode" = "UniversalForward"
+			}
+
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
+
+
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+
+			// Keywords
+			#pragma multi_compile _ _SCREEN_SPACE_OCCLUSION
+			#pragma multi_compile _ LIGHTMAP_ON
+			#pragma multi_compile _ DIRLIGHTMAP_COMBINED
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS
+			#pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
+			#pragma multi_compile _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS _ADDITIONAL_OFF
+			#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
+			#pragma multi_compile _ _SHADOWS_SOFT
+			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
+
 
 			// Base material properties
 			half3 _Albedo;
@@ -59,6 +106,7 @@ Shader "MyRP/Skinner/TrailSurface"
 			struct a2v
 			{
 				float4 vertex:POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
 			struct v2f
@@ -69,37 +117,28 @@ Shader "MyRP/Skinner/TrailSurface"
 				float3 worldPos : TEXCOORD2;
 				float4 shadowCoord : TEXCOORD3;
 				float3 sh : TEXCOORD4;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
 			};
 
 			v2f vert(a2v IN)
 			{
-				//Line ID
+				v2f o;
+				UNITY_SETUP_INSTANCE_ID(IN);
+				UNITY_TRANSFER_INSTANCE_ID(IN, o);
+
 				float id = IN.vertex.x;
 
-				//fetch samples from the animation kernel
-				float2 uv = IN.vertex.xy;
-				float3 p = SAMPLE_TEXTURE2D_LOD(_PositionBuffer, s_linear_clamp_sampler, uv, 0).xyz;
-				float3 v = SAMPLE_TEXTURE2D_LOD(_VelocityBuffer, s_linear_clamp_sampler, uv, 0).xyz;
-				float4 b = SAMPLE_TEXTURE2D_LOD(_OrthnormBuffer, s_linear_clamp_sampler, uv, 0);
-
-				// Extract normal/binormal vector from the orthnormal sample.
-				half3 normal = StereoInverseProjection(b.xy);
-				half3 binormal = StereoInverseProjection(b.zw);
-
-				half speed = length(v);
-
-				half width = _LineWidth.x * IN.vertex.z * (1 - IN.vertex.y);
-				width *= saturate((speed - _LineWidth.y) * _LineWidth.z);
+				float4 vpos;
+				float3 nor;
+				float speed;
+				GetPosAndNormal(IN.vertex, vpos, nor, speed);
 
 				half intensity = saturate((speed - _CutoffSpeed) * _SpeedToIntensity);
 
-				float4 vpos = float4(p + binormal * width, IN.vertex.w);
-				vpos = IN.vertex;
-				
-				v2f o;
+
 				o.worldPos = TransformObjectToWorld(vpos.xyz);
 				o.pos = TransformWorldToHClip(o.worldPos);
-				o.worldNormal = TransformObjectToWorldNormal(normal);
+				o.worldNormal = TransformObjectToWorldNormal(nor);
 				o.color = ColorAnimation(id, intensity);
 				o.shadowCoord = TransformWorldToShadowCoord(o.worldPos);
 				OUTPUT_SH(o.worldNormal, o.sh);
@@ -109,20 +148,23 @@ Shader "MyRP/Skinner/TrailSurface"
 
 			half4 frag(v2f IN, half facing : VFACE):SV_Target
 			{
-				float3 normalWS = normalize(IN.worldNormal);
+				UNITY_SETUP_INSTANCE_ID(IN);
+
+				float3 normalWS = float3(0, 0, facing > 0 ? 1 : -1);// normalize(IN.worldNormal);
+				normalWS = TransformObjectToWorldNormal(normalWS);
 				half3 viewDirectionWS = normalize(GetWorldSpaceViewDir(IN.worldPos));
 
 				InputData inputData = (InputData)0;
 				//PRDFForward.BuildInputData()
 				inputData.positionWS = IN.worldPos;
-				inputData.normalWS = normalWS;
+				inputData.normalWS = normalWS; 
 				inputData.viewDirectionWS = viewDirectionWS;
 				inputData.shadowCoord = IN.shadowCoord;
 				inputData.fogCoord = 0;
 				inputData.vertexLighting = 1;
 				inputData.bakedGI = SAMPLE_GI(0, IN.sh, IN.worldNormal);
 				inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(IN.pos);
-				
+
 				SurfaceData surface = (SurfaceData)0;
 				surface.albedo = _Albedo;
 				surface.metallic = _Metallic;
@@ -134,12 +176,143 @@ Shader "MyRP/Skinner/TrailSurface"
 				surface.clearCoatMask = 0;
 				surface.clearCoatSmoothness = 1;
 
-
 				half4 color = UniversalFragmentPBR(inputData, surface);
 				return color;
 			}
 			ENDHLSL
 		}
+
+
+		Pass
+		{
+			Name "ShadowCaster"
+			Tags
+			{
+				"LightMode" = "ShadowCaster"
+			}
+
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+
+
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/CommonMaterial.hlsl"
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
+
+			struct a2v
+			{
+				float4 vertex: POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+
+
+			// x: global clip space bias, y: normal world space bias
+			float3 _LightDirection;
+
+
+			v2f vert(a2v v)
+			{
+				v2f o;
+
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+
+				float4 vpos;
+				float3 nor;
+				float speed;
+				GetPosAndNormal(v.vertex, vpos, nor, speed);
+
+				float3 positionWS = TransformObjectToWorld(vpos.xyz);
+				float3 normalWS = TransformObjectToWorldNormal(nor.xyz, true);
+				o.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
+
+				return o;
+			}
+
+			float4 frag(v2f IN): SV_Target
+			{
+				UNITY_SETUP_INSTANCE_ID(IN);
+
+				return 0;
+			}
+			ENDHLSL
+
+		}
+
+		Pass
+		{
+			Name "DepthOnly"
+			Tags
+			{
+				"LightMode" = "DepthOnly"
+			}
+
+			ColorMask 0
+
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+
+			// Keywords
+			#pragma multi_compile_instancing
+			#pragma multi_compile_fog
+			#pragma multi_compile _ DOTS_INSTANCING_ON
+
+			#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+			struct a2v
+			{
+				float4 vertex: POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+
+			struct v2f
+			{
+				float4 positionCS: SV_POSITION;
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+			};
+
+
+			v2f vert(a2v IN)
+			{
+				v2f o;
+
+				UNITY_SETUP_INSTANCE_ID(v);
+				UNITY_TRANSFER_INSTANCE_ID(v, o);
+
+				float4 vpos;
+				float3 nor;
+				float speed;
+				GetPosAndNormal(IN.vertex, vpos, nor, speed);
+				
+				float3 positionWS = TransformObjectToWorld(IN.vertex.xyz);
+				o.positionCS = TransformWorldToHClip(positionWS);
+
+				return o;
+			}
+
+			float4 frag(v2f IN): SV_Target
+			{
+				UNITY_SETUP_INSTANCE_ID(IN);
+
+				return 0;
+			}
+			ENDHLSL
+
+		}
+
 
 		Pass
 		{

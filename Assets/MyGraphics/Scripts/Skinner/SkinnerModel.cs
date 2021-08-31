@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MyGraphics.Scripts.Skinner
 {
-	public class SkinnerModel : MonoBehaviour
+	public class SkinnerModel : ScriptableObject
 	{
 		[SerializeField] private int vertexCount;
 
@@ -44,7 +44,7 @@ namespace MyGraphics.Scripts.Skinner
 
 			mesh = Instantiate(source);
 			//减去 (Copy)   加上_Skinner
-			mesh.name = mesh.name.Substring(0, mesh.name.Length - 7)+"_Skinner";
+			mesh.name = mesh.name.Substring(0, mesh.name.Length - 7) + "_Skinner";
 
 
 			mesh.colors = null;
