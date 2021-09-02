@@ -6,30 +6,8 @@ namespace MyGraphics.Scripts.Skinner
 	[RequireComponent(typeof(MeshRenderer))]
 	public class SkinnerParticle : MonoBehaviour
 	{
-		//Animation kernels management
-		//-----------------------
-		private enum Kernels
-		{
-			InitializePosition,
-			InitializeVelocity,
-			InitializeRotation,
-			UpdatePosition,
-			UpdateVelocity,
-			UpdateRotation
-		}
-
-		private enum Buffers
-		{
-			Position,
-			Velocity,
-			Rotation
-		}
-
-		//External object/asset references
-		//---------------------------------------
-		[SerializeField, Tooltip("Reference to an effect source.")]
-		private SkinnerSource source;
-
+		public static SkinnerParticle Instance { get; private set; }
+		
 		[SerializeField, Tooltip("Reference to a template object used for rendering particles.")]
 		private SkinnerParticleTemplate template;
 
@@ -94,22 +72,9 @@ namespace MyGraphics.Scripts.Skinner
 		//---------------------------
 		private bool reconfigured;
 
-		private AnimationKernelSet<Kernels, Buffers> kernel;
-
 		// Local state variables.
 		private Vector3 noiseOffset;
 
-		private RendererAdapter rendererAdapter;
-
-		public SkinnerSource Source
-		{
-			get => source;
-			set
-			{
-				source = value;
-				reconfigured = true;
-			}
-		}
 
 		/// Reference to a template object used for rendering particles.
 		public SkinnerParticleTemplate Template
@@ -207,122 +172,26 @@ namespace MyGraphics.Scripts.Skinner
 			}
 		}
 
-		private void LateUpdate()
+		private void OnEnable()
 		{
-			if (Source == null)// || !Source.IsReady)
-			{
-				return;
-			}
-
-			if (reconfigured)
-			{
-				kernel?.Release();
-				reconfigured = false;
-			}
-			
-			InvokeAnimationKernels();
-			UpdateRenderer();
+			Instance = this;
 		}
 
-		private void OnDestroy()
+		private void OnDisable()
 		{
-			kernel.Release();
+			Instance = null;
 		}
 
 		private void OnValidate()
 		{
 			SpeedToLife = Mathf.Max(SpeedToLife, 0.0f);
 			MaxLife = Mathf.Max(MaxLife, 0.01f);
-			
+
 			SpeedToScale = Mathf.Max(SpeedToScale, 0.0f);
 			MaxScale = Mathf.Max(MaxScale, 0.0f);
 		}
 
-		private void InvokeAnimationKernels()
-		{
-			if (kernel == null)
-			{
-				kernel = new AnimationKernelSet<Kernels, Buffers>(kernelShader, x => (int) x, y => (int) y);
-			}
-
-			if (!kernel.Ready)
-			{
-				kernel.Setup(Template.InstanceCount, 1);
-				kernel.Material.SetTexture("_SourcePositionBuffer1", Source.PositionTex);
-				kernel.Material.SetFloat("_RandomSeed", RandomSeed);
-				kernel.Invoke(Kernels.InitializePosition, Buffers.Position);
-				kernel.Invoke(Kernels.InitializeVelocity, Buffers.Velocity);
-				kernel.Invoke(Kernels.InitializeRotation, Buffers.Rotation);
-			}
-			else
-			{
-				float dt = Time.deltaTime;
-				kernel.Material.SetVector("_Damper", new Vector2(
-					Mathf.Exp(-Drag * dt), SpeedLimit
-				));
-				kernel.Material.SetVector("_Gravity", Gravity * dt);
-				kernel.Material.SetVector("_Life", new Vector2(dt / MaxLife, dt / (MaxLife * speedToLife)));
-				var pi360dt = Mathf.PI * dt / 360.0f;
-				kernel.Material.SetVector("_Spin", new Vector2(
-					MaxSpin * pi360dt, SpeedToSpin * pi360dt
-				));
-				kernel.Material.SetVector("_NoiseParams", new Vector2(
-					NoiseFrequency, NoiseAmplitude * dt
-				));
-
-				// Move the noise field backward in the direction of the
-				// gravity vector, or simply pull up if no gravity is set.
-				var noiseDir = (Gravity == Vector3.zero) ? Vector3.up : Gravity.normalized;
-				noiseOffset += noiseDir * NoiseMotion * dt;
-				kernel.Material.SetVector("_NoiseOffset", noiseOffset);
-
-				// Transfer the source position attributes.
-				kernel.Material.SetTexture("_SourcePositionBuffer0", source.PreviousPositionTex);
-				kernel.Material.SetTexture("_SourcePositionBuffer1", source.PositionTex);
-
-				// Invoke the position update kernel.
-				kernel.Material.SetTexture("_PositionBuffer", kernel.GetLastBuffer(Buffers.Position));
-				kernel.Material.SetTexture("_VelocityBuffer", kernel.GetLastBuffer(Buffers.Velocity));
-				kernel.Invoke(Kernels.UpdatePosition, Buffers.Position);
-
-				// Invoke the velocity update kernel with the updated positions.
-				kernel.Material.SetTexture("_PositionBuffer", kernel.GetWorkingBuffer(Buffers.Position));
-				kernel.Invoke(Kernels.UpdateVelocity, Buffers.Velocity);
-
-				// Invoke the rotation update kernel with the updated velocity.
-				kernel.Material.SetTexture("_RotationBuffer", kernel.GetLastBuffer(Buffers.Rotation));
-				kernel.Material.SetTexture("_VelocityBuffer", kernel.GetWorkingBuffer(Buffers.Velocity));
-				kernel.Invoke(Kernels.UpdateRotation, Buffers.Rotation);
-			}
-
-			kernel.SwapBuffers();
-		}
-
-		private void UpdateRenderer()
-		{
-			if (rendererAdapter == null)
-			{
-				rendererAdapter = new RendererAdapter(gameObject, defaultMaterial);
-			}
-
-			var block = rendererAdapter.PropertyBlock;
-			block.SetTexture("_PreviousPositionBuffer", kernel.GetWorkingBuffer(Buffers.Position));
-			block.SetTexture("_PreviousRotationBuffer", kernel.GetWorkingBuffer(Buffers.Position));
-			block.SetTexture("_PositionBuffer", kernel.GetLastBuffer(Buffers.Position));
-			block.SetTexture("_VelocityBuffer", kernel.GetLastBuffer(Buffers.Velocity));
-			block.SetTexture("_RotationBuffer", kernel.GetLastBuffer(Buffers.Rotation));
-			block.SetVector("_Scale", new Vector2(MaxScale, SpeedToScale));
-			block.SetFloat("_RandomSeed", RandomSeed);
-			
-			rendererAdapter.Update(Template.Mesh);
-		}
-		
 		private void Reset()
-		{
-			reconfigured = true;
-		}
-
-		public void UpdateConfiguration()
 		{
 			reconfigured = true;
 		}

@@ -1,4 +1,4 @@
-Shader "MyRP/Skinner/TrailSurface"
+Shader "MyRP/Skinner/TrailSurfaceStandard"
 {
 	Properties
 	{

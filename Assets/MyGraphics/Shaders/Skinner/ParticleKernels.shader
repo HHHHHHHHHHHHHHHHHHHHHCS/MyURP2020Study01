@@ -7,8 +7,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 
 	struct a2v
 	{
-		float4 pos:POSITION;
-		float2 uv:TEXCOORD0;
+		uint id:SV_InstanceID;
 	};
 
 	struct v2f
@@ -35,8 +34,8 @@ Shader "MyRP/Skinner/ParticleKernels"
 	v2f vert(a2v IN)
 	{
 		v2f o;
-		o.pos = IN.pos;
-		o.uv = IN.uv;
+		o.pos = GetFullScreenTriangleVertexPosition(IN.id);
+		o.uv = GetFullScreenTriangleTexCoord(IN.id);
 		return o;
 	}
 	ENDHLSL

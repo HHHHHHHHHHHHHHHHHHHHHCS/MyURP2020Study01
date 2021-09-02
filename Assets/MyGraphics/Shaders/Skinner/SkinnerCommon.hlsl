@@ -31,6 +31,14 @@ float4 QMult(float4 q1, float4 q2)
     return float4(ijk, q1.w * q2.w - dot(q1.xyz, q2.xyz));
 }
 
+// Vector rotation with a quaternion
+// http://mathworld.wolfram.com/Quaternion.html
+float3 RotateVector(float3 v, float4 r)
+{
+    float4 r_c = r * float4(-1, -1, -1, 1);
+    return QMult(r, QMult(float4(v, 0), r_c)).xyz;
+}
+
 
 half3 StereoInverseProjection(half2 p)
 {
@@ -71,6 +79,18 @@ half3 ColorAnimation(float id, half intensity)
 
     // Apply brightness.
     return rgb * (_Brightness * lfo + _BrightnessOffs * intensity);
+}
+
+// Scale animation used in the particle shaders.
+float ParticleScale(float id, half life, half speed, half2 params)
+{
+    // Start/End
+    half s = min((1 - life) * 20, min(life * 3, 1));
+    // Scale by the initial speed.
+    s *= min(speed * params.y, params.x);
+    // 50% randomization
+    s *= 1 - 0.5 * UVRandom(id, 20);
+    return s;
 }
 
 

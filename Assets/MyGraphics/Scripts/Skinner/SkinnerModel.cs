@@ -38,7 +38,7 @@ namespace MyGraphics.Scripts.Skinner
 			}
 
 			var outUVs = Enumerable.Range(0, outVertices.Count)
-				.Select(i => Vector2.right * (i + 0.5f) / outVertices.Count).ToList();
+				.Select(i => Vector2.right * ((i + 0.5f) / outVertices.Count)).ToList();
 
 			var indices = Enumerable.Range(0, outVertices.Count).ToArray();
 

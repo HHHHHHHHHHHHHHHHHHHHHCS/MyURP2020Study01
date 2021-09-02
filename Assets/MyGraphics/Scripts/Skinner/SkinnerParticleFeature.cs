@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 
 namespace MyGraphics.Scripts.Skinner
 {
-	public class SkinnerVertexAttrFeature : ScriptableRendererFeature
+	public class SkinnerParticleFeature : ScriptableRendererFeature
 	{
 		private SkinnerVertexAttrPass skinnerVertexAttrPass;
 
@@ -44,7 +44,6 @@ namespace MyGraphics.Scripts.Skinner
 			}
 			
 			skinnerVertexAttrPass.OnSetup(model);
-
 			renderer.EnqueuePass(skinnerVertexAttrPass);
 		}
 	}

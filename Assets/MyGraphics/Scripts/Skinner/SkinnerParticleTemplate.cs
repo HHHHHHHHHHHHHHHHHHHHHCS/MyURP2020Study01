@@ -6,10 +6,10 @@ using Object = UnityEngine.Object;
 
 namespace MyGraphics.Scripts.Skinner
 {
-	public class SkinnerParticleTemplate : MonoBehaviour
+	public class SkinnerParticleTemplate : ScriptableObject
 	{
 		private const string k_tempMeshName = "Skinner Particle Template";
-		
+
 		[SerializeField, Tooltip("List of meshes of particle shapes.")]
 		private Mesh[] shapes = new Mesh[1];
 
@@ -20,6 +20,7 @@ namespace MyGraphics.Scripts.Skinner
 
 		[SerializeField] private Mesh mesh;
 
+		//可以在脚本上  添加默认值 
 		[SerializeField] private Mesh defaultShape;
 
 		public Mesh[] Shapes => shapes;
@@ -88,6 +89,12 @@ namespace MyGraphics.Scripts.Skinner
 			{
 				// Get the N-th Source mesh.
 				var mesh = GetShape(instanceCount);
+				if (mesh == null)
+				{
+					instanceCount++;
+					continue;
+				}
+
 				var vtx_in = mesh.vertices;
 
 				// Keep the vertex count under 64k.
@@ -120,6 +127,12 @@ namespace MyGraphics.Scripts.Skinner
 				instanceCount++;
 			}
 
+			if (vtx_out.Count == 0)
+			{
+				Debug.Log("All input mesh is null!");
+				return;
+			}
+
 			// Rescale the UV1.
 			uv1_out = uv1_out.Select(x => x / instanceCount).ToList();
 
@@ -130,7 +143,6 @@ namespace MyGraphics.Scripts.Skinner
 			mesh.SetUVs(0, uv0_out);
 			mesh.SetUVs(1, uv1_out);
 			mesh.SetIndices(idx_out.ToArray(), MeshTopology.Triangles, 0);
-			//TODO: 需要重新确定
 			mesh.bounds = new Bounds((maxP + minP) / 2.0f, (maxP - minP) / 2.0f);
 			mesh.UploadMeshData(true);
 		}
