@@ -65,15 +65,12 @@ namespace MyGraphics.Scripts.Skinner
 
 		//Built-in assets
 		//-------------------------------
-		[SerializeField] private Shader kernelShader;
-		[SerializeField] private Material defaultMaterial;
+		// [SerializeField] private Shader kernelShader;
+		// [SerializeField] private Material defaultMaterial;
 
 		//Reconfiguration detection
 		//---------------------------
 		private bool reconfigured;
-
-		// Local state variables.
-		private Vector3 noiseOffset;
 
 
 		/// Reference to a template object used for rendering particles.
@@ -171,6 +168,8 @@ namespace MyGraphics.Scripts.Skinner
 				reconfigured = true;
 			}
 		}
+
+		public bool Reconfigured => reconfigured;
 
 		private void OnEnable()
 		{

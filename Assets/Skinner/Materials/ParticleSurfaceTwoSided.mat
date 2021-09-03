@@ -21,16 +21,16 @@ Material:
     m_TexEnvs: []
     m_Floats:
     - _BaseHue: 0
-    - _Brightness: 0.8
-    - _BrightnessOffs: 1
-    - _CutoffSpeed: 0.5
-    - _EmissionProb: 0.2
-    - _HueRandomness: 0.2
-    - _HueShift: 0.2
-    - _Metallic: 0
-    - _Saturation: 1
-    - _Smoothness: 0.5
-    - _SpeedToIntensity: 1
+    - _Brightness: 2.29
+    - _BrightnessOffs: 4.1
+    - _CutoffSpeed: 0.65
+    - _EmissionProb: 0.049
+    - _HueRandomness: 0.112
+    - _HueShift: -0.53
+    - _Metallic: 0.473
+    - _Saturation: 0.929
+    - _Smoothness: 0.67
+    - _SpeedToIntensity: 0.39
     m_Colors:
-    - _Albedo: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _Albedo: {r: 0.77254903, g: 0.59607846, b: 0.59607846, a: 1}
   m_BuildTextureStacks: []

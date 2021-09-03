@@ -14,6 +14,10 @@ namespace MyGraphics.Scripts.Skinner
 
 		private Material particleKernelsMaterial;
 
+		public SkinnerVertexAttrPass VertexAttrPass => skinnerVertexAttrPass;
+		public SkinnerParticleAttrPass ParticleAttrPass => skinnerParticleAttrPass;
+
+
 		public override void Create()
 		{
 			var queueEvent = RenderPassEvent.BeforeRendering;
@@ -23,7 +27,7 @@ namespace MyGraphics.Scripts.Skinner
 				renderPassEvent = queueEvent
 			};
 
-			skinnerParticleAttrPass = new SkinnerParticleAttrPass()
+			skinnerParticleAttrPass = new SkinnerParticleAttrPass(this)
 			{
 				renderPassEvent = queueEvent
 			};
@@ -44,7 +48,7 @@ namespace MyGraphics.Scripts.Skinner
 			}
 
 			AddVertexAttrPass(renderer, ref renderingData);
-			// AddParticleAttrPass(renderer, ref renderingData);
+			AddParticleAttrPass(renderer, ref renderingData);
 		}
 
 		private void AddVertexAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -82,7 +86,8 @@ namespace MyGraphics.Scripts.Skinner
 				return;
 			}
 
-			var template = SkinnerParticle.Instance.Template;
+			var particle = SkinnerParticle.Instance;
+			var template = particle.Template;
 
 			if (template == null)
 			{
@@ -95,7 +100,7 @@ namespace MyGraphics.Scripts.Skinner
 				particleKernelsMaterial = CoreUtils.CreateEngineMaterial(particleKernelsShader);
 			}
 
-			skinnerParticleAttrPass.OnSetup(template, particleKernelsMaterial);
+			skinnerParticleAttrPass.OnSetup(particle, particleKernelsMaterial);
 			renderer.EnqueuePass(skinnerParticleAttrPass);
 		}
 	}

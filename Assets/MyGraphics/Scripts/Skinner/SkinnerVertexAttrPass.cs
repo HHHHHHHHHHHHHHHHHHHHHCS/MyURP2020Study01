@@ -26,6 +26,10 @@ namespace MyGraphics.Scripts.Skinner
 
 		private bool pingpong;
 
+		public RenderTexture CurrPosTex => pingpong ? positionTex1 : positionTex0;
+		public RenderTexture PrevPosTex => pingpong ? positionTex0 : positionTex1;
+
+
 		public SkinnerVertexAttrPass()
 		{
 			profilingSampler = new ProfilingSampler(k_tag);
@@ -44,25 +48,13 @@ namespace MyGraphics.Scripts.Skinner
 		{
 			skinnerModel = _model;
 			OnCreate();
-
-			if (pingpong)
-			{
-				mrt_rti[0] = positionTex1;
-			}
-			else
-			{
-				mrt_rti[0] = positionTex0;
-			}
-
-
-			pingpong = !pingpong;
 		}
 
 		public void OnCreate()
 		{
 			if (positionTex0 == null || positionTex0.width != skinnerModel.VertexCount)
 			{
-				pingpong = true;
+				pingpong = false;
 
 				int w = skinnerModel.VertexCount;
 				int h = 1;
@@ -74,7 +66,7 @@ namespace MyGraphics.Scripts.Skinner
 
 				mrt_rti = new RenderTargetIdentifier[3]
 				{
-					positionTex1,
+					CurrPosTex,
 					normalTex,
 					tangentTex,
 				};
@@ -96,6 +88,9 @@ namespace MyGraphics.Scripts.Skinner
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
+				pingpong = !pingpong;
+				mrt_rti[0] = CurrPosTex;
+				
 				cmd.SetRenderTarget(mrt_rti, mrt_rti[0]);
 
 				// cmd.SetRenderTarget(positionTex0);

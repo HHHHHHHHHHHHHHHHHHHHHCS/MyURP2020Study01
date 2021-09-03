@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using static MyGraphics.Scripts.Skinner.SkinnerShaderConstants;
 
 namespace MyGraphics.Scripts.Skinner
 {
@@ -27,7 +26,8 @@ namespace MyGraphics.Scripts.Skinner
 
 		private const string k_tag = "Skinner Particle Attr";
 
-		private SkinnerParticleTemplate template;
+		private SkinnerFeature skinnerFeature;
+		private SkinnerParticle particle;
 		private Material mat;
 
 		private RenderTexture skinnerPositionTex0;
@@ -40,41 +40,30 @@ namespace MyGraphics.Scripts.Skinner
 		private RenderTargetIdentifier[] lastRTIs, currRTIs;
 
 		private bool isFirst;
-		private bool pingpong;
+		private Vector3 noiseOffset;
 
-		public SkinnerParticleAttrPass()
+		public SkinnerParticleAttrPass(SkinnerFeature _skinnerFeature)
 		{
 			profilingSampler = new ProfilingSampler(k_tag);
+			skinnerFeature = _skinnerFeature;
 		}
 
-		public void OnSetup(SkinnerParticleTemplate _template, Material _mat)
+		public void OnSetup(SkinnerParticle _particle, Material _mat)
 		{
-			template = _template;
+			particle = _particle;
 			mat = _mat;
-
 			OnCreate();
-
-			if (pingpong)
-			{
-				CoreUtils.Swap(ref lastRTIs, ref currRTIs);
-			}
-			else
-			{
-				CoreUtils.Swap(ref lastRTIs, ref currRTIs);
-			}
-
-
-			pingpong = !pingpong;
 		}
 
 		public void OnCreate()
 		{
-			if (skinnerPositionTex0 == null || skinnerPositionTex0.width != template.InstanceCount)
+
+			if (particle.Reconfigured ||
+			    skinnerPositionTex0 == null || skinnerPositionTex0.width != particle.Template.InstanceCount)
 			{
 				isFirst = true;
-				pingpong = true;
 
-				int w = template.InstanceCount;
+				int w = particle.Template.InstanceCount;
 				int h = 1;
 
 				SkinnerUtils.CreateRT(ref skinnerPositionTex0, w, h, nameof(skinnerPositionTex0));
@@ -115,9 +104,15 @@ namespace MyGraphics.Scripts.Skinner
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
+				CoreUtils.Swap(ref lastRTIs, ref currRTIs);
+				
 				if (isFirst)
 				{
 					isFirst = false;
+					noiseOffset = Vector3.zero;
+					mat.SetTexture(SourcePositionTex1_ID,
+						skinnerFeature.VertexAttrPass.CurrPosTex);
+					mat.SetFloat(RandomSeed_ID, particle.RandomSeed);
 					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Position], mat,
 						ShaderKernels.InitializePosition);
 					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Velocity], mat,
@@ -127,7 +122,47 @@ namespace MyGraphics.Scripts.Skinner
 				}
 				else
 				{
-					//todo:
+					float dt = Time.deltaTime;
+					mat.SetVector(Damper_ID,
+						new Vector4(Mathf.Exp(-particle.Drag * dt), particle.SpeedLimit));
+					mat.SetVector(Gravity_ID, particle.Gravity * dt);
+					mat.SetVector(Life_ID,
+						new Vector4(dt / particle.MaxLife, dt / (particle.MaxLife * particle.SpeedToLife)));
+					var pi360dt = dt * Mathf.Deg2Rad;
+					mat.SetVector(Spin_ID, new Vector4(particle.MaxSpin * pi360dt, particle.SpeedToSpin * pi360dt));
+					mat.SetVector(NoiseParams_ID, new Vector4(particle.NoiseFrequency, particle.NoiseAmplitude * dt));
+
+
+					// Move the noise field backward in the direction of the
+					// gravity vector, or simply pull up if no gravity is set.
+					var noiseDir = (particle.Gravity == Vector3.zero) ? Vector3.up : particle.Gravity.normalized;
+					noiseOffset += noiseDir * particle.NoiseMotion * dt;
+					mat.SetVector(NoiseOffset_ID, noiseOffset);
+
+					// Transfer the source position attributes.
+					mat.SetTexture(SourcePositionTex0_ID, skinnerFeature.VertexAttrPass.PrevPosTex);
+					mat.SetTexture(SourcePositionTex1_ID, skinnerFeature.VertexAttrPass.CurrPosTex);
+
+					// Invoke the position update kernel.
+					cmd.SetGlobalTexture(PositionTex_ID, lastRTIs[RTIndexs.Position]);
+					cmd.SetGlobalTexture(VelocityTex_ID, lastRTIs[RTIndexs.Velocity]);
+					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Position], mat, ShaderKernels.UpdatePosition);
+
+					context.ExecuteCommandBuffer(cmd);
+					cmd.Clear();
+
+
+					// Invoke the velocity update kernel with the updated positions.
+					cmd.SetGlobalTexture(PositionTex_ID, currRTIs[RTIndexs.Position]);
+					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Velocity], mat, ShaderKernels.UpdateVelocity);
+
+					context.ExecuteCommandBuffer(cmd);
+					cmd.Clear();
+
+					// Invoke the rotation update kernel with the updated velocity.
+					cmd.SetGlobalTexture(RotationTex_ID, lastRTIs[RTIndexs.Rotation]);
+					cmd.SetGlobalTexture(VelocityTex_ID, currRTIs[RTIndexs.Velocity]);
+					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Rotation], mat, ShaderKernels.UpdateRotation);
 				}
 			}
 

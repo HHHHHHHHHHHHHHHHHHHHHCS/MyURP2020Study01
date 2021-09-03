@@ -567,7 +567,7 @@ GameObject:
   - component: {fileID: 2075613165}
   - component: {fileID: 2075613167}
   - component: {fileID: 2075613166}
-  - component: {fileID: 2075613168}
+  - component: {fileID: 2075613169}
   m_Layer: 0
   m_Name: Particle (Shards)
   m_TagString: Untagged
@@ -608,7 +608,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 14a0c8e34b0bd2f4ba6441c5329a8a1a, type: 2}
+  - {fileID: 2100000, guid: 1fbc7653fc518634ca7bd0f10872ed94, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -638,19 +638,18 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2075613164}
   m_Mesh: {fileID: 0}
---- !u!114 &2075613168
+--- !u!114 &2075613169
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2075613164}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 503d0281d7196c7448744dbbf32bbe91, type: 3}
+  m_Script: {fileID: 11500000, guid: a5c88a70d9234844d80aa39c65215d17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  source: {fileID: 1456149487}
   template: {fileID: 11400000, guid: f3130d65f9bcca34abdd25dcf6634c28, type: 2}
   speedLimit: 2
   drag: 4
@@ -665,5 +664,3 @@ MonoBehaviour:
   noiseFrequency: 0.7
   noiseMotion: 1.8
   randomSeed: 0
-  kernelShader: {fileID: 4800000, guid: c84a69550a3583846ab3656599c03ec8, type: 3}
-  defaultMaterial: {fileID: 2100000, guid: 636d729c01697b3419002e19a575398e, type: 2}

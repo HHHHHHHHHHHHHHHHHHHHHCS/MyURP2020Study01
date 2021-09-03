@@ -7,7 +7,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 
 	struct a2v
 	{
-		uint id:SV_InstanceID;
+		uint vertexID:SV_VertexID;
 	};
 
 	struct v2f
@@ -16,34 +16,49 @@ Shader "MyRP/Skinner/ParticleKernels"
 		float2 uv:TEXCOORD0;
 	};
 
-	TEXTURE2D(_SourcePositionBuffer0);
-	TEXTURE2D(_SourcePositionBuffer1);
-	TEXTURE2D(_PositionBuffer);
-	TEXTURE2D(_VelocityBuffer);
-	TEXTURE2D(_RotationBuffer);
+	TEXTURE2D(_SourcePositionTex0);
+	float4 _SourcePositionTex0_TexelSize;
+	TEXTURE2D(_SourcePositionTex1);
+	float4 _SourcePositionTex1_TexelSize;
+	TEXTURE2D(_PositionTex);
+	float4 _PositionTex_TexelSize;
+	TEXTURE2D(_VelocityTex);
+	float4 _VelocityTex_TexelSize;
+	TEXTURE2D(_RotationTex);
+	float4 _RotationTex_TexelSize;
 
-	SAMPLER(s_linear_clamp_sampler);
 
-	half2 _Damper; // drag, speed_imit
+	half2 _Damper; // drag, speed_limit
 	half3 _Gravity;
 	half2 _Life; // dt / max_life, dt / (max_life * speed_to_life)
 	half2 _Spin; // max_spin * dt, speed_to_spin * dt
 	half2 _NoiseParams; // frequency, amplitude * dt
 	float3 _NoiseOffset;
 
+	//也可以用textureName.GetDimensions()
+	#define LoadTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2 * textureName##_TexelSize.zw)
+	// SAMPLER(s_point_clamp_sampler);
+	// #define LoadTex(textureName, coord2) SAMPLE_TEXTURE2D(textureName, s_point_clamp_sampler, coord2)
+
 	v2f vert(a2v IN)
 	{
 		v2f o;
-		o.pos = GetFullScreenTriangleVertexPosition(IN.id);
-		o.uv = GetFullScreenTriangleTexCoord(IN.id);
+		o.pos = GetFullScreenTriangleVertexPosition(IN.vertexID);
+		o.uv = GetFullScreenTriangleTexCoord(IN.vertexID);
 		return o;
 	}
 	ENDHLSL
 	SubShader
 	{
+		ZTest Always
+		ZWrite Off
+		Cull Off
+
 		//0
 		Pass
 		{
+			Name "InitializePosition"
+
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment InitializePositionFragment
@@ -51,6 +66,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			float4 InitializePositionFragment(v2f IN):SV_Target
 			{
 				//a far point and random life
+				//是可以存在负数的
 				return float4(1e+6, 1e+6, 1e+6, UVRandom(IN.uv, 16) - 0.5);
 			}
 			ENDHLSL
@@ -58,6 +74,8 @@ Shader "MyRP/Skinner/ParticleKernels"
 		//1
 		Pass
 		{
+			Name "InitializeVelocity"
+
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment InitializeVelocityFragment
@@ -68,9 +86,12 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
+		//TODO:My
 		//2
 		Pass
 		{
+			Name "InitializeRotation"
+
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment InitializeRotationFragment
@@ -96,31 +117,37 @@ Shader "MyRP/Skinner/ParticleKernels"
 		//3
 		Pass
 		{
+			Name "UpdatePosition"
+
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment UpdatePositionFragment
 
 			float4 NewParticlePosition(float2 uv)
 			{
+				//随机一个坐标点
 				uv = float2(UVRandom(uv, _Time.x), 0.5);
-				float3 p = SAMPLE_TEXTURE2D(_SourcePositionBuffer1, s_linear_clamp_sampler, uv).xyz;
+				float3 p = LoadTex(_SourcePositionTex1, uv).xyz;
 				return float4(p, 0.5);
 			}
 
 			float4 UpdatePositionFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-				float4 p = SAMPLE_TEXTURE2D(_PositionBuffer, s_linear_clamp_sampler, uv);
-				float4 v = SAMPLE_TEXTURE2D(_VelocityBuffer, s_linear_clamp_sampler, uv);
 
+				float4 p = LoadTex(_PositionTex, uv);
+				float4 v = LoadTex(_VelocityTex, uv);
 				float rnd = 1 + UVRandom(uv, 17) * 0.5;
+				//v越小 说明越平稳 粒子需要越不明显  则life衰减越快
+				//v越大 则可能走MaxLife
+				v.w = max(v.w, 1e-6);
 				p.w -= max(_Life.x, _Life.y / v.w) * rnd;
 
+				//p.w第一次是很大的负数
 				if (p.w > -0.5)
 				{
-					float lv = max(length(v.xyz), 1e-6);
+					float lv = v.w;
 					v.xyz = v.xyz * min(lv, _Damper.y) / lv;
-
 					p.xyz += v.xyz * unity_DeltaTime.x;
 					return p;
 				}
@@ -134,15 +161,18 @@ Shader "MyRP/Skinner/ParticleKernels"
 		//4
 		Pass
 		{
+			Name "UpdateVelocity"
+
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment UpdateVelocityFragment
 
 			float4 NewParticleVelocity(float2 uv)
 			{
+				//因为跟上面就隔了一帧数,所以映射的pos不会差很大
 				uv = float2(UVRandom(uv, _Time.x), 0.5);
-				float3 p0 = SAMPLE_TEXTURE2D(_SourcePositionBuffer0, s_linear_clamp_sampler, uv).xyz;
-				float3 p1 = SAMPLE_TEXTURE2D(_SourcePositionBuffer1, s_linear_clamp_sampler, uv).xyz;
+				float3 p0 = LoadTex(_SourcePositionTex0, uv).xyz;
+				float3 p1 = LoadTex(_SourcePositionTex1, uv).xyz;
 				float3 v = (p1 - p0) * unity_DeltaTime.y;
 				v *= 1 - UVRandom(uv, 12) * 0.5;
 				return float4(v, length(v));
@@ -151,12 +181,15 @@ Shader "MyRP/Skinner/ParticleKernels"
 			float4 UpdateVelocityFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-				float4 p = SAMPLE_TEXTURE2D(_PositionBuffer, s_linear_clamp_sampler, uv);
-				float4 v = SAMPLE_TEXTURE2D(_VelocityBuffer, s_linear_clamp_sampler, uv);
+				float4 p = LoadTex(_PositionTex, uv);
 
+				//等于0.5的时候是刚创建
 				if (p.w < 0.5)
 				{
+					float4 v = LoadTex(_VelocityTex, uv);
+
 					v.xyz = v.xyz * _Damper.x + _Gravity.xyz;
+					//_NoiseOffset
 					float3 np = (p.xyz + _NoiseOffset) * _NoiseParams.x;
 					float3 n1 = snoise_grad(np);
 					float3 n2 = snoise_grad(np + float3(21.83, 13.28, 7.32));
@@ -174,6 +207,8 @@ Shader "MyRP/Skinner/ParticleKernels"
 		//5
 		Pass
 		{
+			Name "UpdateRotation"
+
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment UpdateRotationFragment
@@ -194,8 +229,8 @@ Shader "MyRP/Skinner/ParticleKernels"
 			float4 UpdateRotationFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-				float4 r = SAMPLE_TEXTURE2D(_RotationBuffer, s_linear_clamp_sampler, uv);
-				float4 v = SAMPLE_TEXTURE2D(_VelocityBuffer, s_linear_clamp_sampler, uv);
+				float4 r = LoadTex(_RotationTex, uv);
+				float4 v = LoadTex(_VelocityTex, uv);
 
 				float delta = min(_Spin.x, length(v.xyz) * _Spin.y);
 				delta *= 1 - UVRandom(uv, 18) * 0.5;
