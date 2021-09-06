@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace MyGraphics.Scripts.Skinner
 {
-	[RequireComponent(typeof(MeshRenderer))]
+	[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 	public class SkinnerParticle : MonoBehaviour
 	{
 		public static SkinnerParticle Instance { get; private set; }
-		
+
 		[SerializeField, Tooltip("Reference to a template object used for rendering particles.")]
 		private SkinnerParticleTemplate template;
 
@@ -62,6 +62,10 @@ namespace MyGraphics.Scripts.Skinner
 
 		[SerializeField, Tooltip("Determines the random number sequence used for the effect.")]
 		private int randomSeed = 0;
+
+		private MeshRenderer mr;
+		private MaterialPropertyBlock mpb;
+
 
 		//Built-in assets
 		//-------------------------------
@@ -169,11 +173,23 @@ namespace MyGraphics.Scripts.Skinner
 			}
 		}
 
-		public bool Reconfigured => reconfigured;
+		public bool Reconfigured
+		{
+			get => reconfigured;
+			set => reconfigured = value;
+		}
+
+		private void Awake()
+		{
+			GetComponent<MeshFilter>().mesh = Template != null ? Template.Mesh : null;
+			mr = GetComponent<MeshRenderer>();
+			mpb = new MaterialPropertyBlock();
+		}
 
 		private void OnEnable()
 		{
 			Instance = this;
+			UpdateMPB();
 		}
 
 		private void OnDisable()
@@ -188,11 +204,22 @@ namespace MyGraphics.Scripts.Skinner
 
 			SpeedToScale = Mathf.Max(SpeedToScale, 0.0f);
 			MaxScale = Mathf.Max(MaxScale, 0.0f);
+			UpdateMPB();
 		}
 
 		private void Reset()
 		{
 			reconfigured = true;
+			UpdateMPB();
+		}
+
+		private void UpdateMPB()
+		{
+			if (mpb != null)
+			{
+				mpb.SetVector(SkinnerShaderConstants.Scale_ID, new Vector4(maxScale, speedToScale, 0, 0));
+				mr.SetPropertyBlock(mpb);
+			}
 		}
 	}
 }

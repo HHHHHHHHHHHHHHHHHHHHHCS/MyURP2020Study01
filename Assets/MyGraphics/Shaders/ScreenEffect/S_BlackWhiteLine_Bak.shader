@@ -118,7 +118,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine_Bak"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#pragma enable_d3d11_debug_symbols
+			// #pragma enable_d3d11_debug_symbols
 
 			inline float Intensity(in half3 col)
 			{
@@ -195,7 +195,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine_Bak"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#pragma enable_d3d11_debug_symbols
+			// #pragma enable_d3d11_debug_symbols
 
 			void CalcJunction(float2 uv, out float whiteJunction, out float outlineJunction)
 			{
@@ -288,7 +288,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine_Bak"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#pragma enable_d3d11_debug_symbols
+			// #pragma enable_d3d11_debug_symbols
 
 
 			half4 frag(v2f IN) : SV_Target

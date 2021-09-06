@@ -1,6 +1,9 @@
 Shader "MyRP/Skinner/ParticleKernels"
 {
 	HLSLINCLUDE
+
+	#pragma enable_d3d11_debug_symbols
+	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	#include "SkinnerCommon.hlsl"
 	#include "SimplexNoiseGrad3D.hlsl"
@@ -36,9 +39,9 @@ Shader "MyRP/Skinner/ParticleKernels"
 	float3 _NoiseOffset;
 
 	//也可以用textureName.GetDimensions()
-	#define LoadTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2 * textureName##_TexelSize.zw)
+	#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2 * textureName##_TexelSize.zw)
 	// SAMPLER(s_point_clamp_sampler);
-	// #define LoadTex(textureName, coord2) SAMPLE_TEXTURE2D(textureName, s_point_clamp_sampler, coord2)
+	// #define SampleTex(textureName, coord2) SAMPLE_TEXTURE2D(textureName, s_point_clamp_sampler, coord2)
 
 	v2f vert(a2v IN)
 	{
@@ -71,6 +74,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
+		
 		//1
 		Pass
 		{
@@ -82,11 +86,11 @@ Shader "MyRP/Skinner/ParticleKernels"
 
 			float4 InitializeVelocityFragment(v2f IN):SV_Target
 			{
-				return 0;
+				return 1e-6;
 			}
 			ENDHLSL
 		}
-		//TODO:My
+		
 		//2
 		Pass
 		{
@@ -114,6 +118,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
+		
 		//3
 		Pass
 		{
@@ -127,26 +132,25 @@ Shader "MyRP/Skinner/ParticleKernels"
 			{
 				//随机一个坐标点
 				uv = float2(UVRandom(uv, _Time.x), 0.5);
-				float3 p = LoadTex(_SourcePositionTex1, uv).xyz;
+				float3 p = SampleTex(_SourcePositionTex1, uv).xyz;
 				return float4(p, 0.5);
 			}
 
 			float4 UpdatePositionFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-
-				float4 p = LoadTex(_PositionTex, uv);
-				float4 v = LoadTex(_VelocityTex, uv);
+				float4 p = SampleTex(_PositionTex, uv);
+				float4 v = SampleTex(_VelocityTex, uv);
 				float rnd = 1 + UVRandom(uv, 17) * 0.5;
 				//v越小 说明越平稳 粒子需要越不明显  则life衰减越快
 				//v越大 则可能走MaxLife
-				v.w = max(v.w, 1e-6);
+				//而且这里的v.w是初始速度
 				p.w -= max(_Life.x, _Life.y / v.w) * rnd;
 
 				//p.w第一次是很大的负数
 				if (p.w > -0.5)
 				{
-					float lv = v.w;
+					float lv = max(length(v.xyz), 1e-6);
 					v.xyz = v.xyz * min(lv, _Damper.y) / lv;
 					p.xyz += v.xyz * unity_DeltaTime.x;
 					return p;
@@ -158,6 +162,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
+		
 		//4
 		Pass
 		{
@@ -171,22 +176,23 @@ Shader "MyRP/Skinner/ParticleKernels"
 			{
 				//因为跟上面就隔了一帧数,所以映射的pos不会差很大
 				uv = float2(UVRandom(uv, _Time.x), 0.5);
-				float3 p0 = LoadTex(_SourcePositionTex0, uv).xyz;
-				float3 p1 = LoadTex(_SourcePositionTex1, uv).xyz;
+				float3 p0 = SampleTex(_SourcePositionTex0, uv).xyz;
+				float3 p1 = SampleTex(_SourcePositionTex1, uv).xyz;
 				float3 v = (p1 - p0) * unity_DeltaTime.y;
 				v *= 1 - UVRandom(uv, 12) * 0.5;
-				return float4(v, length(v));
+				float w = max(length(v), 1e-6);
+				return float4(v, w);
 			}
 
 			float4 UpdateVelocityFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-				float4 p = LoadTex(_PositionTex, uv);
+				float4 p = SampleTex(_PositionTex, uv);
 
 				//等于0.5的时候是刚创建
 				if (p.w < 0.5)
 				{
-					float4 v = LoadTex(_VelocityTex, uv);
+					float4 v = SampleTex(_VelocityTex, uv);
 
 					v.xyz = v.xyz * _Damper.x + _Gravity.xyz;
 					//_NoiseOffset
@@ -195,6 +201,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 					float3 n2 = snoise_grad(np + float3(21.83, 13.28, 7.32));
 					v.xyz += cross(n1, n2) * _NoiseParams.y;
 
+					//v.w初始速度没有更新
 					return v;
 				}
 				else
@@ -204,6 +211,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
+		
 		//5
 		Pass
 		{
@@ -229,8 +237,8 @@ Shader "MyRP/Skinner/ParticleKernels"
 			float4 UpdateRotationFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-				float4 r = LoadTex(_RotationTex, uv);
-				float4 v = LoadTex(_VelocityTex, uv);
+				float4 r = SampleTex(_RotationTex, uv);
+				float4 v = SampleTex(_VelocityTex, uv);
 
 				float delta = min(_Spin.x, length(v.xyz) * _Spin.y);
 				delta *= 1 - UVRandom(uv, 18) * 0.5;

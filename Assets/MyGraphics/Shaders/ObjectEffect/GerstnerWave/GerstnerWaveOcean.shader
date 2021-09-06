@@ -78,7 +78,7 @@ Shader "MyRP/ObjectEffect/GerstnerWaveOcean"
 
 			HLSLPROGRAM
 			#pragma target 4.6
-			#pragma enable_d3d11_debug_symbols
+			// #pragma enable_d3d11_debug_symbols
 
 			#pragma vertex tessVert
 			#pragma hull tessHull

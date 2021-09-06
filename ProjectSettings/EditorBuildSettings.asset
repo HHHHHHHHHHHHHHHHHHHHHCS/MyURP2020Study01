@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/CPURayTracing/Scenes/CPURayTracing.unity
-    guid: 78db2273a7614d245a1ebc8f64d9d077
+    path: Assets/Skinner/Scenes/Skinner.unity
+    guid: 4af841f705ac2cc40ad789f7125fb3ab
   m_configObjects: {}

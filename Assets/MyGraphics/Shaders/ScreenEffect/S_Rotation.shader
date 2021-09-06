@@ -26,7 +26,7 @@ Shader "MyRP/ScreenEffect/S_Rotation"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#pragma enable_d3d11_debug_symbols
+			// #pragma enable_d3d11_debug_symbols
 
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"

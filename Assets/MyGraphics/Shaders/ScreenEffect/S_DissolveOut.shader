@@ -32,7 +32,7 @@
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#pragma enable_d3d11_debug_symbols
+			// #pragma enable_d3d11_debug_symbols
 			#pragma multi_compile_local_fragment _ _3DUV_ON
 
 			#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"

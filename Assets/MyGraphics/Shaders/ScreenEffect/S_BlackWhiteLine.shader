@@ -362,8 +362,7 @@ Shader "MyRP/ScreenEffect/S_BlackWhiteLine"
 			#pragma vertex vert
 			#pragma fragment frag
 
-			#pragma enable_d3d11_debug_symbols
-
+			// #pragma enable_d3d11_debug_symbols
 
 			half4 frag(v2f IN) : SV_Target
 			{

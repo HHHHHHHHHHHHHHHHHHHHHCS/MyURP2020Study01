@@ -37,7 +37,7 @@ namespace MyGraphics.Scripts.Skinner
 		private RenderTexture rotationTex0;
 		private RenderTexture rotationTex1;
 
-		private RenderTargetIdentifier[] lastRTIs, currRTIs;
+		private RenderTargetIdentifier[] prevRTIs, currRTIs;
 
 		private bool isFirst;
 		private Vector3 noiseOffset;
@@ -57,10 +57,10 @@ namespace MyGraphics.Scripts.Skinner
 
 		public void OnCreate()
 		{
-
 			if (particle.Reconfigured ||
 			    skinnerPositionTex0 == null || skinnerPositionTex0.width != particle.Template.InstanceCount)
 			{
+				particle.Reconfigured = false;
 				isFirst = true;
 
 				int w = particle.Template.InstanceCount;
@@ -73,7 +73,7 @@ namespace MyGraphics.Scripts.Skinner
 				SkinnerUtils.CreateRT(ref rotationTex0, w, h, nameof(rotationTex0));
 				SkinnerUtils.CreateRT(ref rotationTex1, w, h, nameof(rotationTex1));
 
-				lastRTIs = new RenderTargetIdentifier[3]
+				prevRTIs = new RenderTargetIdentifier[3]
 				{
 					skinnerPositionTex1,
 					velocityTex1,
@@ -104,8 +104,8 @@ namespace MyGraphics.Scripts.Skinner
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
-				CoreUtils.Swap(ref lastRTIs, ref currRTIs);
-				
+				CoreUtils.Swap(ref prevRTIs, ref currRTIs);
+
 				if (isFirst)
 				{
 					isFirst = false;
@@ -144,8 +144,8 @@ namespace MyGraphics.Scripts.Skinner
 					mat.SetTexture(SourcePositionTex1_ID, skinnerFeature.VertexAttrPass.CurrPosTex);
 
 					// Invoke the position update kernel.
-					cmd.SetGlobalTexture(PositionTex_ID, lastRTIs[RTIndexs.Position]);
-					cmd.SetGlobalTexture(VelocityTex_ID, lastRTIs[RTIndexs.Velocity]);
+					cmd.SetGlobalTexture(PositionTex_ID, prevRTIs[RTIndexs.Position]);
+					cmd.SetGlobalTexture(VelocityTex_ID, prevRTIs[RTIndexs.Velocity]);
 					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Position], mat, ShaderKernels.UpdatePosition);
 
 					context.ExecuteCommandBuffer(cmd);
@@ -160,9 +160,19 @@ namespace MyGraphics.Scripts.Skinner
 					cmd.Clear();
 
 					// Invoke the rotation update kernel with the updated velocity.
-					cmd.SetGlobalTexture(RotationTex_ID, lastRTIs[RTIndexs.Rotation]);
+					cmd.SetGlobalTexture(RotationTex_ID, prevRTIs[RTIndexs.Rotation]);
 					cmd.SetGlobalTexture(VelocityTex_ID, currRTIs[RTIndexs.Velocity]);
 					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Rotation], mat, ShaderKernels.UpdateRotation);
+
+					context.ExecuteCommandBuffer(cmd);
+					cmd.Clear();
+
+					cmd.SetGlobalTexture(ObjPositionTex_ID, currRTIs[RTIndexs.Position]);
+					cmd.SetGlobalTexture(ObjVelocityTex_ID, currRTIs[RTIndexs.Velocity]);
+					cmd.SetGlobalTexture(ObjRotationTex_ID, currRTIs[RTIndexs.Rotation]);
+					cmd.SetGlobalTexture(ObjRotationTex_ID, prevRTIs[RTIndexs.Position]);
+					cmd.SetGlobalTexture(ObjRotationTex_ID, prevRTIs[RTIndexs.Rotation]);
+
 				}
 			}
 

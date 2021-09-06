@@ -84,8 +84,8 @@ half3 ColorAnimation(float id, half intensity)
 // Scale animation used in the particle shaders.
 float ParticleScale(float id, half life, half speed, half2 params)
 {
-    // Start/End
-    half s = min((1 - life) * 20, min(life * 3, 1));
+    // Start/End  类似于梯形
+    half s = min(min((1 - life) * 20, life * 3), 1);
     // Scale by the initial speed.
     s *= min(speed * params.y, params.x);
     // 50% randomization

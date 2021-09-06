@@ -8,11 +8,12 @@
 
 #include "SkinnerCommon.hlsl"
 
-TEXTURE2D(_PositionBuffer);
-TEXTURE2D(_VelocityBuffer);
-TEXTURE2D(_RotationBuffer);
+TEXTURE2D(_ObjPositionTex);
+float4 _ObjPositionTex_TexelSize;
+TEXTURE2D(_ObjVelocityTex);
+TEXTURE2D(_ObjRotationTex);
 
-SAMPLER(s_linear_clamp_sampler);
+#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
 
 // Scale modifier
 float2 _Scale; // (min, max)
@@ -31,12 +32,13 @@ struct AttrData
 
 void GetAttrData(inout AttrData data)
 {
-    float2 uv = float2(data.id, 0.5);
-    float4 p = SAMPLE_TEXTURE2D_LOD(_PositionBuffer, s_linear_clamp_sampler, uv, 0);
-    float4 v = SAMPLE_TEXTURE2D_LOD(_VelocityBuffer, s_linear_clamp_sampler, uv, 0);
-    float4 r = SAMPLE_TEXTURE2D_LOD(_RotationBuffer, s_linear_clamp_sampler, uv, 0);
+    uint2 uv = uint2(data.id * _ObjPositionTex_TexelSize.z, 0.0);
+    float4 p = SampleTex(_ObjPositionTex, uv);
+    float4 v = SampleTex(_ObjVelocityTex, uv);
+    float4 r = SampleTex(_ObjRotationTex, uv);
 
     data.speed = length(v.xyz);
+    //p.w [-0.5,0.5]   v.w 是初始速度
     half scale = ParticleScale(data.id, p.w + 0.5, v.w, _Scale);
 
     data.vertex = RotateVector(data.vertex, r) * scale + p.xyz;
@@ -127,8 +129,8 @@ half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
     float3 normal = float3(0, 0, 1);
     half3 albedo = _Albedo;
 #ifdef SKINNER_TEXTURED
-    albedo *= SAMPLE_TEXTURE2D(_AlbedoMap,s_linear_clamp_sampler,IN.uv).rgb;
-    half3 n = UnpackNormalScale(SAMPLE_TEXTURE2D(_NormalMap,sampler_NormalMap, IN.uv), _NormalScale);
+    albedo *= SAMPLE_TEXTURE2D(_AlbedoMap, sampler_AlbedoMap,IN.uv).rgb;
+    half3 n = UnpackNormalScale(SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, IN.uv), _NormalScale);
 #ifdef SKINNER_TWO_SIDED
     normal = n * (facing > 0? 1: -1);
 #else
@@ -303,8 +305,8 @@ struct v2f
     float4 transfer1:TEXCOORD1;
 };
 
-TEXTURE2D(_PreviousPositionBuffer);
-TEXTURE2D(_PreviousRotationBuffer);
+TEXTURE2D(_ObjPrevPositionTex);
+TEXTURE2D(_ObjPrevRotationTex);
 
 float4x4 _NonJitteredVP;
 float4x4 _PreviousVP;
@@ -316,12 +318,12 @@ v2f MotionVectorsVert(a2v IN)
     float id = IN.texcoord1.x;
 
     //fetch samples from the animation kernel
-    float2 uv = IN.vertex.xy;
-    float4 p0 = SAMPLE_TEXTURE2D_LOD(_PreviousPositionBuffer, s_linear_clamp_sampler, uv, 0);
-    float4 r0 = SAMPLE_TEXTURE2D_LOD(_PreviousRotationBuffer, s_linear_clamp_sampler, uv, 0);
-    float4 p1 = SAMPLE_TEXTURE2D_LOD(_PositionBuffer, s_linear_clamp_sampler, uv, 0);
-    float4 r1 = SAMPLE_TEXTURE2D_LOD(_RotationBuffer, s_linear_clamp_sampler, uv, 0);
-    float4 v1 = SAMPLE_TEXTURE2D_LOD(_VelocityBuffer, s_linear_clamp_sampler, uv, 0);
+    uint2 uv = uint2(id * _ObjPositionTex_TexelSize.x, 0);
+    float4 p0 = SampleTex(_ObjPrevPositionTex, uv);
+    float4 r0 = SampleTex(_ObjPrevRotationTex, uv);
+    float4 p1 = SampleTex(_ObjPositionTex, uv);
+    float4 r1 = SampleTex(_ObjRotationTex, uv);
+    float4 v1 = SampleTex(_ObjVelocityTex, uv);
 
     // Scale animation
     half s0 = ParticleScale(id, p0.w + 0.5, v1.w, _Scale); // ok for borrowing V1.w?

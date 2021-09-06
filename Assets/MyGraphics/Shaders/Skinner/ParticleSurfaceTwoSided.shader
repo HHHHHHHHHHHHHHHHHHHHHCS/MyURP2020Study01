@@ -20,6 +20,7 @@ Shader "MyRP/Skinner/ParticleSurfaceTwoSided"
 		_HueShift("Hue Shift", Range(-1, 1)) = 0.2
 	}
 	HLSLINCLUDE
+	// #pragma enable_d3d11_debug_symbols
 	ENDHLSL
 	SubShader
 	{
