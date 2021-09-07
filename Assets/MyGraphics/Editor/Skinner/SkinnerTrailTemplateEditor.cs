@@ -1,4 +1,3 @@
-using System;
 using MyGraphics.Scripts.Skinner;
 using UnityEditor;
 using UnityEditor.ProjectWindowCallback;
@@ -6,33 +5,29 @@ using UnityEngine;
 
 namespace MyGraphics.Editor.Skinner
 {
-	[CustomEditor(typeof(SkinnerParticleTemplate))]
-	public class SkinnerParticleTemplateEditor : UnityEditor.Editor
+	[CustomEditor(typeof(SkinnerTrailTemplate))]
+	public class SkinnerTrailTemplateEditor : UnityEditor.Editor
 	{
 		private const string _helpText =
-			"The Skinner Particle renderer draws all particles in a single " +
-			"draw call, and thus the actual number of particle instances is " +
-			"limited by the number of vertices in the particle shapes; it " +
-			"may be less than the Max Instance Count.";
+			"The Skinner Trail renderer tries to draw trail lines as many " +
+			"as possible in a single draw call, and thus the number of " +
+			"lines is automatically determined from the history length.";
 
-		private SerializedProperty shapes_ID;
-		private SerializedProperty maxInstanceCount_ID;
+		private SerializedProperty historyLength_ID;
 
-		private void OnEnable()
+		void OnEnable()
 		{
-			shapes_ID = serializedObject.FindProperty("shapes");
-			maxInstanceCount_ID = serializedObject.FindProperty("maxInstanceCount");
+			historyLength_ID = serializedObject.FindProperty("historyLength");
 		}
 
 		public override void OnInspectorGUI()
 		{
-			var template = (SkinnerParticleTemplate) target;
+			var template = (SkinnerTrailTemplate) target;
 
 			serializedObject.Update();
 
 			EditorGUI.BeginChangeCheck();
-			EditorGUILayout.PropertyField(shapes_ID, true);
-			EditorGUILayout.PropertyField(maxInstanceCount_ID);
+			EditorGUILayout.PropertyField(historyLength_ID);
 			var rebuild = EditorGUI.EndChangeCheck();
 
 			if (rebuild)
@@ -40,10 +35,8 @@ namespace MyGraphics.Editor.Skinner
 				serializedObject.ApplyModifiedProperties();
 			}
 
-			EditorGUILayout.LabelField("Instance Count", template.InstanceCount.ToString());
+			EditorGUILayout.LabelField("Line Count", template.LineCount.ToString());
 			EditorGUILayout.HelpBox(_helpText, MessageType.None);
-
-			rebuild |= GUILayout.Button("Rebuild");
 
 			if (rebuild)
 			{
@@ -51,11 +44,11 @@ namespace MyGraphics.Editor.Skinner
 			}
 		}
 
-		[MenuItem("Assets/Create/Skinner/Particle Template")]
+		[MenuItem("Assets/Create/Skinner/Trail Template")]
 		private static void CreateTemplateAsset()
 		{
 			ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, CreateInstance<CreateTemplateAssetAction>(),
-				"New Skinner Particle Template.asset", null, null);
+				"New Skinner Trail Template.asset", null, null);
 		}
 
 
@@ -64,7 +57,7 @@ namespace MyGraphics.Editor.Skinner
 		{
 			public override void Action(int instanceId, string pathName, string resourceFile)
 			{
-				var asset = CreateInstance<SkinnerParticleTemplate>();
+				var asset = CreateInstance<SkinnerTrailTemplate>();
 				AssetDatabase.CreateAsset(asset, pathName);
 				asset.RebuildMesh();
 

@@ -63,19 +63,12 @@ namespace MyGraphics.Scripts.Skinner
 		[SerializeField, Tooltip("Determines the random number sequence used for the effect.")]
 		private int randomSeed = 0;
 
-		private MeshRenderer mr;
-		private MaterialPropertyBlock mpb;
-
-
-		//Built-in assets
-		//-------------------------------
-		// [SerializeField] private Shader kernelShader;
-		// [SerializeField] private Material defaultMaterial;
-
 		//Reconfiguration detection
 		//---------------------------
 		private bool reconfigured;
 
+		private MeshRenderer mr;
+		private MaterialPropertyBlock mpb;
 
 		/// Reference to a template object used for rendering particles.
 		public SkinnerParticleTemplate Template
@@ -84,7 +77,7 @@ namespace MyGraphics.Scripts.Skinner
 			set
 			{
 				template = value;
-				reconfigured = true;
+				Reconfigured = true;
 			}
 		}
 

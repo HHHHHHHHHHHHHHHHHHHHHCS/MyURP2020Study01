@@ -2,7 +2,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 {
 	HLSLINCLUDE
 
-	#pragma enable_d3d11_debug_symbols
+	// #pragma enable_d3d11_debug_symbols
 	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	#include "SkinnerCommon.hlsl"
@@ -86,7 +86,9 @@ Shader "MyRP/Skinner/ParticleKernels"
 
 			float4 InitializeVelocityFragment(v2f IN):SV_Target
 			{
-				return 1e-6;
+				//会出现1/0的情况  不同GPU结果不一样  是Nan 还是正无穷(INF) 或者是 别的值
+				//不用FLT_MIN是避免 FLT_MAX+1 溢出
+				return FLT_EPS;
 			}
 			ENDHLSL
 		}
@@ -150,7 +152,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 				//p.w第一次是很大的负数
 				if (p.w > -0.5)
 				{
-					float lv = max(length(v.xyz), 1e-6);
+					float lv = max(length(v.xyz), FLT_EPS);
 					v.xyz = v.xyz * min(lv, _Damper.y) / lv;
 					p.xyz += v.xyz * unity_DeltaTime.x;
 					return p;
@@ -180,7 +182,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 				float3 p1 = SampleTex(_SourcePositionTex1, uv).xyz;
 				float3 v = (p1 - p0) * unity_DeltaTime.y;
 				v *= 1 - UVRandom(uv, 12) * 0.5;
-				float w = max(length(v), 1e-6);
+				float w = max(length(v), FLT_EPS);
 				return float4(v, w);
 			}
 

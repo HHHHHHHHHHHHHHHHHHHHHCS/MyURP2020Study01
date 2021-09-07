@@ -12,6 +12,7 @@ namespace MyGraphics.Scripts.Skinner
 		public static int PositionTex_ID = Shader.PropertyToID("_PositionTex");
 		public static int VelocityTex_ID = Shader.PropertyToID("_VelocityTex");
 		public static int RotationTex_ID = Shader.PropertyToID("_RotationTex");
+		public static int OrthnormTex_ID = Shader.PropertyToID("_OrthnormTex");
 		public static int ObjPositionTex_ID = Shader.PropertyToID("_ObjPositionTex");
 		public static int ObjVelocityTex_ID = Shader.PropertyToID("_ObjVelocityTex");
 		public static int ObjRotationTex_ID = Shader.PropertyToID("_ObjRotationTex");
@@ -25,8 +26,10 @@ namespace MyGraphics.Scripts.Skinner
 		public static int Spin_ID = Shader.PropertyToID("_Spin");
 		public static int NoiseParams_ID = Shader.PropertyToID("_NoiseParams");
 		public static int NoiseOffset_ID = Shader.PropertyToID("_NoiseOffset");
-		
 		public static int Scale_ID = Shader.PropertyToID("_Scale");
+		public static int SpeedLimit_ID = Shader.PropertyToID("_SpeedLimit");
+		public static int Drag_ID = Shader.PropertyToID("_Drag");
+
 	}
 
 	public static class SkinnerUtils

@@ -39,6 +39,11 @@ float3 RotateVector(float3 v, float4 r)
     return QMult(r, QMult(float4(v, 0), r_c)).xyz;
 }
 
+// Stereographic projection and inverse projection
+half2 StereoProjection(half3 n)
+{
+    return n.xy / (1 - n.z);
+}
 
 half3 StereoInverseProjection(half2 p)
 {

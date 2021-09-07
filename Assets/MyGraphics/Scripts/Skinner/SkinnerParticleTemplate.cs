@@ -43,19 +43,10 @@ namespace MyGraphics.Scripts.Skinner
 			}
 		}
 
-		private void OnDestroy()
-		{
-			if (mesh != null && mesh.name == k_tempMeshName)
-			{
-				Destroy(mesh);
-			}
-		}
-
 		private void OnValidate()
 		{
 			maxInstanceCount = Mathf.Clamp(maxInstanceCount, 4, 8192);
 		}
-
 
 		private Mesh GetShape(int index)
 		{
@@ -73,6 +64,11 @@ namespace MyGraphics.Scripts.Skinner
 
 		public void RebuildMesh()
 		{
+			if (shapes == null || shapes.All(x => x == null))
+			{
+				return;
+			}
+
 			var vtx_out = new List<Vector3>();
 			var nrm_out = new List<Vector3>();
 			var tan_out = new List<Vector4>();
