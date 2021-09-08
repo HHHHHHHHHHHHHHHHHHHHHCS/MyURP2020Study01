@@ -30,12 +30,12 @@ namespace MyGraphics.Scripts.Skinner
 		private SkinnerTrail trail;
 		private Material mat;
 
-		private RenderTexture skinnerPositionTex0;
-		private RenderTexture skinnerPositionTex1;
+		private RenderTexture positionTex0;
+		private RenderTexture positionTex1;
 		private RenderTexture velocityTex0;
 		private RenderTexture velocityTex1;
-		private RenderTexture rotationTex0;
-		private RenderTexture rotationTex1;
+		private RenderTexture orthnormTex0;
+		private RenderTexture orthnormTex1;
 
 		private RenderTargetIdentifier[] prevRTIs, currRTIs;
 
@@ -59,43 +59,43 @@ namespace MyGraphics.Scripts.Skinner
 			int w = SkinnerSource.Instance.Model.VertexCount;
 			int h = trail.Template.HistoryLength;
 
-			if (trail.Reconfigured || skinnerPositionTex0 == null
-			                       || skinnerPositionTex0.width != w
-			                       || skinnerPositionTex0.height != h)
+			if (trail.Reconfigured || positionTex0 == null
+			                       || positionTex0.width != w
+			                       || positionTex0.height != h)
 			{
 				trail.Reconfigured = false;
 				isFirst = true;
 
-				SkinnerUtils.CreateRT(ref skinnerPositionTex0, w, h, nameof(skinnerPositionTex0));
-				SkinnerUtils.CreateRT(ref skinnerPositionTex1, w, h, nameof(skinnerPositionTex1));
-				SkinnerUtils.CreateRT(ref velocityTex0, w, h, nameof(velocityTex0));
-				SkinnerUtils.CreateRT(ref velocityTex1, w, h, nameof(velocityTex1));
-				SkinnerUtils.CreateRT(ref rotationTex0, w, h, nameof(rotationTex0));
-				SkinnerUtils.CreateRT(ref rotationTex1, w, h, nameof(rotationTex1));
+				SkinnerUtils.CreateRT(ref positionTex0, w, h, "Trail_" + nameof(positionTex0));
+				SkinnerUtils.CreateRT(ref positionTex1, w, h, "Trail_" + nameof(positionTex1));
+				SkinnerUtils.CreateRT(ref velocityTex0, w, h, "Trail_" + nameof(velocityTex0));
+				SkinnerUtils.CreateRT(ref velocityTex1, w, h, "Trail_" + nameof(velocityTex1));
+				SkinnerUtils.CreateRT(ref orthnormTex0, w, h, "Trail_" + nameof(orthnormTex0));
+				SkinnerUtils.CreateRT(ref orthnormTex1, w, h, "Trail_" + nameof(orthnormTex1));
 
 				prevRTIs = new RenderTargetIdentifier[3]
 				{
-					skinnerPositionTex1,
+					positionTex1,
 					velocityTex1,
-					rotationTex1,
+					orthnormTex1,
 				};
 				currRTIs = new RenderTargetIdentifier[3]
 				{
-					skinnerPositionTex0,
+					positionTex0,
 					velocityTex0,
-					rotationTex0,
+					orthnormTex0,
 				};
 			}
 		}
 
 		public void OnDestroy()
 		{
-			SkinnerUtils.CleanRT(ref skinnerPositionTex0);
-			SkinnerUtils.CleanRT(ref skinnerPositionTex1);
+			SkinnerUtils.CleanRT(ref positionTex0);
+			SkinnerUtils.CleanRT(ref positionTex1);
 			SkinnerUtils.CleanRT(ref velocityTex0);
 			SkinnerUtils.CleanRT(ref velocityTex1);
-			SkinnerUtils.CleanRT(ref rotationTex0);
-			SkinnerUtils.CleanRT(ref rotationTex1);
+			SkinnerUtils.CleanRT(ref orthnormTex0);
+			SkinnerUtils.CleanRT(ref orthnormTex1);
 		}
 
 
@@ -127,7 +127,7 @@ namespace MyGraphics.Scripts.Skinner
 					cmd.SetGlobalTexture(PositionTex_ID, prevRTIs[RTIndexs.Position]);
 					cmd.SetGlobalTexture(VelocityTex_ID, prevRTIs[RTIndexs.Velocity]);
 					mat.SetFloat(SpeedLimit_ID, trail.SpeedLimit);
-
+					
 					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Velocity], mat, ShaderKernels.UpdateVelocity);
 
 					context.ExecuteCommandBuffer(cmd);
@@ -140,9 +140,20 @@ namespace MyGraphics.Scripts.Skinner
 					context.ExecuteCommandBuffer(cmd);
 					cmd.Clear();
 
+					// Invoke the orthonormal update kernel with the updated velocity.
 					cmd.SetGlobalTexture(PositionTex_ID, currRTIs[RTIndexs.Position]);
 					cmd.SetGlobalTexture(OrthnormTex_ID, prevRTIs[RTIndexs.Orthnorm]);
 					SkinnerUtils.DrawFullScreen(cmd, currRTIs[RTIndexs.Orthnorm], mat, ShaderKernels.UpdateOrthnorm);
+
+					context.ExecuteCommandBuffer(cmd);
+					cmd.Clear();
+					
+					cmd.SetGlobalTexture(TrailPositionTex_ID, currRTIs[RTIndexs.Position]);
+					cmd.SetGlobalTexture(TrailVelocityTex_ID, currRTIs[RTIndexs.Velocity]);
+					cmd.SetGlobalTexture(TrailOrthnormTex_ID, currRTIs[RTIndexs.Orthnorm]);
+					cmd.SetGlobalTexture(TrailPrevPositionTex_ID, prevRTIs[RTIndexs.Position]);
+					cmd.SetGlobalTexture(TrailPrevVelocityTex_ID, prevRTIs[RTIndexs.Velocity]);
+					cmd.SetGlobalTexture(TrailPrevOrthnormTex_ID, prevRTIs[RTIndexs.Orthnorm]);
 				}
 			}
 

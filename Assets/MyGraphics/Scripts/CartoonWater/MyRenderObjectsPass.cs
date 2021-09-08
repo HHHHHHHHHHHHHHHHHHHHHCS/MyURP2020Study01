@@ -12,7 +12,6 @@ namespace MyGraphics.Scripts.CartoonWater
 		private FilteringSettings filteringSettings;
 		private MyRenderObjectsFeature.CustomCameraSettings cameraSettings;
 		private string profilerTag;
-		private ProfilingSampler profilingSampler;
 		private RenderStateBlock renderStateBlock;
 
 		private List<ShaderTagId> shaderTagIdList = new List<ShaderTagId>();
@@ -97,13 +96,13 @@ namespace MyGraphics.Scripts.CartoonWater
 			CommandBuffer cmd = CommandBufferPool.Get(profilerTag);
 			using (new ProfilingScope(cmd, profilingSampler))
 			{
-				if (cameraSettings.overrideCamera && cameraData.isStereoEnabled)
+				if (cameraSettings.overrideCamera && XRGraphics.enabled)
 				{
 					Debug.LogWarning(
 						"RenderObjects pass is configured to override camera matrices. While rendering in stereo camera matrices cannot be overriden.");
 				}
 
-				if (cameraSettings.overrideCamera && !cameraData.isStereoEnabled)
+				if (cameraSettings.overrideCamera && !XRGraphics.enabled)
 				{
 					Matrix4x4 projectionMatrix = Matrix4x4.Perspective(cameraSettings.cameraFieldOfView, cameraAspect,
 						camera.nearClipPlane, camera.farClipPlane);
@@ -125,7 +124,7 @@ namespace MyGraphics.Scripts.CartoonWater
 				context.DrawRenderers(renderingData.cullResults, ref drawingSettings, ref filteringSettings,
 					ref renderStateBlock);
 
-				if (cameraSettings.overrideCamera && cameraSettings.restoreCamera && !cameraData.isStereoEnabled)
+				if (cameraSettings.overrideCamera && cameraSettings.restoreCamera && !XRGraphics.enabled)
 				{
 					RenderingUtils.SetViewAndProjectionMatrices(cmd, cameraData.GetViewMatrix(),
 						cameraData.GetGPUProjectionMatrix(), false);

@@ -7,7 +7,7 @@ namespace MyGraphics.Scripts.Skinner
 	public class SkinnerTrail : MonoBehaviour
 	{
 		public static SkinnerTrail Instance { get; private set; }
-		
+
 		[SerializeField] [Tooltip("Reference to a template object used for rendering trail lines.")]
 		public SkinnerTrailTemplate template;
 
@@ -24,14 +24,14 @@ namespace MyGraphics.Scripts.Skinner
 		//Line width modifier
 		//----------------------------------
 
-		[SerializeField, Tooltip("Part of lines under this speed will be culled.")]
+		[SerializeField, Min(0f), Tooltip("Part of lines under this speed will be culled.")]
 		private float cutoffSpeed = 0;
 
-		[SerializeField, Tooltip("Increases the line width based on its speed.")]
+		[SerializeField, Min(0f), Tooltip("Increases the line width based on its speed.")]
 		private float speedToWidth = 0.02f;
 
 
-		[SerializeField, Tooltip("The maximum width of lines.")]
+		[SerializeField, Min(0f), Tooltip("The maximum width of lines.")]
 		private float maxWidth = 0.05f;
 
 		//Other settings
@@ -39,6 +39,9 @@ namespace MyGraphics.Scripts.Skinner
 
 		[SerializeField, Tooltip("Determines the random number sequence used for the effect.")]
 		private int randomSeed = 0;
+
+		private MeshRenderer mr;
+		private MaterialPropertyBlock mpb;
 
 		private bool reconfigured;
 
@@ -105,15 +108,48 @@ namespace MyGraphics.Scripts.Skinner
 			set => reconfigured = value;
 		}
 
+		private void Awake()
+		{
+			GetComponent<MeshFilter>().mesh = Template != null ? Template.Mesh : null;
+			mr = GetComponent<MeshRenderer>();
+			mpb = new MaterialPropertyBlock();
+		}
+
 
 		private void OnEnable()
 		{
 			Instance = this;
+			reconfigured = true;
+			UpdateMPB();
 		}
 
 		private void OnDisable()
 		{
 			Instance = null;
+		}
+
+		private void Reset()
+		{
+			reconfigured = true;
+			UpdateMPB();
+		}
+
+		private void OnValidate()
+		{
+			cutoffSpeed = Mathf.Max(cutoffSpeed, 0);
+			speedToWidth = Mathf.Max(speedToWidth, 0);
+			maxWidth = Mathf.Max(maxWidth, 0);
+			UpdateMPB();
+		}
+
+		private void UpdateMPB()
+		{
+			if (mpb != null)
+			{
+				mpb.SetVector(SkinnerShaderConstants.LineWidth_ID,
+					new Vector4(maxWidth, cutoffSpeed, speedToWidth / maxWidth, 0));
+				mr.SetPropertyBlock(mpb);
+			}
 		}
 	}
 }

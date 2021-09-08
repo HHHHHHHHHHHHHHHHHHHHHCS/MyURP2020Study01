@@ -10,7 +10,6 @@ namespace MyGraphics.Scripts.HDR
 		
 		private static readonly int s_ScaleBiasID = Shader.PropertyToID("_ScaleBiasRt");
 
-		private ProfilingSampler profilingSampler;
 		private CustomTonemapSettings settings;
 		private RenderTargetIdentifier colorTarget;
 		private Material material;

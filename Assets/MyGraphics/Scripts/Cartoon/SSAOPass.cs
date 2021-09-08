@@ -42,7 +42,6 @@ namespace MyGraphics.Scripts.Cartoon
 
 		private SSAOFeature.SSAOSettings currentSettings;
 
-		private ProfilingSampler profilingSampler = new ProfilingSampler("SSAO.Execute()");
 
 		private RenderTextureDescriptor descriptor;
 
@@ -54,6 +53,11 @@ namespace MyGraphics.Scripts.Cartoon
 
 		private RenderTargetIdentifier ssaoTextureTarget3 =
 			new RenderTargetIdentifier(s_SSAOTexture3ID, 0, CubemapFace.Unknown, -1);
+
+		public SSAOPass()
+		{
+			profilingSampler = new ProfilingSampler("SSAO.Execute()");
+		}
 
 
 		public bool Setup(SSAOFeature.SSAOSettings settings)
@@ -187,7 +191,7 @@ namespace MyGraphics.Scripts.Cartoon
 				cmd.SetGlobalTexture(c_SSAOTextureName, ssaoTextureTarget2);
 				cmd.SetGlobalVector(c_SSAOAmbientOcclusionParamName,
 					new Vector4(0f, 0f, 0f, currentSettings.directLightStrength));
-				
+
 				//SSAORT1 2 3  因为用的是RenderTargetIdentifier  所以不用setGlobalTexture  也可以直接在shader中获取
 			}
 

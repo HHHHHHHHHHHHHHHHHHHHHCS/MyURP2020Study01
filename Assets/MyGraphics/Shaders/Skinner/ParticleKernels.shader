@@ -1,9 +1,8 @@
 Shader "MyRP/Skinner/ParticleKernels"
 {
 	HLSLINCLUDE
+	#pragma enable_d3d11_debug_symbols
 
-	// #pragma enable_d3d11_debug_symbols
-	
 	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	#include "SkinnerCommon.hlsl"
 	#include "SimplexNoiseGrad3D.hlsl"
@@ -24,11 +23,8 @@ Shader "MyRP/Skinner/ParticleKernels"
 	TEXTURE2D(_SourcePositionTex1);
 	float4 _SourcePositionTex1_TexelSize;
 	TEXTURE2D(_PositionTex);
-	float4 _PositionTex_TexelSize;
 	TEXTURE2D(_VelocityTex);
-	float4 _VelocityTex_TexelSize;
 	TEXTURE2D(_RotationTex);
-	float4 _RotationTex_TexelSize;
 
 
 	half2 _Damper; // drag, speed_limit
@@ -38,8 +34,9 @@ Shader "MyRP/Skinner/ParticleKernels"
 	half2 _NoiseParams; // frequency, amplitude * dt
 	float3 _NoiseOffset;
 
-	//也可以用textureName.GetDimensions()
-	#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2 * textureName##_TexelSize.zw)
+	//也可以用textureName.GetDimensions()  但是效率比较低  具体看  https://zhuanlan.zhihu.com/p/400016561 评论
+	#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
+	// #define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2 * textureName##_TexelSize.zw)
 	// SAMPLER(s_point_clamp_sampler);
 	// #define SampleTex(textureName, coord2) SAMPLE_TEXTURE2D(textureName, s_point_clamp_sampler, coord2)
 
@@ -74,7 +71,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
-		
+
 		//1
 		Pass
 		{
@@ -92,7 +89,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
-		
+
 		//2
 		Pass
 		{
@@ -120,7 +117,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
-		
+
 		//3
 		Pass
 		{
@@ -133,16 +130,17 @@ Shader "MyRP/Skinner/ParticleKernels"
 			float4 NewParticlePosition(float2 uv)
 			{
 				//随机一个坐标点
-				uv = float2(UVRandom(uv, _Time.x), 0.5);
-				float3 p = SampleTex(_SourcePositionTex1, uv).xyz;
+				float2 pos = float2(UVRandom(uv, _Time.x), 0.5) * _SourcePositionTex1_TexelSize.zw;
+				float3 p = SampleTex(_SourcePositionTex1, pos).xyz;
 				return float4(p, 0.5);
 			}
 
 			float4 UpdatePositionFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-				float4 p = SampleTex(_PositionTex, uv);
-				float4 v = SampleTex(_VelocityTex, uv);
+				int2 pos = IN.pos.xy; //float2 x.5 也可以不-0.5 直接转换才int2
+				float4 p = SampleTex(_PositionTex, pos);
+				float4 v = SampleTex(_VelocityTex, pos);
 				float rnd = 1 + UVRandom(uv, 17) * 0.5;
 				//v越小 说明越平稳 粒子需要越不明显  则life衰减越快
 				//v越大 则可能走MaxLife
@@ -164,7 +162,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
-		
+
 		//4
 		Pass
 		{
@@ -177,10 +175,11 @@ Shader "MyRP/Skinner/ParticleKernels"
 			float4 NewParticleVelocity(float2 uv)
 			{
 				//因为跟上面就隔了一帧数,所以映射的pos不会差很大
-				uv = float2(UVRandom(uv, _Time.x), 0.5);
-				float3 p0 = SampleTex(_SourcePositionTex0, uv).xyz;
-				float3 p1 = SampleTex(_SourcePositionTex1, uv).xyz;
+				float2 pos = float2(UVRandom(uv, _Time.x), 0.5) * _SourcePositionTex0_TexelSize.zw;
+				float3 p0 = SampleTex(_SourcePositionTex0, pos).xyz;
+				float3 p1 = SampleTex(_SourcePositionTex1, pos).xyz;
 				float3 v = (p1 - p0) * unity_DeltaTime.y;
+				v = min(v,FLT_MAX);
 				v *= 1 - UVRandom(uv, 12) * 0.5;
 				float w = max(length(v), FLT_EPS);
 				return float4(v, w);
@@ -189,12 +188,14 @@ Shader "MyRP/Skinner/ParticleKernels"
 			float4 UpdateVelocityFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-				float4 p = SampleTex(_PositionTex, uv);
+				int2 pos = IN.pos.xy;
+
+				float4 p = SampleTex(_PositionTex, pos);
 
 				//等于0.5的时候是刚创建
 				if (p.w < 0.5)
 				{
-					float4 v = SampleTex(_VelocityTex, uv);
+					float4 v = SampleTex(_VelocityTex, pos);
 
 					v.xyz = v.xyz * _Damper.x + _Gravity.xyz;
 					//_NoiseOffset
@@ -213,7 +214,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			}
 			ENDHLSL
 		}
-		
+
 		//5
 		Pass
 		{
@@ -239,8 +240,10 @@ Shader "MyRP/Skinner/ParticleKernels"
 			float4 UpdateRotationFragment(v2f IN):SV_Target
 			{
 				float2 uv = IN.uv;
-				float4 r = SampleTex(_RotationTex, uv);
-				float4 v = SampleTex(_VelocityTex, uv);
+				int2 pos = IN.pos.xy;
+
+				float4 r = SampleTex(_RotationTex, pos);
+				float4 v = SampleTex(_VelocityTex, pos);
 
 				float delta = min(_Spin.x, length(v.xyz) * _Spin.y);
 				delta *= 1 - UVRandom(uv, 18) * 0.5;

@@ -24,6 +24,8 @@ namespace MyGraphics.Scripts.Skinner
 
 		public override void Create()
 		{
+			DoDestroy();
+
 			var queueEvent = RenderPassEvent.BeforeRendering;
 
 			vertexAttrPass = new SkinnerVertexAttrPass()
@@ -44,6 +46,11 @@ namespace MyGraphics.Scripts.Skinner
 
 		private void OnDisable()
 		{
+			DoDestroy();
+		}
+
+		private void DoDestroy()
+		{
 			vertexAttrPass?.OnDestroy();
 			particleAttrPass?.OnDestroy();
 			trailAttrPass?.OnDestroy();
@@ -53,11 +60,25 @@ namespace MyGraphics.Scripts.Skinner
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
+#if UNITY_EDITOR
+			// if (UnityEditor.EditorApplication.isPaused)
+			// {
+			// 	return;
+			// }
+
 			if (!Application.isPlaying)
 			{
 				return;
 			}
+#endif
+			
+			if (renderingData.cameraData.cameraType != CameraType.Game
+			    || renderingData.cameraData.camera.name == "Preview Camera")
+			{
+				return;
+			}
 
+			//其实应该添加如果看不见就不渲染了  否则会图片残留
 			AddVertexAttrPass(renderer, ref renderingData);
 			AddParticleAttrPass(renderer, ref renderingData);
 			AddTrailAttrPass(renderer, ref renderingData);
@@ -119,7 +140,7 @@ namespace MyGraphics.Scripts.Skinner
 			}
 
 			trailAttrPass.OnSetup(SkinnerTrail.Instance, trailKernelsMaterial);
-			renderer.EnqueuePass(particleAttrPass);
+			renderer.EnqueuePass(trailAttrPass);
 		}
 	}
 }

@@ -182,6 +182,7 @@ namespace MyGraphics.Scripts.Skinner
 		private void OnEnable()
 		{
 			Instance = this;
+			reconfigured = true;
 			UpdateMPB();
 		}
 

@@ -39,11 +39,10 @@ namespace MyGraphics.Scripts.AreaLight
 		private void Awake()
 		{
 			Debug.LogError("有问题,暂时弃坑这个先!!!");
-			return;
-			if (!Init())
-			{
-				return;
-			}
+			// if (!Init())
+			// {
+			// 	return;
+			// }
 
 			//UpdateSourceMesh();
 		}

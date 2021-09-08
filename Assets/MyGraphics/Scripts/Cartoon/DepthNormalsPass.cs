@@ -15,7 +15,6 @@ namespace MyGraphics.Scripts.Cartoon
 		private Material depthNormalsMaterial;
 		private FilteringSettings filteringSettings;
 		private ShaderTagId shaderTagId;
-		private ProfilingSampler profilingSampler;
 
 		public DepthNormalsPass(RenderQueueRange range, LayerMask layerMask, Material _depthNormalsMaterial)
 		{

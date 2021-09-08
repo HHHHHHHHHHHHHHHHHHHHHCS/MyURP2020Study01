@@ -1,11 +1,9 @@
 Shader "MyRP/Skinner/TrailKernels"
 {
 	HLSLINCLUDE
-	// #pragma enable_d3d11_debug_symbols
+	#pragma enable_d3d11_debug_symbols
 
-	#include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 	#include "SkinnerCommon.hlsl"
-	#include "SimplexNoiseGrad3D.hlsl"
 
 	struct a2v
 	{
@@ -31,6 +29,7 @@ Shader "MyRP/Skinner/TrailKernels"
 	float _Drag;
 
 	//也可以用textureName.GetDimensions()
+	//uv*size理论要-0.5 但是被转换为int 自动忽略小数点
 	//是不会超过[0, w or h)的
 	#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
 
@@ -109,19 +108,19 @@ Shader "MyRP/Skinner/TrailKernels"
 
 			float4 UpdatePositionFragment(v2f IN):SV_Target
 			{
-				float2 uv = IN.uv * _PositionTex_TexelSize.zw;
+				int2 pos = IN.pos.xy;
 
-				if (uv.y == 0)
+				if (pos.y == 0)
 				{
 					//first row: just copy the source position
-					return SampleTex(_SourcePositionTex1, uv);
+					return SampleTex(_SourcePositionTex1, pos);
 				}
 
 				//other row
-				uv.y -= 1;
+				pos.y -= 1;
 
-				float3 p = SampleTex(_PositionTex, uv).xyz;
-				float3 v = SampleTex(_VelocityTex, uv).xyz;
+				float3 p = SampleTex(_PositionTex, pos).xyz;
+				float3 v = SampleTex(_VelocityTex, pos).xyz;
 
 				float lv = max(length(v), FLT_EPS);
 				v = v * min(lv, _SpeedLimit) / lv;
@@ -144,21 +143,23 @@ Shader "MyRP/Skinner/TrailKernels"
 
 			float4 UpdateVelocityFragment(v2f IN):SV_Target
 			{
-				float2 uv = IN.uv * _VelocityTex_TexelSize.zw;
+				int2 pos = IN.pos.xy;
 
-				if (uv.y == 0)
+				if (pos.y == 0)
 				{
 					// The first row: calculate the vertex velocity.
 					// Get the average with the previous frame for low-pass filtering.
-					float3 p0 = SampleTex(_SourcePositionTex0, uv).xyz;
-					float3 p1 = SampleTex(_SourcePositionTex1, uv).xyz;
-					float3 v0 = SampleTex(_VelocityTex, uv).xyz;
+					float3 p0 = SampleTex(_SourcePositionTex0, pos).xyz;
+					float3 p1 = SampleTex(_SourcePositionTex1, pos).xyz;
+					float3 v0 = SampleTex(_VelocityTex, pos).xyz;
 					float3 v1 = (p1 - p0) * unity_DeltaTime.y;
-					return float4((v0 + v1) * 0.5, 0.0);
+					//unity_DeltaTime.y 暂停的时候是无穷大
+					float3 cv = min((v0 + v1) * 0.5, FLT_MAX);
+					return float4(cv, 0.0);
 				}
 
-				uv.y -= 1;
-				float3 v = SampleTex(_VelocityTex, uv).xyz;
+				pos.y -= 1;
+				float3 v = SampleTex(_VelocityTex, pos).xyz;
 				return float4(v * _Drag, 0);
 			}
 			ENDHLSL
@@ -175,12 +176,12 @@ Shader "MyRP/Skinner/TrailKernels"
 
 			float4 UpdateOrthnormFragment(v2f IN):SV_Target
 			{
-				float2 oriUV = IN.uv;
-				float2 uv = oriUV * _OrthnormTex_TexelSize.zw;
+				float2 uv = IN.uv;
+				int2 pos = IN.pos.xy;
 
-				float2 uv0 = float2(uv.x, uv.y - 2);
-				float2 uv1 = float2(uv.x, uv.y - 1);
-				float2 uv2 = float2(uv.x, uv.y + 2);
+				float2 uv0 = float2(pos.x, pos.y - 2);
+				float2 uv1 = float2(pos.x, pos.y - 1);
+				float2 uv2 = float2(pos.x, pos.y + 2);
 
 				// Use the parent normal vector from the previous frame.
 				half4 b1 = SampleTex(_OrthnormTex, uv1);
@@ -201,7 +202,7 @@ Shader "MyRP/Skinner/TrailKernels"
 
 				// Twisting
 				//越向下 弯曲越大
-				half tw = frac(oriUV.x * 327.7289) * (1 - oriUV.y) * 0.2;
+				half tw = frac(uv.x * 327.7289) * (1 - uv.y) * 0.2;
 				ax = normalize(ax + ay * tw);
 
 				return half4(StereoProjection(ay), StereoProjection(ax));

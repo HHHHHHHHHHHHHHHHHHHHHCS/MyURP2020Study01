@@ -12,7 +12,6 @@ namespace MyGraphics.Scripts.AtmosphericScattering
 		private static readonly int LightShaft_ID = Shader.PropertyToID("_LightShaft");
 		private static readonly RenderTargetIdentifier lightShaft_RTI = new RenderTargetIdentifier(LightShaft_ID);
 
-		private ProfilingSampler profilingSampler;
 		private Material mat;
 
 		public void Init(Material lightShaftMaterial, Texture2D ditherTex)

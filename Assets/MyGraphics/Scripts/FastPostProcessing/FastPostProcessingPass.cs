@@ -7,7 +7,6 @@ namespace MyGraphics.Scripts.FastPostProcessing
 	public class FastPostProcessingPass : ScriptableRenderPass
 	{
 		private const string k_tag = "FastPostProcessingPass";
-		private static readonly ProfilingSampler profilingSampler = new ProfilingSampler(k_tag);
 
 		private static readonly int MainTex_ID = Shader.PropertyToID("_MainTex");
 		private const string k_TempTex = "_TempTex";
@@ -22,6 +21,7 @@ namespace MyGraphics.Scripts.FastPostProcessing
 
 		public void Init(Material postProcessMaterial)
 		{
+			profilingSampler = new ProfilingSampler(k_tag);
 			mat = postProcessMaterial;
 		}
 

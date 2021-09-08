@@ -23,7 +23,7 @@ namespace MyGraphics.Scripts.AreaLight
 
 
 		private RenderTexture shadowmap;
-		private RenderTexture blurredShadowmap = null;
+		// private RenderTexture blurredShadowmap = null;
 		private Texture2D shadowmapDummy = null;
 
 

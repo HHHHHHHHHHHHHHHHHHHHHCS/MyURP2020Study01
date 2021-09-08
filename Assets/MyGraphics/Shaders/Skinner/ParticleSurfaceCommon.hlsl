@@ -8,10 +8,10 @@
 
 #include "SkinnerCommon.hlsl"
 
-TEXTURE2D(_ObjPositionTex);
-float4 _ObjPositionTex_TexelSize;
-TEXTURE2D(_ObjVelocityTex);
-TEXTURE2D(_ObjRotationTex);
+TEXTURE2D(_ParticlePositionTex);
+float4 _ParticlePositionTex_TexelSize;
+TEXTURE2D(_ParticleVelocityTex);
+TEXTURE2D(_ParticleRotationTex);
 
 #define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
 
@@ -32,10 +32,10 @@ struct AttrData
 
 void GetAttrData(inout AttrData data)
 {
-    uint2 uv = uint2(data.id * _ObjPositionTex_TexelSize.z, 0.0);
-    float4 p = SampleTex(_ObjPositionTex, uv);
-    float4 v = SampleTex(_ObjVelocityTex, uv);
-    float4 r = SampleTex(_ObjRotationTex, uv);
+    int2 pos = int2(data.id * _ParticlePositionTex_TexelSize.z, 0.0);
+    float4 p = SampleTex(_ParticlePositionTex, pos);
+    float4 v = SampleTex(_ParticleVelocityTex, pos);
+    float4 r = SampleTex(_ParticleRotationTex, pos);
 
     data.speed = length(v.xyz);
     //p.w [-0.5,0.5]   v.w 是初始速度
@@ -305,8 +305,8 @@ struct v2f
     float4 transfer1:TEXCOORD1;
 };
 
-TEXTURE2D(_ObjPrevPositionTex);
-TEXTURE2D(_ObjPrevRotationTex);
+TEXTURE2D(_ParticlePrevPositionTex);
+TEXTURE2D(_ParticlePrevRotationTex);
 
 float4x4 _NonJitteredVP;
 float4x4 _PreviousVP;
@@ -318,12 +318,12 @@ v2f MotionVectorsVert(a2v IN)
     float id = IN.texcoord1.x;
 
     //fetch samples from the animation kernel
-    uint2 uv = uint2(id * _ObjPositionTex_TexelSize.x, 0);
-    float4 p0 = SampleTex(_ObjPrevPositionTex, uv);
-    float4 r0 = SampleTex(_ObjPrevRotationTex, uv);
-    float4 p1 = SampleTex(_ObjPositionTex, uv);
-    float4 r1 = SampleTex(_ObjRotationTex, uv);
-    float4 v1 = SampleTex(_ObjVelocityTex, uv);
+    int2 uv = int2(id * _ParticlePositionTex_TexelSize.x, 0);
+    float4 p0 = SampleTex(_ParticlePrevPositionTex, uv);
+    float4 r0 = SampleTex(_ParticlePrevRotationTex, uv);
+    float4 p1 = SampleTex(_ParticlePositionTex, uv);
+    float4 r1 = SampleTex(_ParticleRotationTex, uv);
+    float4 v1 = SampleTex(_ParticleVelocityTex, uv);
 
     // Scale animation
     half s0 = ParticleScale(id, p0.w + 0.5, v1.w, _Scale); // ok for borrowing V1.w?

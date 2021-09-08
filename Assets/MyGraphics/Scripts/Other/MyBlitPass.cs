@@ -15,7 +15,6 @@ namespace MyGraphics.Scripts.Other
 
 
 		private Material blitMaterial;
-		private ProfilingSampler profilingSampler;
 		private string rtName;
 
 		public MyBlitPass(Material _blitMaterial)

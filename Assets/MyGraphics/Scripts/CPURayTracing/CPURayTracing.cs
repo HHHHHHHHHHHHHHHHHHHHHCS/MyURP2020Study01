@@ -313,7 +313,7 @@ namespace MyGraphics.Scripts.CPURayTracing
 				return false;
 			}
 
-			return false;
+			// return false;
 		}
 
 
