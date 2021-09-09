@@ -20,7 +20,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _FlickerTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: a0775ddee39477446bcbcedd7ca1bd22, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -28,22 +28,22 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Floats:
-    - _Alpha: 1
-    - _Brightness: 3
-    - _FlickerSpeed: 1
+    - _Alpha: 0.35
+    - _Brightness: 1.25
+    - _FlickerSpeed: 18.2
     - _Fold: 1
-    - _GlitchIntensity: 1
-    - _GlitchSpeed: 1
+    - _GlitchIntensity: 0.35
+    - _GlitchSpeed: 8
     - _GlitchToggle: 1
-    - _GlowSpeed: 1
-    - _GlowTiling: 0.05
+    - _GlowSpeed: 10
+    - _GlowTiling: 0.06
     - _GlowToggle: 1
-    - _RimPower: 5
-    - _ScanSpeed: 1
-    - _ScanTiling: 0.05
+    - _RimPower: 1.16
+    - _ScanSpeed: -1.58
+    - _ScanTiling: 8.23
     - _ScanToggle: 1
     m_Colors:
     - _Direction: {r: 0, g: 1, b: 0, a: 0}
-    - _MainColor: {r: 1, g: 1, b: 1, a: 1}
-    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
+    - _MainColor: {r: 0, g: 0.48235294, b: 0.5529412, a: 1}
+    - _RimColor: {r: 0.007843138, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
