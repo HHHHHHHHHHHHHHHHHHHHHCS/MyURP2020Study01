@@ -153,4 +153,18 @@ namespace MyGraphics.Scripts.Skinner
 		Velocity = 1,
 		Orthnorm = 2,
 	}
+	
+	public class GlitchKernels
+	{
+		public const int InitializePosition = 0;
+		public const int InitializeVelocity = 1;
+		public const int UpdatePosition = 2;
+		public const int UpdateVelocity = 3;
+	}
+
+	public enum GlitchRTIndex
+	{
+		Position = 0,
+		Velocity = 1,
+	}
 }

@@ -5,6 +5,7 @@ namespace MyGraphics.Scripts.Skinner
 	public interface ISkinnerSetting
 	{
 		Material Mat { get; }
+		SkinnerSource Source { get; }
 		int Width { get; }
 		int Height { get; }
 		bool Reconfigured { get; }
