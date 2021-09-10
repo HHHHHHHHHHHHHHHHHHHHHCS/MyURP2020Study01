@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace MyGraphics.Scripts.Skinner
@@ -10,32 +11,34 @@ namespace MyGraphics.Scripts.Skinner
 
 		[SerializeField] private Material mat;
 
-		[SerializeField] [Tooltip("Reference to an effect source.")]
+		[SerializeField, Tooltip("Reference to an effect source.")]
 		private SkinnerSource source;
 
 		[SerializeField] private SkinnerGlitchTemplate template;
 
-		[SerializeField] [Tooltip("Length of the frame history buffer.")]
+		[SerializeField, Range(1, 1024), Tooltip("Length of the frame history buffer.")]
 		private int historyLength = 256;
 
-		[SerializeField, Range(0, 1)] [Tooltip("Determines how an effect element inherit a source velocity.")]
+		[SerializeField, Range(0, 1), Tooltip("Determines how an effect element inherit a source velocity.")]
 		private float velocityScale = 0.2f;
 
-		[SerializeField] [Tooltip("Triangles that have longer edges than this value will be culled.")]
+		[SerializeField, Min(0), Tooltip("Triangles that have longer edges than this value will be culled.")]
 		private float edgeThreshold = 0.75f;
 
-		[SerializeField] [Tooltip("Triangles that have larger area than this value will be culled.")]
+		[SerializeField, Min(0), Tooltip("Triangles that have larger area than this value will be culled.")]
 		private float areaThreshold = 0.02f;
 
-		[SerializeField] [Tooltip("Determines the random number sequence used for the effect.")]
+		[SerializeField, Tooltip("Determines the random number sequence used for the effect.")]
 		private int randomSeed = 0;
 
 		private bool reconfigured;
+		private bool resetMat;
 
+		private SkinnerData data;
 
 		public Material Mat => mat;
-		public int Width { get; }
-		public int Height { get; }
+		public int Width => source == null || source.Model == null ? 0 : source.Model.VertexCount;
+		public int Height => historyLength;
 
 		/// Reference to an effect source.
 		public SkinnerSource Source
@@ -64,8 +67,9 @@ namespace MyGraphics.Scripts.Skinner
 			get => historyLength;
 			set
 			{
-				historyLength = value;
+				historyLength = Mathf.Clamp(value, 1, 1024);
 				reconfigured = true;
+				resetMat = true;
 			}
 		}
 
@@ -74,21 +78,29 @@ namespace MyGraphics.Scripts.Skinner
 		public float VelocityScale
 		{
 			get => velocityScale;
-			set => velocityScale = value;
+			set { velocityScale = Mathf.Clamp01(value); }
 		}
 
 		/// Triangles that have longer edges than this value will be culled.
 		public float EdgeThreshold
 		{
 			get => edgeThreshold;
-			set => edgeThreshold = value;
+			set
+			{
+				edgeThreshold = Mathf.Max(value, 0);
+				resetMat = true;
+			}
 		}
 
 		/// Triangles that have larger area than this value will be culled.
 		public float AreaThreshold
 		{
 			get => areaThreshold;
-			set => areaThreshold = value;
+			set
+			{
+				areaThreshold = Mathf.Max(value, 0);
+				resetMat = true;
+			}
 		}
 
 
@@ -107,12 +119,67 @@ namespace MyGraphics.Scripts.Skinner
 		/// Determines the random number sequence used for the effect.
 		public bool Reconfigured => reconfigured;
 
-		public SkinnerData Data { get; }
+		public SkinnerData Data => data;
 		public bool CanRender => mat != null && template != null && source != null && source.Model != null;
 
+		private void OnEnable()
+		{
+			if (!CanRender)
+			{
+				return;
+			}
+
+			GetComponent<MeshFilter>().mesh = template.Mesh;
+			data = new SkinnerData()
+			{
+				mat = mat
+			};
+			reconfigured = true;
+			resetMat = true;
+			SkinnerManager.Instance.Register(this);
+		}
+
+		private void OnDisable()
+		{
+			SkinnerManager.Instance.Remove(this);
+		}
+
+
+		private void Reset()
+		{
+			reconfigured = true;
+			resetMat = true;
+		}
+
+		// private void OnValidate()
+		// {
+		// 	reconfigured = true;
+		// 	resetMat = true;
+		// }
 
 		public void UpdateMat()
 		{
+			reconfigured = false;
+			if (resetMat)
+			{
+				resetMat = false;
+				mat.SetFloat(SkinnerShaderConstants.EdgeThreshold_ID, edgeThreshold);
+				mat.SetFloat(SkinnerShaderConstants.AreaThreshold_ID, areaThreshold);
+				mat.SetFloat(SkinnerShaderConstants.RandomSeed_ID, randomSeed);
+				mat.SetFloat(SkinnerShaderConstants.BufferOffset_ID, Time.frameCount);
+			}
+
+			if (data.rts != null)
+			{
+				mat.SetTexture(SkinnerShaderConstants.GlitchPositionTex_ID,
+					data.CurrTex(GlitchRTIndex.Position));
+				mat.SetTexture(SkinnerShaderConstants.GlitchVelocityTex_ID,
+					data.CurrTex(GlitchRTIndex.Velocity));
+				mat.SetTexture(SkinnerShaderConstants.GlitchPrevPositionTex_ID,
+					data.PrevTex(GlitchRTIndex.Position));
+				mat.SetTexture(SkinnerShaderConstants.GlitchPrevVelocityTex_ID,
+					data.PrevTex(GlitchRTIndex.Velocity));
+			}
 		}
 	}
 }

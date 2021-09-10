@@ -37,9 +37,7 @@ namespace MyGraphics.Scripts.Skinner
 			smr = GetComponent<SkinnedMeshRenderer>();
 			smr.receiveShadows = false;
 			smr.sharedMesh =  model.Mesh;
-
 			data = new SkinnerVertexData(smr, mat);
-			
 			SkinnerManager.Instance.Register(this);
 		}
 

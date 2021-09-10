@@ -69,6 +69,8 @@ namespace MyGraphics.Scripts.Skinner
 		//---------------------------
 		private bool reconfigured;
 
+		private bool resetMat;
+
 		private SkinnerData data;
 
 		public Material Mat => mat;
@@ -143,13 +145,21 @@ namespace MyGraphics.Scripts.Skinner
 		public float SpeedToScale
 		{
 			get => speedToScale;
-			set => speedToScale = Mathf.Max(value, 0.0f);
+			set
+			{
+				speedToScale = Mathf.Max(value, 0.0f);
+				resetMat = true;
+			}
 		}
 
 		public float MaxScale
 		{
 			get => maxScale;
-			set => maxScale = Mathf.Max(value, 0.0f);
+			set
+			{
+				maxScale = Mathf.Max(value, 0.0f);
+				resetMat = true;
+			}
 		}
 
 		/// The amplitude of acceleration from the turbulent noise.
@@ -205,6 +215,8 @@ namespace MyGraphics.Scripts.Skinner
 			{
 				mat = mat
 			};
+			reconfigured = true;
+			resetMat = true;
 			SkinnerManager.Instance.Register(this);
 		}
 
@@ -216,12 +228,25 @@ namespace MyGraphics.Scripts.Skinner
 		private void Reset()
 		{
 			reconfigured = true;
+			resetMat = true;
 		}
+
+		// private void OnValidate()
+		// {
+		// 	reconfigured = true;
+		// 	resetMat = true;
+		// }
 
 		public void UpdateMat()
 		{
 			reconfigured = false;
-			mat.SetVector(SkinnerShaderConstants.Scale_ID, new Vector4(maxScale, speedToScale, 0, 0));
+			
+			if (resetMat)
+			{
+				resetMat = false;
+				mat.SetVector(SkinnerShaderConstants.Scale_ID, new Vector4(maxScale, speedToScale, 0, 0));
+			}
+			
 			if (data.rts != null)
 			{
 				mat.SetTexture(SkinnerShaderConstants.ParticlePositionTex_ID, data.CurrTex(ParticlesRTIndex.Position));

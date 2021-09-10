@@ -11,22 +11,23 @@ namespace MyGraphics.Scripts.Skinner
 		private static SkinnerManager instance;
 		public static SkinnerManager Instance => instance ??= new SkinnerManager();
 
-		private readonly List<SkinnerSource> sources;
-		private readonly List<SkinnerParticle> particles;
-		private readonly List<SkinnerTrail> trails;
-		private readonly List<SkinnerGlitch> glitches;
+		//其实可以用字典来 来再次重构但是这里数量比较少 就算了
+		private SkinnerSourceContainer sources;
+		private SkinnerRenderContainer<SkinnerParticle, ParticlesRTIndex> particles;
+		private SkinnerRenderContainer<SkinnerTrail, TrailRTIndex> trails;
+		private SkinnerRenderContainer<SkinnerGlitch, GlitchRTIndex> glitches;
 
-		public List<SkinnerSource> Sources => sources;
-		public List<SkinnerParticle> Particles => particles;
-		public List<SkinnerTrail> Trails => trails;
-		public List<SkinnerGlitch> Glitches => glitches;
+		public List<SkinnerSource> Sources => sources.Skinners;
+		public List<SkinnerParticle> Particles => particles.Skinners;
+		public List<SkinnerTrail> Trails => trails.Skinners;
+		public List<SkinnerGlitch> Glitches => glitches.Skinners;
 
 		private SkinnerManager()
 		{
-			sources = new List<SkinnerSource>();
-			particles = new List<SkinnerParticle>();
-			trails = new List<SkinnerTrail>();
-			glitches = new List<SkinnerGlitch>();
+			sources = new SkinnerSourceContainer();
+			particles = new SkinnerRenderContainer<SkinnerParticle, ParticlesRTIndex>();
+			trails = new SkinnerRenderContainer<SkinnerTrail, TrailRTIndex>();
+			glitches = new SkinnerRenderContainer<SkinnerGlitch, GlitchRTIndex>();
 		}
 
 		public static bool CheckInstance()
@@ -36,284 +37,72 @@ namespace MyGraphics.Scripts.Skinner
 
 		public void Update()
 		{
-			foreach (var item in sources)
-			{
-				item.Data.isSwap = !item.Data.isSwap;
-				CheckRTs(item);
-			}
-
-			foreach (var item in particles)
-			{
-				item.Data.isSwap = !item.Data.isSwap;
-				CheckRTs<ParticlesRTIndex>(item);
-				item.UpdateMat();
-			}
-
-			foreach (var item in trails)
-			{
-				item.Data.isSwap = !item.Data.isSwap;
-				CheckRTs<TrailRTIndex>(item);
-				item.UpdateMat();
-			}
-
-			foreach (var item in glitches)
-			{
-				item.Data.isSwap = !item.Data.isSwap;
-				CheckRTs<GlitchRTIndex>(item);
-				item.UpdateMat();
-			}
+			sources.Update();
+			particles.Update();
+			trails.Update();
+			glitches.Update();
 		}
 
 		//需要在 Pass中调用  不能在feature中
 		//因为 pass 是被添加到渲染队列里面 之后执行的
 		public void AfterRendering()
 		{
-			foreach (var item in particles)
-			{
-				if (!item.Source.Data.isFirst)
-				{
-					item.Data.isFirst = false;
-				}
-			}
-
-			foreach (var item in trails)
-			{
-				if (!item.Source.Data.isFirst)
-				{
-					item.Data.isFirst = false;
-				}
-			}
-
-			foreach (var item in glitches)
-			{
-				if (!item.Source.Data.isFirst)
-				{
-					item.Data.isFirst = false;
-				}
-			}
-
+			particles.AfterRendering();
+			trails.AfterRendering();
+			glitches.AfterRendering();
 			//不能调整顺序  sources的要放在最后
-			foreach (var item in sources)
-			{
-				item.Data.isFirst = false;
-			}
+			sources.AfterRendering();
 		}
 
 		public void Register(SkinnerSource obj)
 		{
-			if (obj == null || !obj.CanRender || obj.Data == null)
-			{
-				return;
-			}
-
-			if (!sources.Contains(obj))
-			{
-				CheckRTs(obj);
-				sources.Add(obj);
-			}
+			sources.Register(obj);
 		}
 
 		public void Register(SkinnerParticle obj)
 		{
-			if (obj == null || !obj.CanRender || obj.Data == null)
-			{
-				return;
-			}
-
-			if (!particles.Contains(obj))
-			{
-				CheckRTs<ParticlesRTIndex>(obj);
-				particles.Add(obj);
-			}
+			particles.Register(obj);
 		}
 
 		public void Register(SkinnerTrail obj)
 		{
-			if (obj == null || !obj.CanRender || obj.Data == null)
-			{
-				return;
-			}
-
-			if (!trails.Contains(obj))
-			{
-				CheckRTs<TrailRTIndex>(obj);
-				trails.Add(obj);
-			}
+			trails.Register(obj);
 		}
 
 		public void Register(SkinnerGlitch obj)
 		{
-			if (obj == null || !obj.CanRender || obj.Data == null)
-			{
-				return;
-			}
-
-			if (!glitches.Contains(obj))
-			{
-				CheckRTs<GlitchRTIndex>(obj);
-				glitches.Add(obj);
-			}
+			glitches.Register(obj);
 		}
-
 
 		public void Remove(SkinnerSource obj)
 		{
-			if (sources.Remove(obj))
-			{
-				DestroyRTs(obj.Data.rts);
-				TryDestroy();
-			}
+			sources.Register(obj);
+			TryDestroy();
 		}
 
 		public void Remove(SkinnerParticle obj)
 		{
-			if (particles.Remove(obj))
-			{
-				DestroyRTs(obj.Data.rts);
-				TryDestroy();
-			}
+			particles.Register(obj);
+			TryDestroy();
 		}
 
 		public void Remove(SkinnerTrail obj)
 		{
-			if (trails.Remove(obj))
-			{
-				DestroyRTs(obj.Data.rts);
-				TryDestroy();
-			}
+			trails.Register(obj);
+			TryDestroy();
 		}
 
 		public void Remove(SkinnerGlitch obj)
 		{
-			if (glitches.Remove(obj))
-			{
-				DestroyRTs(obj.Data.rts);
-				TryDestroy();
-			}
+			glitches.Register(obj);
+			TryDestroy();
 		}
 
 		private void TryDestroy()
 		{
-			if (sources.Count > 0 || particles.Count > 0 || trails.Count > 0 || glitches.Count > 0)
+			if (sources.CanDestroy && particles.CanDestroy && trails.CanDestroy && glitches.CanDestroy)
 			{
-				return;
-			}
-
-			instance = null;
-		}
-
-		private void CheckRTs(SkinnerSource setting)
-		{
-			ref RenderTexture[] rts = ref setting.Data.rts;
-			int width = setting.Width;
-			int height = setting.Height;
-
-			if (rts != null && rts[0] != null && rts[0].width == width && rts[0].height == height)
-			{
-				return;
-			}
-
-			if (width == 0 || height == 0)
-			{
-				DestroyRTs(rts);
-				rts = null;
-				return;
-			}
-
-			setting.Data.isFirst = true;
-			setting.Data.isSwap = false;
-
-			RenderTextureDescriptor rtd =
-				new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBFloat, 0, 1);
-
-			rts = new RenderTexture[4];
-
-			rts[VertexRTIndex.Position0] = new RenderTexture(rtd)
-			{
-				filterMode = FilterMode.Point,
-				name = "SourcePosition0"
-			};
-
-			rts[VertexRTIndex.Position1] = new RenderTexture(rtd)
-			{
-				filterMode = FilterMode.Point,
-				name = "SourcePosition1"
-			};
-
-			rts[VertexRTIndex.Normal] = new RenderTexture(rtd)
-			{
-				filterMode = FilterMode.Point,
-				name = "Normal"
-			};
-
-			rts[VertexRTIndex.Tangent] = new RenderTexture(rtd)
-			{
-				filterMode = FilterMode.Point,
-				name = "Tangent"
-			};
-		}
-
-		private void CheckRTs<T>(ISkinnerSetting setting) where T : Enum
-		{
-			ref RenderTexture[] rts = ref setting.Data.rts;
-			int width = setting.Width;
-			int height = setting.Height;
-			bool isForce = setting.Reconfigured;
-
-			if (!isForce && rts != null && rts[0] != null && rts[0].width == width && rts[0].height == height)
-			{
-				return;
-			}
-
-			if (width == 0 || height == 0)
-			{
-				DestroyRTs(rts);
-				rts = null;
-				return;
-			}
-
-			setting.Data.isFirst = true;
-			setting.Data.isSwap = false;
-
-			var names = Enum.GetNames(typeof(T));
-			var len = names.Length;
-			if (rts == null)
-			{
-				rts = new RenderTexture[len * 2];
-			}
-			else
-			{
-				DestroyRTs(rts);
-			}
-
-			RenderTextureDescriptor rtd =
-				new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBFloat, 0, 1);
-
-			for (int i = 0; i < len; i++)
-			{
-				rts[i] = new RenderTexture(rtd)
-				{
-					filterMode = FilterMode.Point,
-					name = names[i] + "0"
-				};
-				rts[len + i] = new RenderTexture(rtd)
-				{
-					filterMode = FilterMode.Point,
-					name = names[i] + "1"
-				};
-			}
-		}
-
-		private void DestroyRTs(RenderTexture[] rts)
-		{
-			if (rts == null)
-			{
-				return;
-			}
-
-			foreach (var rt in rts)
-			{
-				CoreUtils.Destroy(rt);
+				instance = null;
 			}
 		}
 	}

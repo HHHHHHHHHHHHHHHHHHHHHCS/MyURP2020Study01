@@ -28,6 +28,11 @@ namespace MyGraphics.Scripts.Skinner
 		public static int TrailPrevVelocityTex_ID = Shader.PropertyToID("_TrailPrevVelocityTex");
 		public static int TrailPrevOrthnormTex_ID = Shader.PropertyToID("_TrailPrevOrthnormTex");
 
+		public static int GlitchPositionTex_ID = Shader.PropertyToID("_GlitchPositionTex");
+		public static int GlitchVelocityTex_ID = Shader.PropertyToID("_GlitchVelocityTex");
+		public static int GlitchPrevPositionTex_ID = Shader.PropertyToID("_GlitchPrevPositionTex");
+		public static int GlitchPrevVelocityTex_ID = Shader.PropertyToID("_GlitchPrevVelocityTex");
+		
 		public static int RandomSeed_ID = Shader.PropertyToID("_RandomSeed");
 		public static int Damper_ID = Shader.PropertyToID("_Damper");
 		public static int Gravity_ID = Shader.PropertyToID("_Gravity");
@@ -39,6 +44,10 @@ namespace MyGraphics.Scripts.Skinner
 		public static int SpeedLimit_ID = Shader.PropertyToID("_SpeedLimit");
 		public static int Drag_ID = Shader.PropertyToID("_Drag");
 		public static int LineWidth_ID = Shader.PropertyToID("_LineWidth");
+		public static int EdgeThreshold_ID = Shader.PropertyToID("_EdgeThreshold");
+		public static int AreaThreshold_ID = Shader.PropertyToID("_AreaThreshold");
+		public static int BufferOffset_ID = Shader.PropertyToID("_BufferOffset");
+		public static int VelocityScale_ID = Shader.PropertyToID("_VelocityScale");
 	}
 
 	public class SkinnerVertexData

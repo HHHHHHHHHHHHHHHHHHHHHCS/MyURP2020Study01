@@ -10,14 +10,12 @@ namespace MyGraphics.Scripts.Skinner
 	{
 		private const string k_tag = "Skinner Trail Attr";
 
-		private SkinnerFeature skinnerFeature;
 		private List<SkinnerTrail> trails;
 		private Material mat;
 
-		public SkinnerTrailAttrPass(SkinnerFeature _skinnerFeature)
+		public SkinnerTrailAttrPass()
 		{
 			profilingSampler = new ProfilingSampler(k_tag);
-			skinnerFeature = _skinnerFeature;
 		}
 
 		public void OnSetup(List<SkinnerTrail> _trails, Material _mat)
@@ -29,6 +27,7 @@ namespace MyGraphics.Scripts.Skinner
 		public void OnDestroy()
 		{
 			trails = null;
+			mat = null;
 		}
 		
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)

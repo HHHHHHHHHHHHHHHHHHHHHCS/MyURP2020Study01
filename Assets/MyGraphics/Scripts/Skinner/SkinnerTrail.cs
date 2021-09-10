@@ -43,7 +43,8 @@ namespace MyGraphics.Scripts.Skinner
 		private int randomSeed = 0;
 
 		private bool reconfigured;
-
+		private bool resetMat;
+		
 		private SkinnerData data;
 
 
@@ -88,21 +89,33 @@ namespace MyGraphics.Scripts.Skinner
 		public float CutoffSpeed
 		{
 			get => cutoffSpeed;
-			set => cutoffSpeed = value;
+			set
+			{
+				cutoffSpeed = Mathf.Max(value, 0);
+				resetMat = true;
+			}
 		}
 
 		/// Increases the line width based on its speed.
 		public float SpeedToWidth
 		{
 			get => speedToWidth;
-			set => speedToWidth = value;
+			set
+			{
+				speedToWidth = Mathf.Max(value, 0);
+				resetMat = true;
+			}
 		}
 
 		/// The maximum width of lines.
 		public float MaxWidth
 		{
 			get => maxWidth;
-			set => maxWidth = value;
+			set
+			{
+				maxWidth = Mathf.Max(value, 0);
+				resetMat = true;
+			}
 		}
 
 		/// Determines the random number sequence used for the effect.
@@ -141,6 +154,8 @@ namespace MyGraphics.Scripts.Skinner
 			{
 				mat = mat
 			};
+			reconfigured = true;
+			resetMat = true;
 			SkinnerManager.Instance.Register(this);
 		}
 
@@ -152,21 +167,26 @@ namespace MyGraphics.Scripts.Skinner
 		private void Reset()
 		{
 			reconfigured = true;
+			resetMat = true;
 		}
 
-		private void OnValidate()
-		{
-			cutoffSpeed = Mathf.Max(cutoffSpeed, 0);
-			speedToWidth = Mathf.Max(speedToWidth, 0);
-			maxWidth = Mathf.Max(maxWidth, 0);
-		}
-
+		// private void OnValidate()
+		// {
+		// 	reconfigured = true;
+		// 	resetMat = true;
+		// }
 
 		public void UpdateMat()
 		{
 			reconfigured = false;
-			mat.SetVector(SkinnerShaderConstants.LineWidth_ID,
-				new Vector4(maxWidth, cutoffSpeed, speedToWidth / maxWidth, 0));
+
+			if (resetMat)
+			{
+				resetMat = false;
+				mat.SetVector(SkinnerShaderConstants.LineWidth_ID,
+					new Vector4(maxWidth, cutoffSpeed, speedToWidth / maxWidth, 0));
+			}
+
 			if (data.rts != null)
 			{
 				mat.SetTexture(SkinnerShaderConstants.TrailPositionTex_ID,

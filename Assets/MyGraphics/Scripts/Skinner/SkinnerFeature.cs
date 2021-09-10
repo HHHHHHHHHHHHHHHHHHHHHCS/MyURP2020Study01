@@ -9,17 +9,16 @@ namespace MyGraphics.Scripts.Skinner
 	{
 		public Shader particleKernelsShader;
 		public Shader trailKernelsShader;
+		public Shader glitchKernelsShader;
 
 		private SkinnerVertexAttrPass vertexAttrPass;
 		private SkinnerParticleAttrPass particleAttrPass;
 		private SkinnerTrailAttrPass trailAttrPass;
+		private SkinnerGlitchAttrPass glitchAttrPass;
 
 		private Material particleKernelsMaterial;
 		private Material trailKernelsMaterial;
-
-		public SkinnerVertexAttrPass VertexAttrPass => vertexAttrPass;
-		public SkinnerParticleAttrPass ParticleAttrPass => particleAttrPass;
-		public SkinnerTrailAttrPass TrailAttrPass => trailAttrPass;
+		private Material glitchernelsMaterial;
 
 
 		public override void Create()
@@ -33,12 +32,17 @@ namespace MyGraphics.Scripts.Skinner
 				renderPassEvent = queueEvent
 			};
 
-			particleAttrPass = new SkinnerParticleAttrPass(this)
+			particleAttrPass = new SkinnerParticleAttrPass()
 			{
 				renderPassEvent = queueEvent
 			};
 
-			trailAttrPass = new SkinnerTrailAttrPass(this)
+			trailAttrPass = new SkinnerTrailAttrPass()
+			{
+				renderPassEvent = queueEvent
+			};
+
+			glitchAttrPass = new SkinnerGlitchAttrPass()
 			{
 				renderPassEvent = queueEvent
 			};
@@ -54,8 +58,10 @@ namespace MyGraphics.Scripts.Skinner
 			vertexAttrPass?.OnDestroy();
 			particleAttrPass?.OnDestroy();
 			trailAttrPass?.OnDestroy();
+			glitchAttrPass?.OnDestroy();
 			CoreUtils.Destroy(particleKernelsMaterial);
 			CoreUtils.Destroy(trailKernelsMaterial);
+			CoreUtils.Destroy(glitchernelsMaterial);
 		}
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -94,12 +100,13 @@ namespace MyGraphics.Scripts.Skinner
 
 			instance.Update();
 
-			//其实应该添加如果看不见就不渲染了  否则会图片残留
+			//其实应该添加如果看不见就不渲染了
 			AddVertexAttrPass(renderer, ref renderingData);
 			AddParticleAttrPass(renderer, ref renderingData);
 			AddTrailAttrPass(renderer, ref renderingData);
+			AddGlitchAttrPass(renderer, ref renderingData);
 		}
-		
+
 		private void AddVertexAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
 			vertexAttrPass.OnSetup(SkinnerManager.Instance.Sources);
@@ -117,6 +124,7 @@ namespace MyGraphics.Scripts.Skinner
 
 			if (particleKernelsMaterial == null || particleKernelsMaterial.shader != particleKernelsShader)
 			{
+				CoreUtils.Destroy(particleKernelsMaterial);
 				particleKernelsMaterial = CoreUtils.CreateEngineMaterial(particleKernelsShader);
 			}
 
@@ -135,11 +143,31 @@ namespace MyGraphics.Scripts.Skinner
 
 			if (trailKernelsMaterial == null || trailKernelsMaterial.shader != trailKernelsShader)
 			{
+				CoreUtils.Destroy(trailKernelsMaterial);
 				trailKernelsMaterial = CoreUtils.CreateEngineMaterial(trailKernelsShader);
 			}
 
 			trailAttrPass.OnSetup(SkinnerManager.Instance.Trails, trailKernelsMaterial);
 			renderer.EnqueuePass(trailAttrPass);
+		}
+
+		private void AddGlitchAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
+		{
+			if (SkinnerManager.Instance.Glitches.Count == 0 || glitchKernelsShader == null)
+			{
+				glitchAttrPass?.OnDestroy();
+				CoreUtils.Destroy(glitchernelsMaterial);
+				return;
+			}
+
+			if (glitchernelsMaterial == null || glitchernelsMaterial.shader != glitchKernelsShader)
+			{
+				CoreUtils.Destroy(glitchernelsMaterial);
+				glitchernelsMaterial = CoreUtils.CreateEngineMaterial(glitchKernelsShader);
+			}
+
+			glitchAttrPass.OnSetup(SkinnerManager.Instance.Glitches, glitchernelsMaterial);
+			renderer.EnqueuePass(glitchAttrPass);
 		}
 	}
 }

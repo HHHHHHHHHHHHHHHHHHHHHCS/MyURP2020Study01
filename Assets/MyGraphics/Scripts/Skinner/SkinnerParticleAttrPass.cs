@@ -10,16 +10,14 @@ namespace MyGraphics.Scripts.Skinner
 	{
 		private const string k_tag = "Skinner Particle Attr";
 
-		private SkinnerFeature skinnerFeature;
 		private List<SkinnerParticle> particles;
 		private Material mat;
 
 		private Vector3 noiseOffset;
 
-		public SkinnerParticleAttrPass(SkinnerFeature _skinnerFeature)
+		public SkinnerParticleAttrPass()
 		{
 			profilingSampler = new ProfilingSampler(k_tag);
-			skinnerFeature = _skinnerFeature;
 		}
 
 		public void OnSetup(List<SkinnerParticle> _particles, Material _mat)
@@ -31,6 +29,7 @@ namespace MyGraphics.Scripts.Skinner
 		public void OnDestroy()
 		{
 			particles = null;
+			mat = null;
 		}
 
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
@@ -56,8 +55,7 @@ namespace MyGraphics.Scripts.Skinner
 					if (data.isFirst)
 					{
 						noiseOffset = Vector3.zero;
-						cmd.SetGlobalTexture(SourcePositionTex1_ID,
-							vertData.CurrPosTex);
+						cmd.SetGlobalTexture(SourcePositionTex1_ID,vertData.CurrPosTex);
 						cmd.SetGlobalFloat(RandomSeed_ID, particle.RandomSeed);
 
 						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Position), mat,
