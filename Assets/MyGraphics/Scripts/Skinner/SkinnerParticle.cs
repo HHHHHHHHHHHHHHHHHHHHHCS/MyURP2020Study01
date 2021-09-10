@@ -189,7 +189,7 @@ namespace MyGraphics.Scripts.Skinner
 		public SkinnerData Data => data;
 
 		public bool CanRender =>
-			mat != null && template != null  && source != null && source.CanRender;
+			mat != null && template != null && source != null && source.CanRender;
 
 
 		private void OnEnable()
@@ -198,8 +198,9 @@ namespace MyGraphics.Scripts.Skinner
 			{
 				return;
 			}
-			
+
 			GetComponent<MeshFilter>().mesh = template.Mesh;
+			GetComponent<MeshRenderer>().material = mat;
 			data = new SkinnerData()
 			{
 				mat = mat

@@ -1,7 +1,7 @@
 Shader "MyRP/Skinner/TrailKernels"
 {
 	HLSLINCLUDE
-	#pragma enable_d3d11_debug_symbols
+	// #pragma enable_d3d11_debug_symbols
 
 	#include "SkinnerCommon.hlsl"
 
@@ -58,9 +58,12 @@ Shader "MyRP/Skinner/TrailKernels"
 
 			float4 InitializePositionFragment(v2f IN):SV_Target
 			{
+				int2 uv = int2(IN.pos.x, 0);
+				half3 pos = SampleTex(_SourcePositionTex1, uv);
+				
 				//a far point and random life
 				//是可以存在负数的
-				return float4(1e+6, 1e+6, 1e+6, UVRandom(IN.uv, 16) - 0.5);
+				return float4(pos, UVRandom(IN.uv, 16) - 0.5);
 			}
 			ENDHLSL
 		}
@@ -188,8 +191,8 @@ Shader "MyRP/Skinner/TrailKernels"
 				half3 ax = StereoInverseProjection(b1.zw);
 
 				//tangent vector
-				float3 p0 = SampleTex(_PositionTex, uv0);
-				float3 p1 = SampleTex(_PositionTex, uv2);
+				float3 p0 = SampleTex(_PositionTex, uv0).xyz;
+				float3 p1 = SampleTex(_PositionTex, uv2).xyz;
 				half3 az = p1 - p0;
 				if (az.x == 0 && az.y == 0 && az.z == 0)
 				{

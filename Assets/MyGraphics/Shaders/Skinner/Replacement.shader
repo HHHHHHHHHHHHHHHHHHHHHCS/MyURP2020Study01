@@ -8,7 +8,8 @@ Shader "MyRP/Skinner/Replacement"
 		}
 		Pass
 		{
-			ZTest Always ZWrite Off
+			ZTest Always 
+			ZWrite Off
 			HLSLPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag

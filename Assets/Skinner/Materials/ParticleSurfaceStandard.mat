@@ -18,19 +18,28 @@ Material:
   disabledShaderPasses: []
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _AlbedoMap:
+        m_Texture: {fileID: 2800000, guid: 96673f8e78466cd429bae3c15e0a1a3e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 2800000, guid: c217610a019457c42bc5d412d88afd2f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Floats:
     - _BaseHue: 0
-    - _Brightness: 0.8
-    - _BrightnessOffs: 1
-    - _CutoffSpeed: 0.5
-    - _EmissionProb: 0.2
-    - _HueRandomness: 0.2
-    - _HueShift: 0.2
-    - _Metallic: 0
+    - _Brightness: 0.72
+    - _BrightnessOffs: 2.8
+    - _CutoffSpeed: 0.8
+    - _EmissionProb: 0.026
+    - _HueRandomness: 0
+    - _HueShift: 0.1
+    - _Metallic: 0.4
+    - _NormalScale: 1.6
     - _Saturation: 1
-    - _Smoothness: 0.5
+    - _Smoothness: 0.4
     - _SpeedToIntensity: 1
     m_Colors:
-    - _Albedo: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+    - _Albedo: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

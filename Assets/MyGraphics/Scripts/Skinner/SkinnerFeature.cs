@@ -78,38 +78,28 @@ namespace MyGraphics.Scripts.Skinner
 				return;
 			}
 
-			if (!SkinnerManager.CheckInstance() )
+			if (!SkinnerManager.CheckInstance())
 			{
 				DoDestroy();
 				return;
 			}
-			
-			var instance =  SkinnerManager.Instance;
+
+			var instance = SkinnerManager.Instance;
 
 			if (instance.Sources.Count == 0)
 			{
 				DoDestroy();
 				return;
 			}
-			
+
 			instance.Update();
-			
+
 			//其实应该添加如果看不见就不渲染了  否则会图片残留
 			AddVertexAttrPass(renderer, ref renderingData);
-
-			if (instance.Particles.Count > 0)
-			{
-				AddParticleAttrPass(renderer, ref renderingData);
-			}
-
-			if (instance.Trails.Count > 0)
-			{
-				AddTrailAttrPass(renderer, ref renderingData);
-			}
-
-			instance.LateUpdate();
+			AddParticleAttrPass(renderer, ref renderingData);
+			AddTrailAttrPass(renderer, ref renderingData);
 		}
-
+		
 		private void AddVertexAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
 			vertexAttrPass.OnSetup(SkinnerManager.Instance.Sources);
@@ -118,8 +108,9 @@ namespace MyGraphics.Scripts.Skinner
 
 		private void AddParticleAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
-			if (particleKernelsShader == null)
+			if (SkinnerManager.Instance.Particles.Count == 0 || particleKernelsShader == null)
 			{
+				particleAttrPass?.OnDestroy();
 				CoreUtils.Destroy(particleKernelsMaterial);
 				return;
 			}
@@ -135,8 +126,9 @@ namespace MyGraphics.Scripts.Skinner
 
 		private void AddTrailAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
-			if (trailKernelsShader == null)
+			if (SkinnerManager.Instance.Trails.Count == 0 || trailKernelsShader == null)
 			{
+				trailAttrPass?.OnDestroy();
 				CoreUtils.Destroy(trailKernelsMaterial);
 				return;
 			}

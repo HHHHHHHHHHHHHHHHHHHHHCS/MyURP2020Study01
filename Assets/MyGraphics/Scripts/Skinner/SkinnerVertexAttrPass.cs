@@ -73,5 +73,15 @@ namespace MyGraphics.Scripts.Skinner
 			context.ExecuteCommandBuffer(cmd);
 			CommandBufferPool.Release(cmd);
 		}
+
+		public override void OnFinishCameraStackRendering(CommandBuffer cmd)
+		{
+			if (!SkinnerManager.CheckInstance())
+			{
+				return;
+			}
+
+			SkinnerManager.Instance.AfterRendering();
+		}
 	}
 }

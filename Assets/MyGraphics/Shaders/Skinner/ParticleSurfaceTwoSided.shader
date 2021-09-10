@@ -29,6 +29,8 @@ Shader "MyRP/Skinner/ParticleSurfaceTwoSided"
 			"RenderType" = "Opaque" "Queue" = "Geometry"
 		}
 
+		Cull Off
+
 		Pass
 		{
 			Name "ForwardLit"
@@ -59,9 +61,8 @@ Shader "MyRP/Skinner/ParticleSurfaceTwoSided"
 
 			#define SKINNER_TWO_SIDED
 			#define ForwardLitPass
-			
+
 			#include "ParticleSurfaceCommon.hlsl"
-			
 			ENDHLSL
 		}
 
@@ -84,9 +85,8 @@ Shader "MyRP/Skinner/ParticleSurfaceTwoSided"
 			#pragma multi_compile _ DOTS_INSTANCING_ON
 
 			#define ShadowCasterPass
-			
-			#include "ParticleSurfaceCommon.hlsl"
 
+			#include "ParticleSurfaceCommon.hlsl"
 			ENDHLSL
 
 		}
@@ -111,9 +111,8 @@ Shader "MyRP/Skinner/ParticleSurfaceTwoSided"
 			#pragma multi_compile _ DOTS_INSTANCING_ON
 
 			#define DepthOnlyPass
-			
-			#include "ParticleSurfaceCommon.hlsl"
 
+			#include "ParticleSurfaceCommon.hlsl"
 			ENDHLSL
 		}
 
@@ -131,9 +130,8 @@ Shader "MyRP/Skinner/ParticleSurfaceTwoSided"
 			#pragma fragment MotionVectorsFrag
 
 			#define MotionVectorsPass
-			
+
 			#include "ParticleSurfaceCommon.hlsl"
-			
 			ENDHLSL
 		}
 	}

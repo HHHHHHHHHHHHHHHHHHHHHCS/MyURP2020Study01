@@ -6,12 +6,14 @@
 #include "SkinnerCommon.hlsl"
 
 TEXTURE2D(_TrailPositionTex);
-float4 _TrailPositionTex_TexelSize;
+// float4 _TrailPositionTex_TexelSize;
 TEXTURE2D(_TrailVelocityTex);
 TEXTURE2D(_TrailOrthnormTex);
 
-#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
+SAMPLER(s_linear_clamp_sampler);
 
+// #define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
+#define SampleTex(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, s_linear_clamp_sampler, coord2, 0)
 
 // Line width modifier
 half3 _LineWidth; // (max width, cutoff, speed-to-width / max width)
@@ -19,7 +21,9 @@ half3 _LineWidth; // (max width, cutoff, speed-to-width / max width)
 void GetAttrData(float4 vertex, out float4 pos, out float3 nor, out float speed)
 {
     //fetch samples from the animation kernel
-    int2 uv = vertex.xy * _TrailPositionTex_TexelSize.zw;
+    // 为什么用linear 不用point   顶点数量不是 1:1的  所以  让位置有插值 效果更好
+    // int2 uv = vertex.xy * _TrailPositionTex_TexelSize.zw;
+	float2 uv = vertex.xy;
     float3 p = SampleTex(_TrailPositionTex, uv).xyz;
     float3 v = SampleTex(_TrailVelocityTex, uv).xyz;
     float4 b = SampleTex(_TrailOrthnormTex, uv);
@@ -249,13 +253,14 @@ float4x4 _PreviousM;
 v2f MotionVectorsVert(a2v IN)
 {
     //fetch samples from the animation kernel
-    float2 pos = IN.vertex.xy * _TrailPositionTex_TexelSize.zw;
-    float3 p0 = SampleTex(_TrailPrevPositionTex, pos).xyz;
-    float3 v0 = SampleTex(_TrailPrevVelocityTex, pos).xyz;
-    float4 b0 = SampleTex(_TrailPrevOrthnormTex, pos);
-    float3 p1 = SampleTex(_TrailPositionTex, pos).xyz;
-    float3 v1 = SampleTex(_TrailVelocityTex, pos).xyz;
-    float4 b1 = SampleTex(_TrailOrthnormTex, pos);
+    // int2 pos = IN.vertex.xy * _TrailPositionTex_TexelSize.zw;
+	float2 uv = IN.vertex.xy;
+    float3 p0 = SampleTex(_TrailPrevPositionTex, uv).xyz;
+    float3 v0 = SampleTex(_TrailPrevVelocityTex, uv).xyz;
+    float4 b0 = SampleTex(_TrailPrevOrthnormTex, uv);
+    float3 p1 = SampleTex(_TrailPositionTex, uv).xyz;
+    float3 v1 = SampleTex(_TrailVelocityTex, uv).xyz;
+    float4 b1 = SampleTex(_TrailOrthnormTex, uv);
 
     //Binormal Vector
     half3 binormal0 = StereoInverseProjection(b0.zw);

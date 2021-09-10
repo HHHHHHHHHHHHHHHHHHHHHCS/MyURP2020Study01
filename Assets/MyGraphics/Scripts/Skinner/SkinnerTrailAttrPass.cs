@@ -30,8 +30,7 @@ namespace MyGraphics.Scripts.Skinner
 		{
 			trails = null;
 		}
-
-
+		
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);

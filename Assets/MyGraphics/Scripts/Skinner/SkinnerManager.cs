@@ -55,7 +55,9 @@ namespace MyGraphics.Scripts.Skinner
 			}
 		}
 
-		public void LateUpdate()
+		//需要在 Pass中调用  不能在feature中
+		//因为 pass 是被添加到渲染队列里面 之后执行的
+		public void AfterRendering()
 		{
 			foreach (var item in particles)
 			{
@@ -102,7 +104,6 @@ namespace MyGraphics.Scripts.Skinner
 
 			if (!particles.Contains(obj))
 			{
-				obj.Data.isFirst = true;
 				CheckRTs<ParticlesRTIndex>(obj);
 				particles.Add(obj);
 			}
@@ -117,7 +118,6 @@ namespace MyGraphics.Scripts.Skinner
 
 			if (!trails.Contains(obj))
 			{
-				obj.Data.isFirst = true;
 				CheckRTs<TrailRTIndex>(obj);
 				trails.Add(obj);
 			}
@@ -178,6 +178,9 @@ namespace MyGraphics.Scripts.Skinner
 				rts = null;
 				return;
 			}
+			
+			setting.Data.isFirst = true;
+			setting.Data.isSwap = false;
 
 			RenderTextureDescriptor rtd =
 				new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBFloat, 0, 1);
@@ -229,6 +232,7 @@ namespace MyGraphics.Scripts.Skinner
 			}
 
 			setting.Data.isFirst = true;
+			setting.Data.isSwap = false;
 
 			var names = Enum.GetNames(typeof(T));
 			var len = names.Length;
