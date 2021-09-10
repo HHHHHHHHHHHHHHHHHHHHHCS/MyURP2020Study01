@@ -4,9 +4,11 @@ using UnityEngine;
 namespace MyGraphics.Scripts.Skinner
 {
 	[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-	public class SkinnerParticle : MonoBehaviour
+	public class SkinnerParticle : MonoBehaviour, ISkinnerSetting
 	{
-		public static SkinnerParticle Instance { get; private set; }
+		[SerializeField] private Material mat;
+
+		[SerializeField] private SkinnerSource source;
 
 		[SerializeField, Tooltip("Reference to a template object used for rendering particles.")]
 		private SkinnerParticleTemplate template;
@@ -27,10 +29,10 @@ namespace MyGraphics.Scripts.Skinner
 
 		//Particle life (duration) settings
 		//-------------------------------
-		[SerializeField, Tooltip("Changes the duration of a particle based on its initial speed.")]
+		[SerializeField, Min(0.0f), Tooltip("Changes the duration of a particle based on its initial speed.")]
 		private float speedToLife = 4.0f;
 
-		[SerializeField, Tooltip("The maximum duration of particles.")]
+		[SerializeField, Min(0.01f), Tooltip("The maximum duration of particles.")]
 		private float maxLife = 4.0f;
 
 		//Spin (rotational movement) settings
@@ -43,10 +45,10 @@ namespace MyGraphics.Scripts.Skinner
 
 		//Particle scale settings
 		//-----------------------------------
-		[SerializeField, Tooltip("Changes the scale of a particle based on its initial speed.")]
+		[SerializeField, Min(0.0f), Tooltip("Changes the scale of a particle based on its initial speed.")]
 		private float speedToScale = 0.5f;
 
-		[SerializeField, Tooltip("The maximum scale of particles.")]
+		[SerializeField, Min(0.0f), Tooltip("The maximum scale of particles.")]
 		private float maxScale = 1.0f;
 
 		//Turbulent noise settings
@@ -67,8 +69,21 @@ namespace MyGraphics.Scripts.Skinner
 		//---------------------------
 		private bool reconfigured;
 
-		private MeshRenderer mr;
-		private MaterialPropertyBlock mpb;
+		private SkinnerData data;
+
+		public Material Mat => mat;
+		public int Width => Template == null ? 0 : Template.InstanceCount;
+		public int Height => 1;
+
+		public SkinnerSource Source
+		{
+			get => source;
+			set
+			{
+				source = value;
+				reconfigured = true;
+			}
+		}
 
 		/// Reference to a template object used for rendering particles.
 		public SkinnerParticleTemplate Template
@@ -77,7 +92,7 @@ namespace MyGraphics.Scripts.Skinner
 			set
 			{
 				template = value;
-				Reconfigured = true;
+				reconfigured = true;
 			}
 		}
 
@@ -103,14 +118,14 @@ namespace MyGraphics.Scripts.Skinner
 		public float SpeedToLife
 		{
 			get => speedToLife;
-			set => speedToLife = value;
+			set => speedToLife = Mathf.Max(value, 0.0f);
 		}
 
 		/// The maximum duration of particles.
 		public float MaxLife
 		{
 			get => maxLife;
-			set => maxLife = value;
+			set => maxLife = Mathf.Max(value, 0.01f);
 		}
 
 		public float SpeedToSpin
@@ -128,13 +143,13 @@ namespace MyGraphics.Scripts.Skinner
 		public float SpeedToScale
 		{
 			get => speedToScale;
-			set => speedToScale = value;
+			set => speedToScale = Mathf.Max(value, 0.0f);
 		}
 
 		public float MaxScale
 		{
 			get => maxScale;
-			set => maxScale = value;
+			set => maxScale = Mathf.Max(value, 0.0f);
 		}
 
 		/// The amplitude of acceleration from the turbulent noise.
@@ -169,50 +184,52 @@ namespace MyGraphics.Scripts.Skinner
 		public bool Reconfigured
 		{
 			get => reconfigured;
-			set => reconfigured = value;
 		}
 
-		private void Awake()
-		{
-			GetComponent<MeshFilter>().mesh = Template != null ? Template.Mesh : null;
-			mr = GetComponent<MeshRenderer>();
-			mpb = new MaterialPropertyBlock();
-		}
+		public SkinnerData Data => data;
+
+		public bool CanRender =>
+			mat != null && template != null  && source != null && source.CanRender;
+
 
 		private void OnEnable()
 		{
-			Instance = this;
-			reconfigured = true;
-			UpdateMPB();
+			if (!CanRender)
+			{
+				return;
+			}
+			
+			GetComponent<MeshFilter>().mesh = template.Mesh;
+			data = new SkinnerData()
+			{
+				mat = mat
+			};
+			SkinnerManager.Instance.Register(this);
 		}
 
 		private void OnDisable()
 		{
-			Instance = null;
-		}
-
-		private void OnValidate()
-		{
-			SpeedToLife = Mathf.Max(SpeedToLife, 0.0f);
-			MaxLife = Mathf.Max(MaxLife, 0.01f);
-
-			SpeedToScale = Mathf.Max(SpeedToScale, 0.0f);
-			MaxScale = Mathf.Max(MaxScale, 0.0f);
-			UpdateMPB();
+			SkinnerManager.Instance.Remove(this);
 		}
 
 		private void Reset()
 		{
 			reconfigured = true;
-			UpdateMPB();
 		}
 
-		private void UpdateMPB()
+		public void UpdateMat()
 		{
-			if (mpb != null)
+			reconfigured = false;
+			mat.SetVector(SkinnerShaderConstants.Scale_ID, new Vector4(maxScale, speedToScale, 0, 0));
+			if (data.rts != null)
 			{
-				mpb.SetVector(SkinnerShaderConstants.Scale_ID, new Vector4(maxScale, speedToScale, 0, 0));
-				mr.SetPropertyBlock(mpb);
+				mat.SetTexture(SkinnerShaderConstants.ParticlePositionTex_ID, data.CurrTex(ParticlesRTIndex.Position));
+				mat.SetTexture(SkinnerShaderConstants.ParticleVelocityTex_ID, data.CurrTex(ParticlesRTIndex.Velocity));
+				mat.SetTexture(SkinnerShaderConstants.ParticleRotationTex_ID, data.CurrTex(ParticlesRTIndex.Rotation));
+				mat.SetTexture(SkinnerShaderConstants.ParticlePrevPositionTex_ID,
+					data.PrevTex(ParticlesRTIndex.Position));
+				mat.SetTexture(SkinnerShaderConstants.ParticlePrevRotationTex_ID,
+					data.PrevTex(ParticlesRTIndex.Rotation));
 			}
 		}
 	}

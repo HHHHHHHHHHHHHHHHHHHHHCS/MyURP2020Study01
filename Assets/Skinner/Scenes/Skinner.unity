@@ -369,7 +369,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9500000, guid: 427d34d6970bfe74f99a26b6745ccbc5, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9500000, guid: 427d34d6970bfe74f99a26b6745ccbc5, type: 3}
       propertyPath: m_Controller
@@ -431,7 +431,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1164186901
 Transform:
   m_ObjectHideFlags: 0
@@ -507,6 +507,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88bee529c46cfa348a45df193eee100f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mat: {fileID: 2100000, guid: cfb7d55573848254599c53578d6984ee, type: 2}
+  source: {fileID: 1456149487}
   template: {fileID: 11400000, guid: f1e2f8595ae9d6e4d9fb6a8d25365da1, type: 2}
   speedLimit: 0.4
   drag: 5
@@ -532,6 +534,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   model: {fileID: 11400000, guid: 40afeb007706c3341b37a79c35ac45ea, type: 2}
+  mat: {fileID: 2100000, guid: f92106ac955887d46bc0016966a2f4b3, type: 2}
 --- !u!1 &2053879230
 GameObject:
   m_ObjectHideFlags: 0
@@ -756,6 +759,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5c88a70d9234844d80aa39c65215d17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mat: {fileID: 2100000, guid: 1fbc7653fc518634ca7bd0f10872ed94, type: 2}
+  source: {fileID: 1456149487}
   template: {fileID: 11400000, guid: f3130d65f9bcca34abdd25dcf6634c28, type: 2}
   speedLimit: 2
   drag: 4

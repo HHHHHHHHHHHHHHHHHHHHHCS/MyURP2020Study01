@@ -71,47 +71,56 @@ namespace MyGraphics.Scripts.Skinner
 				return;
 			}
 #endif
-			
+
 			if (renderingData.cameraData.cameraType != CameraType.Game
 			    || renderingData.cameraData.camera.name == "Preview Camera")
 			{
 				return;
 			}
 
+			if (!SkinnerManager.CheckInstance() )
+			{
+				DoDestroy();
+				return;
+			}
+			
+			var instance =  SkinnerManager.Instance;
+
+			if (instance.Sources.Count == 0)
+			{
+				DoDestroy();
+				return;
+			}
+			
+			instance.Update();
+			
 			//其实应该添加如果看不见就不渲染了  否则会图片残留
 			AddVertexAttrPass(renderer, ref renderingData);
-			AddParticleAttrPass(renderer, ref renderingData);
-			AddTrailAttrPass(renderer, ref renderingData);
+
+			if (instance.Particles.Count > 0)
+			{
+				AddParticleAttrPass(renderer, ref renderingData);
+			}
+
+			if (instance.Trails.Count > 0)
+			{
+				AddTrailAttrPass(renderer, ref renderingData);
+			}
+
+			instance.LateUpdate();
 		}
 
 		private void AddVertexAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
-			if (SkinnerSource.Instance == null)
-			{
-				particleAttrPass?.OnDestroy();
-				return;
-			}
-
-			var model = SkinnerSource.Instance.Model;
-
-			if (model == null)
-			{
-				vertexAttrPass?.OnDestroy();
-				return;
-			}
-
-
-			vertexAttrPass.OnSetup(model);
+			vertexAttrPass.OnSetup(SkinnerManager.Instance.Sources);
 			renderer.EnqueuePass(vertexAttrPass);
 		}
 
 		private void AddParticleAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
-			if (particleKernelsShader == null || SkinnerParticle.Instance == null
-			                                  || SkinnerParticle.Instance.Template == null)
+			if (particleKernelsShader == null)
 			{
 				CoreUtils.Destroy(particleKernelsMaterial);
-				particleAttrPass?.OnDestroy();
 				return;
 			}
 
@@ -120,17 +129,15 @@ namespace MyGraphics.Scripts.Skinner
 				particleKernelsMaterial = CoreUtils.CreateEngineMaterial(particleKernelsShader);
 			}
 
-			particleAttrPass.OnSetup(SkinnerParticle.Instance, particleKernelsMaterial);
+			particleAttrPass.OnSetup(SkinnerManager.Instance.Particles, particleKernelsMaterial);
 			renderer.EnqueuePass(particleAttrPass);
 		}
 
 		private void AddTrailAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
 		{
-			if (trailKernelsShader == null || SkinnerTrail.Instance == null
-			                               || SkinnerTrail.Instance.Template == null)
+			if (trailKernelsShader == null)
 			{
 				CoreUtils.Destroy(trailKernelsMaterial);
-				trailAttrPass?.OnDestroy();
 				return;
 			}
 
@@ -139,7 +146,7 @@ namespace MyGraphics.Scripts.Skinner
 				trailKernelsMaterial = CoreUtils.CreateEngineMaterial(trailKernelsShader);
 			}
 
-			trailAttrPass.OnSetup(SkinnerTrail.Instance, trailKernelsMaterial);
+			trailAttrPass.OnSetup(SkinnerManager.Instance.Trails, trailKernelsMaterial);
 			renderer.EnqueuePass(trailAttrPass);
 		}
 	}

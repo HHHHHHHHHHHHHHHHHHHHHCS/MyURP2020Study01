@@ -4,9 +4,11 @@ using UnityEngine;
 namespace MyGraphics.Scripts.Skinner
 {
 	[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
-	public class SkinnerTrail : MonoBehaviour
+	public class SkinnerTrail : MonoBehaviour, ISkinnerSetting
 	{
-		public static SkinnerTrail Instance { get; private set; }
+		[SerializeField] private Material mat;
+
+		[SerializeField] private SkinnerSource source;
 
 		[SerializeField] [Tooltip("Reference to a template object used for rendering trail lines.")]
 		public SkinnerTrailTemplate template;
@@ -40,10 +42,22 @@ namespace MyGraphics.Scripts.Skinner
 		[SerializeField, Tooltip("Determines the random number sequence used for the effect.")]
 		private int randomSeed = 0;
 
-		private MeshRenderer mr;
-		private MaterialPropertyBlock mpb;
-
 		private bool reconfigured;
+
+		private SkinnerData data;
+
+
+		public Material Mat => mat;
+
+		public SkinnerSource Source
+		{
+			get => source;
+			set
+			{
+				source = value;
+				reconfigured = true;
+			}
+		}
 
 		public SkinnerTrailTemplate Template
 		{
@@ -51,7 +65,7 @@ namespace MyGraphics.Scripts.Skinner
 			set
 			{
 				template = value;
-				Reconfigured = true;
+				reconfigured = true;
 			}
 		}
 
@@ -105,33 +119,39 @@ namespace MyGraphics.Scripts.Skinner
 		public bool Reconfigured
 		{
 			get => reconfigured;
-			set => reconfigured = value;
 		}
 
-		private void Awake()
-		{
-			GetComponent<MeshFilter>().mesh = Template != null ? Template.Mesh : null;
-			mr = GetComponent<MeshRenderer>();
-			mpb = new MaterialPropertyBlock();
-		}
+		public SkinnerData Data => data;
 
+		public int Width => Source == null || Source.Model == null ? 0 : Source.Model.VertexCount;
+		public int Height => Template == null ? 0 : Template.HistoryLength;
+
+		public bool CanRender =>
+			mat != null && template != null && source != null && source.CanRender;
 
 		private void OnEnable()
 		{
-			Instance = this;
-			reconfigured = true;
-			UpdateMPB();
+			if (!CanRender)
+			{
+				return;
+			}
+
+			GetComponent<MeshFilter>().mesh = template.Mesh;
+			data = new SkinnerData()
+			{
+				mat = mat
+			};
+			SkinnerManager.Instance.Register(this);
 		}
 
 		private void OnDisable()
 		{
-			Instance = null;
+			SkinnerManager.Instance.Remove(this);
 		}
 
 		private void Reset()
 		{
 			reconfigured = true;
-			UpdateMPB();
 		}
 
 		private void OnValidate()
@@ -139,16 +159,28 @@ namespace MyGraphics.Scripts.Skinner
 			cutoffSpeed = Mathf.Max(cutoffSpeed, 0);
 			speedToWidth = Mathf.Max(speedToWidth, 0);
 			maxWidth = Mathf.Max(maxWidth, 0);
-			UpdateMPB();
 		}
 
-		private void UpdateMPB()
+
+		public void UpdateMat()
 		{
-			if (mpb != null)
+			reconfigured = false;
+			mat.SetVector(SkinnerShaderConstants.LineWidth_ID,
+				new Vector4(maxWidth, cutoffSpeed, speedToWidth / maxWidth, 0));
+			if (data.rts != null)
 			{
-				mpb.SetVector(SkinnerShaderConstants.LineWidth_ID,
-					new Vector4(maxWidth, cutoffSpeed, speedToWidth / maxWidth, 0));
-				mr.SetPropertyBlock(mpb);
+				mat.SetTexture(SkinnerShaderConstants.TrailPositionTex_ID,
+					data.CurrTex(TrailRTIndex.Position));
+				mat.SetTexture(SkinnerShaderConstants.TrailVelocityTex_ID,
+					data.CurrTex(TrailRTIndex.Velocity));
+				mat.SetTexture(SkinnerShaderConstants.TrailOrthnormTex_ID,
+					data.CurrTex(TrailRTIndex.Orthnorm));
+				mat.SetTexture(SkinnerShaderConstants.TrailPrevPositionTex_ID,
+					data.PrevTex(TrailRTIndex.Position));
+				mat.SetTexture(SkinnerShaderConstants.TrailPrevVelocityTex_ID,
+					data.PrevTex(TrailRTIndex.Velocity));
+				mat.SetTexture(SkinnerShaderConstants.TrailPrevOrthnormTex_ID,
+					data.PrevTex(TrailRTIndex.Orthnorm));
 			}
 		}
 	}

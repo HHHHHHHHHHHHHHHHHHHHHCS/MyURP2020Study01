@@ -8,37 +8,44 @@ namespace MyGraphics.Scripts.Skinner
 	[RequireComponent(typeof(SkinnedMeshRenderer))]
 	public class SkinnerSource : MonoBehaviour
 	{
-		public static SkinnerSource Instance { get; private set; }
-
 		[SerializeField, Tooltip("Preprocessed model data.")]
 		private SkinnerModel model;
 
+		[SerializeField] private Material mat;
+
 		private SkinnedMeshRenderer smr;
 
-		/// Baked texture of skinned vertex positions.
-		public RenderTexture PositionTex => null;
+		private SkinnerVertexData data;
 
-		/// Baked texture of skinned vertex positions from the previous frame.
-		public RenderTexture PreviousPositionTex => null;
+		public SkinnerVertexData Data => data;
 
 		public SkinnerModel Model => model;
 
+		public int Width => model == null ? 0 : model.VertexCount;
+		public int Height => 1;
+
+		public bool CanRender => mat != null && model != null;
+
+
 		private void OnEnable()
 		{
-			Instance = this;
-			smr = GetComponent<SkinnedMeshRenderer>();
-
-			if (model != null)
+			if (!CanRender)
 			{
-				smr.sharedMesh = model.Mesh;
+				return;
 			}
-
+			
+			smr = GetComponent<SkinnedMeshRenderer>();
 			smr.receiveShadows = false;
+			smr.sharedMesh =  model.Mesh;
+
+			data = new SkinnerVertexData(smr, mat);
+			
+			SkinnerManager.Instance.Register(this);
 		}
 
 		private void OnDisable()
 		{
-			Instance = null;
+			SkinnerManager.Instance.Remove(this);
 		}
 	}
 }
