@@ -10,16 +10,18 @@ namespace MyGraphics.Scripts.Skinner
 		public Shader particleKernelsShader;
 		public Shader trailKernelsShader;
 		public Shader glitchKernelsShader;
+		public Shader debugShader;
 
 		private SkinnerVertexAttrPass vertexAttrPass;
 		private SkinnerParticleAttrPass particleAttrPass;
 		private SkinnerTrailAttrPass trailAttrPass;
 		private SkinnerGlitchAttrPass glitchAttrPass;
+		private SkinnerDebugAttrPass debugAttrPass;
 
 		private Material particleKernelsMaterial;
 		private Material trailKernelsMaterial;
 		private Material glitchernelsMaterial;
-
+		private Material debugMaterial;
 
 		public override void Create()
 		{
@@ -46,6 +48,11 @@ namespace MyGraphics.Scripts.Skinner
 			{
 				renderPassEvent = queueEvent
 			};
+
+			debugAttrPass = new SkinnerDebugAttrPass()
+			{
+				renderPassEvent = RenderPassEvent.AfterRenderingOpaques
+			};
 		}
 
 		private void OnDisable()
@@ -59,9 +66,11 @@ namespace MyGraphics.Scripts.Skinner
 			particleAttrPass?.OnDestroy();
 			trailAttrPass?.OnDestroy();
 			glitchAttrPass?.OnDestroy();
+			debugAttrPass?.OnDestroy();
 			CoreUtils.Destroy(particleKernelsMaterial);
 			CoreUtils.Destroy(trailKernelsMaterial);
 			CoreUtils.Destroy(glitchernelsMaterial);
+			CoreUtils.Destroy(debugMaterial);
 		}
 
 		public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -105,6 +114,7 @@ namespace MyGraphics.Scripts.Skinner
 			AddParticleAttrPass(renderer, ref renderingData);
 			AddTrailAttrPass(renderer, ref renderingData);
 			AddGlitchAttrPass(renderer, ref renderingData);
+			AddDebugAttrPass(renderer, ref renderingData);
 		}
 
 		private void AddVertexAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
@@ -168,6 +178,25 @@ namespace MyGraphics.Scripts.Skinner
 
 			glitchAttrPass.OnSetup(SkinnerManager.Instance.Glitches, glitchernelsMaterial);
 			renderer.EnqueuePass(glitchAttrPass);
+		}
+
+		private void AddDebugAttrPass(ScriptableRenderer renderer, ref RenderingData renderingData)
+		{
+			if (SkinnerManager.Instance.Debugs.Count == 0 || debugShader == null)
+			{
+				debugAttrPass?.OnDestroy();
+				CoreUtils.Destroy(debugMaterial);
+				return;
+			}
+
+			if (debugMaterial == null || debugMaterial.shader != debugShader)
+			{
+				CoreUtils.Destroy(debugMaterial);
+				debugMaterial = CoreUtils.CreateEngineMaterial(debugShader);
+			}
+
+			debugAttrPass.OnSetup(SkinnerManager.Instance.Debugs, debugMaterial);
+			renderer.EnqueuePass(debugAttrPass);
 		}
 	}
 }

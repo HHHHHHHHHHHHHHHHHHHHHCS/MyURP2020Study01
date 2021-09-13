@@ -30,6 +30,7 @@ Shader "MyRP/Skinner/ParticleSurfaceTwoSided"
 		}
 
 		Cull Off
+		ZTest Always
 
 		Pass
 		{

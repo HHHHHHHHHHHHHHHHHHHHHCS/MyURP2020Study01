@@ -1,5 +1,7 @@
+using System.IO;
 using MyGraphics.Scripts.Skinner;
 using UnityEditor;
+using UnityEditor.ProjectWindowCallback;
 using UnityEngine;
 
 namespace MyGraphics.Editor.Skinner
@@ -11,35 +13,32 @@ namespace MyGraphics.Editor.Skinner
 		{
 			// There is nothing to show!
 		}
+		
+		[MenuItem("Assets/Create/Skinner/Glitch Template")]
+		private static void CreateTemplateAsset()
+		{
+			ProjectWindowUtil.StartNameEditingIfProjectWindowExists(0, CreateInstance<CreateTemplateAssetAction>(),
+				"New Glitch Particle Template.asset", null, null);
+		}
 
-#if SHOW_CREATE_MENU_ITEM
-        [MenuItem("Assets/Create/Skinner/Glitch Template")]
-        public static void CreateTemplateAsset()
-        {
-            // Make a proper path from the current selection.
-            var path = AssetDatabase.GetAssetPath(Selection.activeObject);
-            if (string.IsNullOrEmpty(path))
-                path = "Assets";
-            else if (Path.GetExtension(path) != "")
-                path = path.Replace(Path.GetFileName(path), "");
-            var assetPathName = AssetDatabase.GenerateUniqueAssetPath(path + "/New Skinner Glitch Template.asset");
 
-            // Create a template asset.
-            var asset = ScriptableObject.CreateInstance<SkinnerGlitchTemplate>();
-            AssetDatabase.CreateAsset(asset, assetPathName);
-            AssetDatabase.AddObjectToAsset(asset.mesh, asset);
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1812")]
+		internal class CreateTemplateAssetAction : EndNameEditAction
+		{
+			public override void Action(int instanceId, string pathName, string resourceFile)
+			{
+				var asset = CreateInstance<SkinnerGlitchTemplate>();
+				AssetDatabase.CreateAsset(asset, pathName);
+				asset.RebuildMesh();
 
-            // Build an initial mesh for the asset.
-            asset.RebuildMesh();
+				AssetDatabase.AddObjectToAsset(asset.Mesh, asset);
 
-            // Save the generated mesh asset.
-            AssetDatabase.SaveAssets();
+				AssetDatabase.SaveAssets();
+				AssetDatabase.Refresh();
 
-            // Tweak the selection.
-            EditorUtility.FocusProjectWindow();
-            Selection.activeObject = asset;
-        }
-
-#endif
+				EditorUtility.FocusProjectWindow();
+				Selection.activeObject = asset;
+			}
+		}
 	}
 }

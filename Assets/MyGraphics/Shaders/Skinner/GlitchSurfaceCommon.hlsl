@@ -1,46 +1,61 @@
-#ifndef __TRAIL_SURFACE_COMMON_INCLUDE__
-#define __TRAIL_SURFACE_COMMON_INCLUDE__
+#ifndef __Glitch_SURFACE_COMMON_INCLUDE__
+#define __Glitch_SURFACE_COMMON_INCLUDE__
 
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 #include "SkinnerCommon.hlsl"
 
-TEXTURE2D(_TrailPositionTex);
-// float4 _TrailPositionTex_TexelSize;
-TEXTURE2D(_TrailVelocityTex);
-TEXTURE2D(_TrailOrthnormTex);
+TEXTURE2D(_GlitchPositionTex);
+float4 _GlitchPositionTex_TexelSize;
+TEXTURE2D(_GlitchVelocityTex);
 
 SAMPLER(s_linear_clamp_sampler);
 
-//s_linear_clamp_sampler 允许做位置插值
 // #define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
 #define SampleTex(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, s_linear_clamp_sampler, coord2, 0)
 
-// Line width modifier
-half3 _LineWidth; // (max width, cutoff, speed-to-width / max width)
+float _BufferOffset;
 
-void GetAttrData(float4 vertex, out float3 pos, out float3 nor, out float speed)
+// Glitch thresholds
+float _EdgeThreshold;
+float _AreaThreshold;
+
+void GetAttrData(float4 texcoord, out float3 pos, out float3 nor, out float voff, out float dec)
 {
-    //fetch samples from the animation kernel
-    // 为什么用linear 不用point   顶点数量不是 1:1的  所以  让位置有插值 效果更好
-    // int2 uv = vertex.xy * _TrailPositionTex_TexelSize.zw;
-	float2 uv = vertex.xy;
-    float3 p = SampleTex(_TrailPositionTex, uv).xyz;
-    float3 v = SampleTex(_TrailVelocityTex, uv).xyz;
-    float4 b = SampleTex(_TrailOrthnormTex, uv);
+    float id = texcoord.w;
 
-    // Extract normal/binormal vector from the orthnormal sample.
-    half3 normal = StereoInverseProjection(b.xy);
-    half3 binormal = StereoInverseProjection(b.zw);
+    // V-coodinate offset for the position buffer.
+    float voffs = UVRandom(id, 0) + _BufferOffset * _GlitchPositionTex_TexelSize.y;
 
-    speed = length(v);
+    // U-coodinate offset: change randomly when V-offs wraps around.
+    float uoffs = UVRandom(id + floor(voffs), 1);
 
-    half width = _LineWidth.x * vertex.z * (1 - vertex.y);
-    width *= saturate((speed - _LineWidth.y) * _LineWidth.z);
+    // Actually only the fractional part of V-offs is important.
+    voffs = frac(voffs);
 
-    pos = p + binormal * width;
-    nor = normal;
-    // pos = vertex;
+    float3 p0 = SampleTex(_GlitchPositionTex, float2(frac(texcoord.x + uoffs), voffs)).xyz;
+    float3 p1 = SampleTex(_GlitchPositionTex, float2(frac(texcoord.y + uoffs), voffs)).xyz;
+    float3 p2 = SampleTex(_GlitchPositionTex, float2(frac(texcoord.z + uoffs), voffs)).xyz;
+
+    float3 center = (p0 + p1 + p2) / 3.0;
+    float3 edges = float3(length(p1 - p0), length(p2 - p1), length(p0 - p2));
+
+    // Soft thresholding by the edge lengths
+    float3 ecull3 = saturate((edges - _EdgeThreshold) / _EdgeThreshold);
+    float ecull = max(max(ecull3.x, ecull3.y), ecull3.z);
+
+    // Soft thresholding by the triangle area
+    float area = TriangleArea(edges.x, edges.y, edges.z);
+    float acull = saturate((area - _AreaThreshold) / _AreaThreshold);
+
+    // Finally, we can do something fun!
+    float decay = pow(1 - voffs, 6);
+    float scale = saturate(1 - max(ecull, acull)) * decay;
+
+    pos = lerp(center, p0, scale);
+    nor = normalize(cross(p1 - p0, p2 - p0));
+    voff = voffs;
+    dec = decay;
 }
 
 #ifdef ForwardLitPass
@@ -51,12 +66,12 @@ half _Smoothness;
 half _Metallic;
 
 // Color modifier
-half _CutoffSpeed;
-half _SpeedToIntensity;
+half _ModDuration;
+
 
 struct a2v
 {
-	float4 vertex:POSITION;
+	float4 texcoord:TEXCOORD0;
 	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -77,16 +92,17 @@ v2f ForwardLitVert(a2v IN)
 	UNITY_SETUP_INSTANCE_ID(IN);
 	UNITY_TRANSFER_INSTANCE_ID(IN, o);
 
-	float id = IN.vertex.x;
+	float id = IN.texcoord.w;
 
 	float3 vpos;
 	float3 nor;
-	float speed;
-	GetAttrData(IN.vertex, vpos, nor, speed);
+	float voffs;
+	float decay;
+	GetAttrData(IN.texcoord, vpos, nor, voffs, decay);
 
-	half intensity = saturate((speed - _CutoffSpeed) * _SpeedToIntensity);
+	half intensity = (1 - smoothstep(_ModDuration*0.5, _ModDuration, voffs)) * decay;
 
-	o.worldPos = TransformObjectToWorld(vpos);
+	o.worldPos = TransformObjectToWorld(vpos.xyz);
 	o.pos = TransformWorldToHClip(o.worldPos);
 	o.worldNormal = TransformObjectToWorldNormal(nor);
 	o.color = ColorAnimation(id, intensity);
@@ -141,7 +157,7 @@ half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
 
 struct a2v
 {
-	float4 vertex: POSITION;
+	float4 texcoord:TEXCOORD0;
 	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -156,17 +172,18 @@ struct v2f
 float3 _LightDirection;
 
 
-v2f ShadowCasterVert(a2v v)
+v2f ShadowCasterVert(a2v IN)
 {
 	v2f o;
 
-	UNITY_SETUP_INSTANCE_ID(v);
-	UNITY_TRANSFER_INSTANCE_ID(v, o);
+	UNITY_SETUP_INSTANCE_ID(IN);
+	UNITY_TRANSFER_INSTANCE_ID(IN, o);
 
 	float3 vpos;
 	float3 nor;
-	float speed;
-	GetAttrData(v.vertex, vpos, nor, speed);
+	float voffs;
+	float decay;
+	GetAttrData(IN.texcoord, vpos, nor, voffs, decay);
 
 	float3 positionWS = TransformObjectToWorld(vpos);
 	float3 normalWS = TransformObjectToWorldNormal(nor.xyz, true);
@@ -190,7 +207,7 @@ float4 ShadowCasterFrag(v2f IN): SV_Target
 
 struct a2v
 {
-	float4 vertex: POSITION;
+	float4 texcoord:TEXCOORD0;
 	UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -210,8 +227,9 @@ v2f DepthOnlyVert(a2v IN)
 
 	float3 vpos;
 	float3 nor;
-	float speed;
-	GetAttrData(IN.vertex, vpos, nor, speed);
+	float voffs;
+	float decay;
+	GetAttrData(IN.texcoord, vpos, nor, voffs, decay);
 				
 	float3 positionWS = TransformObjectToWorld(vpos);
 	o.positionCS = TransformWorldToHClip(positionWS);
@@ -232,8 +250,7 @@ float4 DepthOnlyFrag(v2f IN): SV_Target
 
 struct a2v
 {
-    float4 vertex:POSITION;
-    float2 texcoord1 :TEXCOORD1;
+    float4 texcoord0 :TEXCOORD0;
 };
 
 struct v2f
@@ -243,46 +260,60 @@ struct v2f
     float4 transfer1:TEXCOORD1;
 };
 
-TEXTURE2D(_TrailPrevPositionTex);
-TEXTURE2D(_TrailPrevVelocityTex);
-TEXTURE2D(_TrailPrevOrthnormTex);
+TEXTURE2D(_GlitchPrevPositionTex);
+TEXTURE2D(_GlitchPrevVelocityTex);
 
 float4x4 _NonJitteredVP;
 float4x4 _PreviousVP;
 float4x4 _PreviousM;
 
+float3 GetPrevAttrData(float4 texcoord)
+{
+    float id = texcoord.w;
+
+    // V-coodinate offset for the position buffer.
+    float voffs = UVRandom(id, 0) + _BufferOffset * _GlitchPositionTex_TexelSize.y;
+
+    // U-coodinate offset: change randomly when V-offs wraps around.
+    float uoffs = UVRandom(id + floor(voffs), 1);
+
+    // Actually only the fractional part of V-offs is important.
+    voffs = frac(voffs);
+
+    float3 p0 = SampleTex(_GlitchPrevPositionTex, float2(frac(texcoord.x + uoffs), voffs)).xyz;
+    float3 p1 = SampleTex(_GlitchPrevPositionTex, float2(frac(texcoord.y + uoffs), voffs)).xyz;
+    float3 p2 = SampleTex(_GlitchPrevPositionTex, float2(frac(texcoord.z + uoffs), voffs)).xyz;
+
+    float3 center = (p0 + p1 + p2) / 3.0;
+    float3 edges = float3(length(p1 - p0), length(p2 - p1), length(p0 - p2));
+
+    // Soft thresholding by the edge lengths
+    float3 ecull3 = saturate((edges - _EdgeThreshold) / _EdgeThreshold);
+    float ecull = max(max(ecull3.x, ecull3.y), ecull3.z);
+
+    // Soft thresholding by the triangle area
+    float area = TriangleArea(edges.x, edges.y, edges.z);
+    float acull = saturate((area - _AreaThreshold) / _AreaThreshold);
+
+    // Finally, we can do something fun!
+    float decay = pow(1 - voffs, 6);
+    float scale = saturate(1 - max(ecull, acull)) * decay;
+
+    return lerp(center, p0, scale);
+}
+
 v2f MotionVectorsVert(a2v IN)
 {
-    //fetch samples from the animation kernel
-    // int2 pos = IN.vertex.xy * _TrailPositionTex_TexelSize.zw;
-	float2 uv = IN.vertex.xy;
-    float3 p0 = SampleTex(_TrailPrevPositionTex, uv).xyz;
-    float3 v0 = SampleTex(_TrailPrevVelocityTex, uv).xyz;
-    float4 b0 = SampleTex(_TrailPrevOrthnormTex, uv);
-    float3 p1 = SampleTex(_TrailPositionTex, uv).xyz;
-    float3 v1 = SampleTex(_TrailVelocityTex, uv).xyz;
-    float4 b1 = SampleTex(_TrailOrthnormTex, uv);
-
-    //Binormal Vector
-    half3 binormal0 = StereoInverseProjection(b0.zw);
-    half3 binormal1 = StereoInverseProjection(b1.zw);
-
-    p0 = lerp(p0, p1, 0.5);
-    p1 = lerp(v0, v1, 0.5);
-    binormal0 = normalize(lerp(binormal0, binormal1, 0.5));
-
-    //Line Width
-    half width = _LineWidth.x * IN.vertex.z * (1 - IN.vertex.y);
-    half width0 = width * saturate((length(v0) - _LineWidth.y) * _LineWidth.z);
-    half width1 = width * saturate((length(v1) - _LineWidth.y) * _LineWidth.z);
-
-    float4 vp0 = float4(p0 + binormal0 * width0, 1);
-    float4 vp1 = float4(p1 + binormal1 * width1, 1);
+    float4 uv = IN.texcoord0;
+    float3 prevPos = GetPrevAttrData(uv);
+    float3 currPos, nor;
+    float voff, dec;
+    GetAttrData(uv, currPos, nor, voff, dec);
 
     v2f o;
-    o.vertex = TransformObjectToHClip(vp1.xyz);
-    o.transfer0 = mul(_PreviousVP, mul(_PreviousM, vp0));
-    o.transfer1 = mul(_NonJitteredVP, mul(UNITY_MATRIX_M, vp1));
+    o.vertex = TransformObjectToHClip(currPos);
+    o.transfer0 = mul(_PreviousVP, mul(_PreviousM, float4(prevPos, 1.0)));
+    o.transfer1 = mul(_NonJitteredVP, mul(UNITY_MATRIX_M, float4(currPos, 1.0)));
     return o;
 }
 

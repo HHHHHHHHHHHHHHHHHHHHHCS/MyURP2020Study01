@@ -7,6 +7,7 @@ namespace MyGraphics.Scripts.Skinner
 	public class SkinnerGlitchTemplate : ScriptableObject
 	{
 		private const string k_tempMeshName = "Skinner Glitch Template";
+		private const int k_vcount = (65536 / 3) * 3;
 
 		[SerializeField] private Mesh mesh;
 
@@ -30,8 +31,7 @@ namespace MyGraphics.Scripts.Skinner
 			mesh.Clear();
 
 			//fill the vertex array with zero
-			const int vcount = (65536 / 3) * 3;
-			mesh.vertices = new Vector3[vcount];
+			mesh.vertices = new Vector3[k_vcount];
 
 			// Hashed texcoord array
 			// .x = hash of the current vertex
@@ -39,7 +39,7 @@ namespace MyGraphics.Scripts.Skinner
 			// .z = hash of the right-hand neighbor vertex
 			// .w = common hash of the triangle
 			var uvs = new List<Vector4>();
-			for (var i = 0; i < vcount; i += 3)
+			for (var i = 0; i < k_vcount; i += 3)
 			{
 				float u0 = Random.value;
 				float u1 = Random.value;
@@ -52,8 +52,7 @@ namespace MyGraphics.Scripts.Skinner
 
 			mesh.SetUVs(0, uvs);
 
-
-			mesh.SetIndices(Enumerable.Range(0, vcount).ToArray()
+			mesh.SetIndices(Enumerable.Range(0, k_vcount).ToArray()
 				, MeshTopology.Triangles, 0);
 
 			mesh.bounds = new Bounds(Vector3.zero, Vector3.one);

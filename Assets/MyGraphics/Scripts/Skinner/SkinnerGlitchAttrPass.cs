@@ -49,8 +49,6 @@ namespace MyGraphics.Scripts.Skinner
 						continue;
 					}
 					
-					//todo:my kernels shader and glitch surface shader
-
 					var data = glitch.Data;
 					if (data.isFirst)
 					{

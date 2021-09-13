@@ -32,7 +32,12 @@ namespace MyGraphics.Scripts.Skinner
 		public static int GlitchVelocityTex_ID = Shader.PropertyToID("_GlitchVelocityTex");
 		public static int GlitchPrevPositionTex_ID = Shader.PropertyToID("_GlitchPrevPositionTex");
 		public static int GlitchPrevVelocityTex_ID = Shader.PropertyToID("_GlitchPrevVelocityTex");
-		
+
+		public static int DebugPositionTex_ID = Shader.PropertyToID("_DebugPositionTex");
+		public static int DebugNormalTex_ID = Shader.PropertyToID("_DebugNormalTex");
+		public static int DebugTangentTex_ID = Shader.PropertyToID("_DebugTangentTex");
+		public static int DebugPrevPositionTex_ID = Shader.PropertyToID("_DebugPrevPositionTex");
+
 		public static int RandomSeed_ID = Shader.PropertyToID("_RandomSeed");
 		public static int Damper_ID = Shader.PropertyToID("_Damper");
 		public static int Gravity_ID = Shader.PropertyToID("_Gravity");
@@ -162,7 +167,7 @@ namespace MyGraphics.Scripts.Skinner
 		Velocity = 1,
 		Orthnorm = 2,
 	}
-	
+
 	public class GlitchKernels
 	{
 		public const int InitializePosition = 0;
@@ -175,5 +180,10 @@ namespace MyGraphics.Scripts.Skinner
 	{
 		Position = 0,
 		Velocity = 1,
+	}
+
+	//only empty for interface
+	public enum DebugRTIndex
+	{
 	}
 }

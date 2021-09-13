@@ -130,6 +130,7 @@ namespace MyGraphics.Scripts.Skinner
 			}
 
 			GetComponent<MeshFilter>().mesh = template.Mesh;
+			GetComponent<MeshRenderer>().material = mat;
 			data = new SkinnerData()
 			{
 				mat = mat

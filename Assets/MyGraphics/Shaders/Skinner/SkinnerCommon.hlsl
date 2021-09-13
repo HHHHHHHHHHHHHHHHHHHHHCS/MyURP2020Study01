@@ -51,6 +51,13 @@ half3 StereoInverseProjection(half2 p)
     return float3(p.xy * d, 1 - d);
 }
 
+// Calculate the area of a triangle from the length of the sides.
+half TriangleArea(half a, half b, half c)
+{
+    // Heron's formula
+    half s = 0.5 * (a + b + c);
+    return sqrt(s * (s - a) * (s - b) * (s - c));
+}
 
 // Hue to RGB convertion
 half3 HueToRGB(half h)

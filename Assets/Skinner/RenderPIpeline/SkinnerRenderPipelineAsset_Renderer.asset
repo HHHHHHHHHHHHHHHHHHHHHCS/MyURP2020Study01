@@ -58,3 +58,5 @@ MonoBehaviour:
   m_Active: 1
   particleKernelsShader: {fileID: 4800000, guid: c84a69550a3583846ab3656599c03ec8, type: 3}
   trailKernelsShader: {fileID: 4800000, guid: 203942a891d64174f99971c53a5f34f4, type: 3}
+  glitchKernelsShader: {fileID: 4800000, guid: b67880aa879a65849bacaa7450208e6b, type: 3}
+  debugShader: {fileID: 4800000, guid: 41070edf220694b41a6f66d55226fccd, type: 3}

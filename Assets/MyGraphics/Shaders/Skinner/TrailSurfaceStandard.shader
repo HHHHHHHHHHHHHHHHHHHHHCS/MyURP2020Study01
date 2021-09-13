@@ -29,7 +29,8 @@ Shader "MyRP/Skinner/TrailSurfaceStandard"
 		}
 
 		Cull Off
-		
+		ZTest Always
+
 		Pass
 		{
 			Name "ForwardLit"

@@ -16,11 +16,13 @@ namespace MyGraphics.Scripts.Skinner
 		private SkinnerRenderContainer<SkinnerParticle, ParticlesRTIndex> particles;
 		private SkinnerRenderContainer<SkinnerTrail, TrailRTIndex> trails;
 		private SkinnerRenderContainer<SkinnerGlitch, GlitchRTIndex> glitches;
+		private SkinnerRenderContainer<SkinnerDebug, DebugRTIndex> debugs;
 
 		public List<SkinnerSource> Sources => sources.Skinners;
 		public List<SkinnerParticle> Particles => particles.Skinners;
 		public List<SkinnerTrail> Trails => trails.Skinners;
 		public List<SkinnerGlitch> Glitches => glitches.Skinners;
+		public List<SkinnerDebug> Debugs => debugs.Skinners;
 
 		private SkinnerManager()
 		{
@@ -28,6 +30,7 @@ namespace MyGraphics.Scripts.Skinner
 			particles = new SkinnerRenderContainer<SkinnerParticle, ParticlesRTIndex>();
 			trails = new SkinnerRenderContainer<SkinnerTrail, TrailRTIndex>();
 			glitches = new SkinnerRenderContainer<SkinnerGlitch, GlitchRTIndex>();
+			debugs = new SkinnerRenderContainer<SkinnerDebug, DebugRTIndex>();
 		}
 
 		public static bool CheckInstance()
@@ -41,6 +44,7 @@ namespace MyGraphics.Scripts.Skinner
 			particles.Update();
 			trails.Update();
 			glitches.Update();
+			debugs.Update();
 		}
 
 		//需要在 Pass中调用  不能在feature中
@@ -50,6 +54,7 @@ namespace MyGraphics.Scripts.Skinner
 			particles.AfterRendering();
 			trails.AfterRendering();
 			glitches.AfterRendering();
+			debugs.AfterRendering();
 			//不能调整顺序  sources的要放在最后
 			sources.AfterRendering();
 		}
@@ -74,33 +79,46 @@ namespace MyGraphics.Scripts.Skinner
 			glitches.Register(obj);
 		}
 
+		public void Register(SkinnerDebug obj)
+		{
+			debugs.Register(obj);
+		}
+
+
 		public void Remove(SkinnerSource obj)
 		{
-			sources.Register(obj);
+			sources.Remove(obj);
 			TryDestroy();
 		}
 
 		public void Remove(SkinnerParticle obj)
 		{
-			particles.Register(obj);
+			particles.Remove(obj);
 			TryDestroy();
 		}
 
 		public void Remove(SkinnerTrail obj)
 		{
-			trails.Register(obj);
+			trails.Remove(obj);
 			TryDestroy();
 		}
 
 		public void Remove(SkinnerGlitch obj)
 		{
-			glitches.Register(obj);
+			glitches.Remove(obj);
+			TryDestroy();
+		}
+
+		public void Remove(SkinnerDebug obj)
+		{
+			debugs.Remove(obj);
 			TryDestroy();
 		}
 
 		private void TryDestroy()
 		{
-			if (sources.CanDestroy && particles.CanDestroy && trails.CanDestroy && glitches.CanDestroy)
+			if (sources.CanDestroy && particles.CanDestroy && trails.CanDestroy 
+			    && glitches.CanDestroy && debugs.CanDestroy)
 			{
 				instance = null;
 			}

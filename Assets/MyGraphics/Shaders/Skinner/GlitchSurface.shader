@@ -1,32 +1,24 @@
-Shader "MyRP/Skinner/ParticleSurfaceStandard"
+Shader "MyRP/Skinner/GlitchSurface"
 {
 	Properties
 	{
-		 _AlbedoMap("Albedo", 2D) = "white"{}
-        _Albedo("Color", Color) = (0.5, 0.5, 0.5)
+        _Albedo("Albedo", Color) = (0.5, 0.5, 0.5)
+        _Smoothness("Smoothness", Range(0, 1)) = 0.5
+        _Metallic("Metallic", Range(0, 1)) = 0
 
-        [Space]
-        _NormalMap("Normal", 2D) = "bump"{}
-        _NormalScale("Scale", Range(0, 2)) = 1
-		
-		_Smoothness("Smoothness", Range(0, 1)) = 0.5
-		_Metallic("Metallic", Range(0, 1)) = 0
+        [Header(Self Illumination)]
+        _BaseHue("Base Hue", Range(0, 1)) = 0
+        _HueRandomness("Hue Randomness", Range(0, 1)) = 0.2
+        _Saturation("Saturation", Range(0, 1)) = 1
+        _Brightness("Brightness", Range(0, 6)) = 0.8
+        _EmissionProb("Probability", Range(0, 1)) = 0.2
 
-		[Header(Self Illumination)]
-		_BaseHue("Base Hue", Range(0, 1)) = 0
-		_HueRandomness("Hue Randomness", Range(0, 1)) = 0.2
-		_Saturation("Saturation", Range(0, 1)) = 1
-		_Brightness("Brightness", Range(0, 6)) = 0.8
-		_EmissionProb("Probability", Range(0, 1)) = 0.2
-
-		[Header(Color Modifier (By Speed))]
-		_CutoffSpeed("Cutoff Speed", Float) = 0.5
-		_SpeedToIntensity("Sensitivity", Float) = 1
-		_BrightnessOffs("Brightness Offset", Range(0, 6)) = 1.0
-		_HueShift("Hue Shift", Range(-1, 1)) = 0.2
+        [Header(Color Modifier (By Time))]
+        _ModDuration("Duration", Range(0, 1)) = 0.5
+        _BrightnessOffs("Brightness Offset", Range(0, 6)) = 1.0
+        _HueShift("Hue Shift", Range(-1, 1)) = 0.2
 	}
 	HLSLINCLUDE
-	// #pragma enable_d3d11_debug_symbols
 	ENDHLSL
 	SubShader
 	{
@@ -34,9 +26,10 @@ Shader "MyRP/Skinner/ParticleSurfaceStandard"
 		{
 			"RenderType" = "Opaque" "Queue" = "Geometry"
 		}
-		
-		ZTest Always
 
+		Cull Off
+		ZTest Always
+				
 		Pass
 		{
 			Name "ForwardLit"
@@ -48,6 +41,7 @@ Shader "MyRP/Skinner/ParticleSurfaceStandard"
 			HLSLPROGRAM
 			#pragma vertex ForwardLitVert
 			#pragma fragment ForwardLitFrag
+
 
 			// Keywords
 			#pragma multi_compile_instancing
@@ -64,11 +58,10 @@ Shader "MyRP/Skinner/ParticleSurfaceStandard"
 			#pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
 			#pragma multi_compile _ _SHADOWS_SOFT
 			#pragma multi_compile _ _MIXED_LIGHTING_SUBTRACTIVE
-
-			#define SKINNER_TEXTURED
-			#define ForwardLitPass
 			
-			#include "ParticleSurfaceCommon.hlsl"
+			#define ForwardLitPass
+
+			#include "GlitchSurfaceCommon.hlsl"
 			
 			ENDHLSL
 		}
@@ -93,10 +86,9 @@ Shader "MyRP/Skinner/ParticleSurfaceStandard"
 
 			#define ShadowCasterPass
 			
-			#include "ParticleSurfaceCommon.hlsl"
-
+			#include "GlitchSurfaceCommon.hlsl"
+			
 			ENDHLSL
-
 		}
 
 		Pass
@@ -117,10 +109,10 @@ Shader "MyRP/Skinner/ParticleSurfaceStandard"
 			#pragma multi_compile_instancing
 			#pragma multi_compile_fog
 			#pragma multi_compile _ DOTS_INSTANCING_ON
-
+			
 			#define DepthOnlyPass
 			
-			#include "ParticleSurfaceCommon.hlsl"
+			#include "GlitchSurfaceCommon.hlsl"
 
 			ENDHLSL
 		}
@@ -140,7 +132,7 @@ Shader "MyRP/Skinner/ParticleSurfaceStandard"
 
 			#define MotionVectorsPass
 			
-			#include "ParticleSurfaceCommon.hlsl"
+			#include "GlitchSurfaceCommon.hlsl"
 			
 			ENDHLSL
 		}
