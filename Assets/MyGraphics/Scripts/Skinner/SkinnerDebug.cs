@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 using static MyGraphics.Scripts.Skinner.SkinnerShaderConstants;
 
@@ -13,6 +14,7 @@ namespace MyGraphics.Scripts.Skinner
 
 		public Material Mat => null;
 		public SkinnerSource Source => source;
+		public bool UseMRT => false;
 		public bool Reconfigured => false;
 		public SkinnerData Data => data;
 		public bool CanRender => source != null && source.CanRender;

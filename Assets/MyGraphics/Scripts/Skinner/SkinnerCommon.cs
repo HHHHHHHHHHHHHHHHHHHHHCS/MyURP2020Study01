@@ -70,8 +70,13 @@ namespace MyGraphics.Scripts.Skinner
 		public RenderTexture PrevPosTex => isSwap ? rts[VertexRTIndex.Position1] : rts[VertexRTIndex.Position0];
 		public RenderTexture NormalTex => rts[VertexRTIndex.Normal];
 		public RenderTexture TangentTex => rts[VertexRTIndex.Tangent];
+		
+		public RenderTargetIdentifier CurrPosRTI => CurrRTIs[0];
+		public RenderTargetIdentifier PrevPosRTI => PrevRTIs[0];
+		public RenderTargetIdentifier NormalRTI => CurrRTIs[1];
+		public RenderTargetIdentifier TangentRTI => CurrRTIs[2];
 
-		public RenderTargetIdentifier[] CurrRTS
+		public RenderTargetIdentifier[] CurrRTIs
 		{
 			get
 			{
@@ -101,6 +106,37 @@ namespace MyGraphics.Scripts.Skinner
 				}
 			}
 		}
+		
+		public RenderTargetIdentifier[] PrevRTIs
+		{
+			get
+			{
+				if (isSwap)
+				{
+					if (rts1 == null)
+					{
+						rts1 = new RenderTargetIdentifier[3];
+						rts1[0] = rts[VertexRTIndex.Position1];
+						rts1[1] = rts[VertexRTIndex.Normal];
+						rts1[2] = rts[VertexRTIndex.Tangent];
+					}
+
+					return rts1;
+				}
+				else
+				{
+					if (rts0 == null)
+					{
+						rts0 = new RenderTargetIdentifier[3];
+						rts0[0] = rts[VertexRTIndex.Position0];
+						rts0[1] = rts[VertexRTIndex.Normal];
+						rts0[2] = rts[VertexRTIndex.Tangent];
+					}
+
+					return rts0;
+				}
+			}
+		}
 
 
 		public SkinnerVertexData(SkinnedMeshRenderer _smr, Material _mat)
@@ -112,16 +148,55 @@ namespace MyGraphics.Scripts.Skinner
 
 	public class SkinnerData
 	{
+		private int len;
+		private RenderTexture[] rts;
+		private RenderTargetIdentifier[] rtis0, rtis1;
+
 		public Material mat;
 		public bool isFirst = true;
 		public bool isSwap = false;
-		public RenderTexture[] rts;
 
-		public int CurrIndex => isSwap ? 0 : rts.Length / 2;
-		public int PrevIndex => isSwap ? rts.Length / 2 : 0;
+		public int CurrIndex => isSwap ? 0 : len;
+		public int PrevIndex => isSwap ? len : 0;
+
+		public RenderTexture[] RTs
+		{
+			get => rts;
+			set
+			{
+				rts = value;
+				if (rts == null)
+				{
+					len = 0;
+				}
+				else
+				{
+					len = rts.Length / 2;
+					rtis0 = new RenderTargetIdentifier[len];
+					for (int i = 0; i < len; i++)
+					{
+						rtis0[i] = rts[i];
+					}
+
+					rtis1 = new RenderTargetIdentifier[len];
+					for (int i = 0; i < len; i++)
+					{
+						rtis1[i] = rts[len + i];
+					}
+				}
+			}
+		}
+
+		public bool HaveRTs => len != 0;
+
+		public RenderTargetIdentifier[] CurrRTIs => isSwap ? rtis0 : rtis1;
+		public RenderTargetIdentifier[] PrevRTIs => isSwap ? rtis1 : rtis0;
 
 		//enum hash code  就是原值
 		//https://blog.csdn.net/lzdidiv/article/details/71170528
+		public RenderTargetIdentifier CurrRTI(Enum index) => CurrRTIs[index.GetHashCode()];
+		public RenderTargetIdentifier PrevRTI(Enum index) => PrevRTIs[index.GetHashCode()];
+
 		public RenderTexture CurrTex(Enum index) => rts[CurrIndex + index.GetHashCode()];
 		public RenderTexture PrevTex(Enum index) => rts[PrevIndex + index.GetHashCode()];
 	}
@@ -159,6 +234,8 @@ namespace MyGraphics.Scripts.Skinner
 		public const int UpdatePosition = 3;
 		public const int UpdateVelocity = 4;
 		public const int UpdateOrthnorm = 5;
+		public const int InitializeMRT = 6;
+		public const int UpdateMRT = 7;
 	}
 
 	public enum TrailRTIndex

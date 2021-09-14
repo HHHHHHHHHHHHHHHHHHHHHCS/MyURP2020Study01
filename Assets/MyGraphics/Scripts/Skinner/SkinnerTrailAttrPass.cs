@@ -23,13 +23,13 @@ namespace MyGraphics.Scripts.Skinner
 			trails = _trails;
 			mat = _mat;
 		}
-		
+
 		public void OnDestroy()
 		{
 			trails = null;
 			mat = null;
 		}
-		
+
 		public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 		{
 			CommandBuffer cmd = CommandBufferPool.Get(k_tag);
@@ -48,54 +48,78 @@ namespace MyGraphics.Scripts.Skinner
 					{
 						continue;
 					}
-					
+
 					var data = trail.Data;
-					
-					
-					if (data.isFirst)
+
+					if (trail.useMRT)
 					{
-						cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosTex);
-						cmd.SetGlobalFloat(RandomSeed_ID, trail.RandomSeed);
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(TrailRTIndex.Position), mat,
-							TrailKernels.InitializePosition);
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(TrailRTIndex.Velocity), mat,
-							TrailKernels.InitializeVelocity);
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(TrailRTIndex.Orthnorm), mat,
-							TrailKernels.InitializeOrthnorm);
+						if (data.isFirst)
+						{
+							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
+							cmd.SetGlobalFloat(RandomSeed_ID, trail.RandomSeed);
+							CoreUtils.DrawFullScreen(cmd, mat, data.CurrRTIs, data.CurrRTIs[0], null,
+								TrailKernels.InitializeMRT);
+						}
+						else
+						{
+							cmd.SetGlobalTexture(SourcePositionTex0_ID, vertData.PrevPosRTI);
+							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
+							cmd.SetGlobalFloat(SpeedLimit_ID, trail.SpeedLimit);
+
+							cmd.SetGlobalTexture(PositionTex_ID, data.PrevRTI(TrailRTIndex.Position));
+							cmd.SetGlobalTexture(VelocityTex_ID, data.PrevRTI(TrailRTIndex.Velocity));
+							cmd.SetGlobalTexture(OrthnormTex_ID, data.PrevRTI(TrailRTIndex.Orthnorm));
+
+							cmd.SetGlobalFloat(Drag_ID, Mathf.Exp(-trail.Drag * Time.deltaTime));
+							CoreUtils.DrawFullScreen(cmd, mat, data.CurrRTIs, data.CurrRTIs[0], null,
+								TrailKernels.UpdateMRT);
+						}
 					}
 					else
 					{
-						cmd.SetGlobalFloat(RandomSeed_ID, trail.RandomSeed);
+						if (data.isFirst)
+						{
+							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
+							cmd.SetGlobalFloat(RandomSeed_ID, trail.RandomSeed);
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Position), mat,
+								TrailKernels.InitializePosition);
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Velocity), mat,
+								TrailKernels.InitializeVelocity);
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Orthnorm), mat,
+								TrailKernels.InitializeOrthnorm);
+						}
+						else
+						{
+							cmd.SetGlobalTexture(SourcePositionTex0_ID, vertData.PrevPosRTI);
+							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
 
-						cmd.SetGlobalTexture(SourcePositionTex0_ID, vertData.PrevPosTex);
-						cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosTex);
+							cmd.SetGlobalTexture(PositionTex_ID, data.PrevRTI(TrailRTIndex.Position));
+							cmd.SetGlobalTexture(VelocityTex_ID, data.PrevRTI(TrailRTIndex.Velocity));
+							cmd.SetGlobalFloat(SpeedLimit_ID, trail.SpeedLimit);
 
-						cmd.SetGlobalTexture(PositionTex_ID, data.PrevTex(TrailRTIndex.Position));
-						cmd.SetGlobalTexture(VelocityTex_ID, data.PrevTex(TrailRTIndex.Velocity));
-						cmd.SetGlobalFloat(SpeedLimit_ID, trail.SpeedLimit);
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Velocity), mat,
+								TrailKernels.UpdateVelocity);
 
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(TrailRTIndex.Velocity), mat,
-							TrailKernels.UpdateVelocity);
+							context.ExecuteCommandBuffer(cmd);
+							cmd.Clear();
 
-						context.ExecuteCommandBuffer(cmd);
-						cmd.Clear();
+							cmd.SetGlobalTexture(VelocityTex_ID, data.CurrRTI(TrailRTIndex.Velocity));
+							cmd.SetGlobalFloat(Drag_ID, Mathf.Exp(-trail.Drag * Time.deltaTime));
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Position), mat,
+								TrailKernels.UpdatePosition);
 
-						cmd.SetGlobalTexture(VelocityTex_ID, data.CurrTex(TrailRTIndex.Velocity));
-						cmd.SetGlobalFloat(Drag_ID, Mathf.Exp(-trail.Drag * Time.deltaTime));
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(TrailRTIndex.Position), mat,
-							TrailKernels.UpdatePosition);
+							context.ExecuteCommandBuffer(cmd);
+							cmd.Clear();
 
-						context.ExecuteCommandBuffer(cmd);
-						cmd.Clear();
+							// Invoke the orthonormal update kernel with the updated velocity.
+							cmd.SetGlobalTexture(PositionTex_ID, data.CurrRTI(TrailRTIndex.Position));
+							cmd.SetGlobalTexture(OrthnormTex_ID, data.PrevRTI(TrailRTIndex.Orthnorm));
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Orthnorm), mat,
+								TrailKernels.UpdateOrthnorm);
 
-						// Invoke the orthonormal update kernel with the updated velocity.
-						cmd.SetGlobalTexture(PositionTex_ID, data.CurrTex(TrailRTIndex.Position));
-						cmd.SetGlobalTexture(OrthnormTex_ID, data.PrevTex(TrailRTIndex.Orthnorm));
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(TrailRTIndex.Orthnorm), mat,
-							TrailKernels.UpdateOrthnorm);
-
-						context.ExecuteCommandBuffer(cmd);
-						cmd.Clear();
+							context.ExecuteCommandBuffer(cmd);
+							cmd.Clear();
+						}
 					}
 				}
 			}

@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace MyGraphics.Scripts.Skinner
 {
@@ -33,12 +34,7 @@ namespace MyGraphics.Scripts.Skinner
 
 		private bool reconfigured;
 		private bool resetMat;
-
 		private SkinnerData data;
-
-		public Material Mat => mat;
-		public int Width => source == null || source.Model == null ? 0 : source.Model.VertexCount;
-		public int Height => historyLength;
 
 		/// Reference to an effect source.
 		public SkinnerSource Source
@@ -118,7 +114,10 @@ namespace MyGraphics.Scripts.Skinner
 
 		/// Determines the random number sequence used for the effect.
 		public bool Reconfigured => reconfigured;
-
+		public Material Mat => mat;
+		public bool UseMRT => false;
+		public int Width => source == null || source.Model == null ? 0 : source.Model.VertexCount;
+		public int Height => historyLength;
 		public SkinnerData Data => data;
 		public bool CanRender => mat != null && template != null && source != null && source.Model != null;
 
@@ -170,7 +169,7 @@ namespace MyGraphics.Scripts.Skinner
 				mat.SetFloat(SkinnerShaderConstants.BufferOffset_ID, Time.frameCount);
 			}
 
-			if (data.rts != null)
+			if (data.HaveRTs)
 			{
 				mat.SetTexture(SkinnerShaderConstants.GlitchPositionTex_ID,
 					data.CurrTex(GlitchRTIndex.Position));

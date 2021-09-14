@@ -19,7 +19,7 @@ struct v2f
 {
     float4 position:SV_POSITION;
     #ifdef SKINNER_POSITION
-    float3 uv:TEXCOORD0;
+    float3 wpos:TEXCOORD0;
     #endif
     #ifdef SKINNER_NORMAL
     half3 normal:NORMAL;
@@ -49,7 +49,7 @@ v2f vert(a2v v)
     o.position = float4(v.uv.x * 2 - 1, 0, 0, 1);
     #if defined(SKINNER_POSITION)
     // TEXCOORD <= World position
-    o.uv = mul(unity_ObjectToWorld, v.vertex).xyz;
+    o.wpos = TransformObjectToWorld(v.vertex.xyz);
     #endif
     #if defined(SKINNER_NORMAL)
     // NORMAL <= World normal
@@ -70,7 +70,7 @@ v2f vert(a2v v)
 FragmentOutput frag(v2f i)
 {
     FragmentOutput o;
-    o.position = float4(i.uv, 0);
+    o.position = float4(i.wpos, 0);
     o.normal = half4(i.normal, 0);
     o.tangent = i.tangent;
     return o;
@@ -79,7 +79,7 @@ FragmentOutput frag(v2f i)
 half4 frag(v2f i) : SV_Target
 {
 #if defined(SKINNER_POSITION)
-    return float4(i.uv, 0);
+    return float4(i.wpos, 0);
 #elif defined(SKINNER_NORMAL)
     return half4(i.normal, 0);
 #elif defined(SKINNER_TANGENT)

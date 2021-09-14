@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace MyGraphics.Scripts.Skinner
 {
@@ -6,6 +7,7 @@ namespace MyGraphics.Scripts.Skinner
 	{
 		Material Mat { get; }
 		SkinnerSource Source { get; }
+		bool UseMRT { get; }
 		int Width { get; }
 		int Height { get; }
 		bool Reconfigured { get; }

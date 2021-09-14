@@ -19,7 +19,7 @@ SAMPLER(s_linear_clamp_sampler);
 // Line width modifier
 half3 _LineWidth; // (max width, cutoff, speed-to-width / max width)
 
-void GetAttrData(float4 vertex, out float3 pos, out float3 nor, out float speed)
+void GetAttrData(float4 vertex, out float3 positionWS, out float3 normalWS, out float speed)
 {
     //fetch samples from the animation kernel
     // 为什么用linear 不用point   顶点数量不是 1:1的  所以  让位置有插值 效果更好
@@ -38,9 +38,8 @@ void GetAttrData(float4 vertex, out float3 pos, out float3 nor, out float speed)
     half width = _LineWidth.x * vertex.z * (1 - vertex.y);
     width *= saturate((speed - _LineWidth.y) * _LineWidth.z);
 
-    pos = p + binormal * width;
-    nor = normal;
-    // pos = vertex;
+    positionWS = p + binormal * width;
+    normalWS = normal;
 }
 
 #ifdef ForwardLitPass
@@ -79,16 +78,16 @@ v2f ForwardLitVert(a2v IN)
 
 	float id = IN.vertex.x;
 
-	float3 vpos;
-	float3 nor;
+	float3 positionWS;
+	float3 normalWS;
 	float speed;
-	GetAttrData(IN.vertex, vpos, nor, speed);
+	GetAttrData(IN.vertex, positionWS, normalWS, speed);
 
 	half intensity = saturate((speed - _CutoffSpeed) * _SpeedToIntensity);
 
-	o.worldPos = TransformObjectToWorld(vpos);
+	o.worldPos = positionWS;
 	o.pos = TransformWorldToHClip(o.worldPos);
-	o.worldNormal = TransformObjectToWorldNormal(nor);
+	o.worldNormal = normalWS;
 	o.color = ColorAnimation(id, intensity);
 	o.shadowCoord = TransformWorldToShadowCoord(o.worldPos);
 	OUTPUT_SH(o.worldNormal, o.sh);
@@ -163,15 +162,12 @@ v2f ShadowCasterVert(a2v v)
 	UNITY_SETUP_INSTANCE_ID(v);
 	UNITY_TRANSFER_INSTANCE_ID(v, o);
 
-	float3 vpos;
-	float3 nor;
+	float3 positionWS;
+	float3 normalWS;
 	float speed;
-	GetAttrData(v.vertex, vpos, nor, speed);
+	GetAttrData(v.vertex, positionWS, normalWS, speed);
 
-	float3 positionWS = TransformObjectToWorld(vpos);
-	float3 normalWS = TransformObjectToWorldNormal(nor.xyz, true);
 	o.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
-
 	return o;
 }
 
@@ -208,12 +204,11 @@ v2f DepthOnlyVert(a2v IN)
 	UNITY_SETUP_INSTANCE_ID(v);
 	UNITY_TRANSFER_INSTANCE_ID(v, o);
 
-	float3 vpos;
-	float3 nor;
+	float3 positionWS;
+	float3 normalWS;
 	float speed;
-	GetAttrData(IN.vertex, vpos, nor, speed);
+	GetAttrData(IN.vertex, positionWS, normalWS, speed);
 				
-	float3 positionWS = TransformObjectToWorld(vpos);
 	o.positionCS = TransformWorldToHClip(positionWS);
 
 	return o;

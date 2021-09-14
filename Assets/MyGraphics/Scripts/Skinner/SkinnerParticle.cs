@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace MyGraphics.Scripts.Skinner
 {
@@ -72,10 +73,7 @@ namespace MyGraphics.Scripts.Skinner
 		private bool resetMat;
 
 		private SkinnerData data;
-
-		public Material Mat => mat;
-		public int Width => Template == null ? 0 : Template.InstanceCount;
-		public int Height => 1;
+		
 
 		public SkinnerSource Source
 		{
@@ -197,7 +195,10 @@ namespace MyGraphics.Scripts.Skinner
 		}
 
 		public SkinnerData Data => data;
-
+		public Material Mat => mat;
+		public bool UseMRT => false;
+		public int Width => Template == null ? 0 : Template.InstanceCount;
+		public int Height => 1;
 		public bool CanRender =>
 			mat != null && template != null && source != null && source.CanRender;
 
@@ -240,14 +241,14 @@ namespace MyGraphics.Scripts.Skinner
 		public void UpdateMat()
 		{
 			reconfigured = false;
-			
+
 			if (resetMat)
 			{
 				resetMat = false;
 				mat.SetVector(SkinnerShaderConstants.Scale_ID, new Vector4(maxScale, speedToScale, 0, 0));
 			}
-			
-			if (data.rts != null)
+
+			if (data.HaveRTs)
 			{
 				mat.SetTexture(SkinnerShaderConstants.ParticlePositionTex_ID, data.CurrTex(ParticlesRTIndex.Position));
 				mat.SetTexture(SkinnerShaderConstants.ParticleVelocityTex_ID, data.CurrTex(ParticlesRTIndex.Velocity));

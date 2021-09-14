@@ -79,7 +79,7 @@ namespace MyGraphics.Scripts.Skinner
 			var vertexCount = 0;
 			instanceCount = 0;
 
-			Vector3 maxP = Vector3.negativeInfinity, minP = Vector3.positiveInfinity;
+			// Vector3 maxP = Vector3.negativeInfinity, minP = Vector3.positiveInfinity;
 			// Push the source shapes one by one into the temporary array.
 			while (instanceCount < maxInstanceCount)
 			{
@@ -99,11 +99,11 @@ namespace MyGraphics.Scripts.Skinner
 					break;
 				}
 
-				foreach (var item in vtx_in)
-				{
-					maxP = Vector3.Max(maxP, item);
-					minP = Vector3.Min(minP, item);
-				}
+				// foreach (var item in vtx_in)
+				// {
+				// 	maxP = Vector3.Max(maxP, item);
+				// 	minP = Vector3.Min(minP, item);
+				// }
 
 				// Copy the vertices.
 				vtx_out.AddRange(vtx_in);
@@ -139,7 +139,7 @@ namespace MyGraphics.Scripts.Skinner
 			mesh.SetUVs(0, uv0_out);
 			mesh.SetUVs(1, uv1_out);
 			mesh.SetIndices(idx_out.ToArray(), MeshTopology.Triangles, 0);
-			mesh.bounds = new Bounds((maxP + minP) / 2.0f, (maxP - minP) / 2.0f);
+			mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10);
 			mesh.UploadMeshData(true);
 		}
 #endif

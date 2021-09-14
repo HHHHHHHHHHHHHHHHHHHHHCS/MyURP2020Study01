@@ -64,8 +64,8 @@ namespace MyGraphics.Scripts.Skinner
 				foreach (var source in sources)
 				{
 					var data = source.Data;
-					var rts = data.CurrRTS;
-					cmd.SetRenderTarget(rts, rts[0]);
+					var rtis = data.CurrRTIs;
+					cmd.SetRenderTarget(rtis, rtis[0]);
 					cmd.DrawRenderer(data.smr, data.mat);
 				}
 			}

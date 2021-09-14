@@ -55,7 +55,7 @@ namespace MyGraphics.Scripts.Skinner
 			mesh.SetIndices(Enumerable.Range(0, k_vcount).ToArray()
 				, MeshTopology.Triangles, 0);
 
-			mesh.bounds = new Bounds(Vector3.zero, Vector3.one);
+			mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10);
 			mesh.UploadMeshData(true);
 		}
 

@@ -87,7 +87,8 @@ namespace MyGraphics.Scripts.Skinner
 
 			mesh.SetIndices(indices, MeshTopology.Triangles, 0);
 
-			mesh.bounds = new Bounds(new Vector3(0.5f, 0.5f, 0f), Vector3.one);
+			//AABB大一点放置被culling掉
+			mesh.bounds = new Bounds(Vector3.zero, Vector3.one*10);
 			mesh.UploadMeshData(true);
 		}
 #endif

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.Rendering;
 
 namespace MyGraphics.Scripts.Skinner
@@ -59,7 +60,7 @@ namespace MyGraphics.Scripts.Skinner
 		{
 			if (skinners.Remove(obj))
 			{
-				DestroyRTs(obj.Data.rts);
+				DestroyRTs(obj.Data.RTs);
 			}
 		}
 
@@ -70,7 +71,7 @@ namespace MyGraphics.Scripts.Skinner
 
 		private void CheckRTs<T>(ISkinnerSetting setting) where T : Enum
 		{
-			ref RenderTexture[] rts = ref setting.Data.rts;
+			RenderTexture[] rts = setting.Data.RTs;
 			int width = setting.Width;
 			int height = setting.Height;
 			bool isForce = setting.Reconfigured;
@@ -83,7 +84,7 @@ namespace MyGraphics.Scripts.Skinner
 			if (width == 0 || height == 0)
 			{
 				DestroyRTs(rts);
-				rts = null;
+				setting.Data.RTs = null;
 				return;
 			}
 
@@ -101,8 +102,9 @@ namespace MyGraphics.Scripts.Skinner
 				DestroyRTs(rts);
 			}
 
+			//为什么不用R11B11G10 因为不支持负数  
 			RenderTextureDescriptor rtd =
-				new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBFloat, 0, 1);
+				new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBHalf, 0, 1);
 
 			for (int i = 0; i < len; i++)
 			{
@@ -117,6 +119,8 @@ namespace MyGraphics.Scripts.Skinner
 					name = names[i] + "1"
 				};
 			}
+
+			setting.Data.RTs = rts;
 		}
 
 		public void DestroyRTs(RenderTexture[] rts)

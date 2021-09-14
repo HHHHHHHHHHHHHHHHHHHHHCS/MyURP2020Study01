@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Experimental.Rendering;
 
 namespace MyGraphics.Scripts.Skinner
 {
@@ -12,6 +13,8 @@ namespace MyGraphics.Scripts.Skinner
 
 		[SerializeField] [Tooltip("Reference to a template object used for rendering trail lines.")]
 		public SkinnerTrailTemplate template;
+
+		[SerializeField] public bool useMRT;
 
 		//Dynamics settings
 		//----------------------------------
@@ -44,11 +47,8 @@ namespace MyGraphics.Scripts.Skinner
 
 		private bool reconfigured;
 		private bool resetMat;
-		
+
 		private SkinnerData data;
-
-
-		public Material Mat => mat;
 
 		public SkinnerSource Source
 		{
@@ -129,13 +129,11 @@ namespace MyGraphics.Scripts.Skinner
 			}
 		}
 
-		public bool Reconfigured
-		{
-			get => reconfigured;
-		}
 
+		public Material Mat => mat;
 		public SkinnerData Data => data;
-
+		public bool UseMRT => useMRT;
+		public bool Reconfigured => reconfigured;
 		public int Width => Source == null || Source.Model == null ? 0 : Source.Model.VertexCount;
 		public int Height => Template == null ? 0 : Template.HistoryLength;
 
@@ -187,7 +185,7 @@ namespace MyGraphics.Scripts.Skinner
 					new Vector4(maxWidth, cutoffSpeed, speedToWidth / maxWidth, 0));
 			}
 
-			if (data.rts != null)
+			if (data.HaveRTs)
 			{
 				mat.SetTexture(SkinnerShaderConstants.TrailPositionTex_ID,
 					data.CurrTex(TrailRTIndex.Position));
