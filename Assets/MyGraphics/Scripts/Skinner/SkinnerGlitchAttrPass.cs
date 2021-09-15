@@ -48,33 +48,58 @@ namespace MyGraphics.Scripts.Skinner
 					{
 						continue;
 					}
-					
+
 					var data = glitch.Data;
+
 					if (data.isFirst)
 					{
 						cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosTex);
 						cmd.SetGlobalFloat(RandomSeed_ID, glitch.RandomSeed);
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Position), mat,
-							GlitchKernels.InitializePosition);
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Velocity), mat,
-							GlitchKernels.InitializeVelocity);
 					}
 					else
 					{
+						cmd.SetGlobalFloat(VelocityScale_ID, glitch.VelocityScale);
 						cmd.SetGlobalTexture(SourcePositionTex0_ID, vertData.PrevPosTex);
 						cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosTex);
-						cmd.SetGlobalTexture(PositionTex_ID, data.PrevTex(GlitchRTIndex.Position));
-						cmd.SetGlobalTexture(VelocityTex_ID, data.PrevTex(GlitchRTIndex.Velocity));
-						cmd.SetGlobalFloat(VelocityScale_ID, glitch.VelocityScale);
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Position), mat,
-							GlitchKernels.UpdatePosition);
+					}
 
-						context.ExecuteCommandBuffer(cmd);
-						cmd.Clear();
+					if (glitch.useMRT)
+					{
+						if (data.isFirst)
+						{
+							CoreUtils.DrawFullScreen(cmd, mat, data.CurrRTIs, data.CurrRTIs[0], null,
+								GlitchKernels.InitializeMRT);
+						}
+						else
+						{
+							cmd.SetGlobalTexture(PositionTex_ID, data.PrevTex(GlitchRTIndex.Position));
+							cmd.SetGlobalTexture(VelocityTex_ID, data.PrevTex(GlitchRTIndex.Velocity));
+							CoreUtils.DrawFullScreen(cmd, mat, data.CurrRTIs, data.CurrRTIs[0], null,
+								GlitchKernels.UpdateMRT);
+						}
+					}
+					else
+					{
+						if (data.isFirst)
+						{
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Position), mat,
+								GlitchKernels.InitializePosition);
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Velocity), mat,
+								GlitchKernels.InitializeVelocity);
+						}
+						else
+						{
+							cmd.SetGlobalTexture(PositionTex_ID, data.PrevTex(GlitchRTIndex.Position));
+							cmd.SetGlobalTexture(VelocityTex_ID, data.PrevTex(GlitchRTIndex.Velocity));
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Position), mat,
+								GlitchKernels.UpdatePosition);
 
-						cmd.SetGlobalTexture(PositionTex_ID, data.CurrTex(GlitchRTIndex.Position));
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Velocity), mat,
-							GlitchKernels.UpdateVelocity);
+							context.ExecuteCommandBuffer(cmd);
+							cmd.Clear();
+
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Velocity), mat,
+								GlitchKernels.UpdateVelocity);
+						}
 					}
 				}
 			}

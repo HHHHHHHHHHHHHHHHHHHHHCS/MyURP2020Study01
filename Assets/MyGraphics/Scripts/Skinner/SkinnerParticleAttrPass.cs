@@ -43,7 +43,7 @@ namespace MyGraphics.Scripts.Skinner
 					// {
 					// 	continue;
 					// }
-					
+
 					var vertData = particle.Source.Data;
 
 					if (vertData.isFirst)
@@ -52,18 +52,12 @@ namespace MyGraphics.Scripts.Skinner
 					}
 
 					var data = particle.Data;
+
 					if (data.isFirst)
 					{
 						noiseOffset = Vector3.zero;
-						cmd.SetGlobalTexture(SourcePositionTex1_ID,vertData.CurrPosTex);
+						cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosTex);
 						cmd.SetGlobalFloat(RandomSeed_ID, particle.RandomSeed);
-
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Position), mat,
-							ParticlesKernels.InitializePosition);
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Velocity), mat,
-							ParticlesKernels.InitializeVelocity);
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Rotation), mat,
-							ParticlesKernels.InitializeRotation);
 					}
 					else
 					{
@@ -78,45 +72,80 @@ namespace MyGraphics.Scripts.Skinner
 							new Vector4(particle.MaxSpin * pi360dt, particle.SpeedToSpin * pi360dt));
 						cmd.SetGlobalVector(NoiseParams_ID,
 							new Vector4(particle.NoiseFrequency, particle.NoiseAmplitude * dt));
-
-
+						
 						// Move the noise field backward in the direction of the
 						// gravity vector, or simply pull up if no gravity is set.
-						var noiseDir = (particle.Gravity == Vector3.zero) ? Vector3.up : particle.Gravity.normalized;
+						var noiseDir = (particle.Gravity == Vector3.zero)
+							? Vector3.up
+							: particle.Gravity.normalized;
 						noiseOffset += noiseDir * particle.NoiseMotion * dt;
 						cmd.SetGlobalVector(NoiseOffset_ID, noiseOffset);
-
+						
+						
 						// Transfer the source position attributes.
-						cmd.SetGlobalTexture(SourcePositionTex0_ID,vertData.PrevPosTex);
-						cmd.SetGlobalTexture(SourcePositionTex1_ID,vertData.CurrPosTex);
+						cmd.SetGlobalTexture(SourcePositionTex0_ID, vertData.PrevPosTex);
+						cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosTex);
+					}
+
+					if (particle.UseMRT)
+					{
+						if (data.isFirst)
+						{
+							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosTex);
+							cmd.SetGlobalFloat(RandomSeed_ID, particle.RandomSeed);
+							CoreUtils.DrawFullScreen(cmd, mat, data.CurrRTIs, data.CurrRTIs[0], null,
+								ParticlesKernels.InitializeMRT);
+						}
+						else
+						{
+							cmd.SetGlobalTexture(PositionTex_ID, data.PrevTex(ParticlesRTIndex.Position));
+							cmd.SetGlobalTexture(VelocityTex_ID, data.PrevTex(ParticlesRTIndex.Velocity));
+							cmd.SetGlobalTexture(RotationTex_ID, data.PrevTex(ParticlesRTIndex.Rotation));
+							CoreUtils.DrawFullScreen(cmd, mat, data.CurrRTIs, data.CurrRTIs[0], null,
+								ParticlesKernels.UpdateMRT);
+						}
+					}
+					else
+					{
+						if (data.isFirst)
+						{
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Position), mat,
+								ParticlesKernels.InitializePosition);
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Velocity), mat,
+								ParticlesKernels.InitializeVelocity);
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Rotation), mat,
+								ParticlesKernels.InitializeRotation);
+						}
+						else
+						{
+							// Invoke the position update kernel.
+							cmd.SetGlobalTexture(PositionTex_ID, data.PrevTex(ParticlesRTIndex.Position));
+							cmd.SetGlobalTexture(VelocityTex_ID, data.PrevTex(ParticlesRTIndex.Velocity));
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Position), mat,
+								ParticlesKernels.UpdatePosition);
+
+							context.ExecuteCommandBuffer(cmd);
+							cmd.Clear();
 
 
-						// Invoke the position update kernel.
-						cmd.SetGlobalTexture(PositionTex_ID, data.PrevTex(ParticlesRTIndex.Position));
-						cmd.SetGlobalTexture(VelocityTex_ID, data.PrevTex(ParticlesRTIndex.Velocity));
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Position), mat,
-							ParticlesKernels.UpdatePosition);
+							// Invoke the velocity update kernel with the updated positions.
+							cmd.SetGlobalTexture(PositionTex_ID, data.CurrTex(ParticlesRTIndex.Position));
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Velocity), mat,
+								ParticlesKernels.UpdateVelocity);
 
-						context.ExecuteCommandBuffer(cmd);
-						cmd.Clear();
+							context.ExecuteCommandBuffer(cmd);
+							cmd.Clear();
 
+							// Invoke the rotation update kernel with the updated velocity.
+							cmd.SetGlobalTexture(RotationTex_ID, data.PrevTex(ParticlesRTIndex.Rotation));
+							cmd.SetGlobalTexture(VelocityTex_ID, data.CurrTex(ParticlesRTIndex.Velocity));
+							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Rotation), mat,
+								ParticlesKernels.UpdateRotation);
 
-						// Invoke the velocity update kernel with the updated positions.
-						cmd.SetGlobalTexture(PositionTex_ID, data.CurrTex(ParticlesRTIndex.Position));
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Velocity), mat,
-							ParticlesKernels.UpdateVelocity);
+							context.ExecuteCommandBuffer(cmd);
+							cmd.Clear();
 
-						context.ExecuteCommandBuffer(cmd);
-						cmd.Clear();
-
-						// Invoke the rotation update kernel with the updated velocity.
-						cmd.SetGlobalTexture(RotationTex_ID, data.PrevTex(ParticlesRTIndex.Rotation));
-						cmd.SetGlobalTexture(VelocityTex_ID, data.CurrTex(ParticlesRTIndex.Velocity));
-						SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Rotation), mat,
-							ParticlesKernels.UpdateRotation);
-
-						context.ExecuteCommandBuffer(cmd);
-						cmd.Clear();
+						}
 					}
 				}
 			}

@@ -39,7 +39,7 @@ void GetAttrData(inout AttrData data)
 
     data.speed = length(v.xyz);
     //p.w [-0.5,0.5]   v.w 是初始速度
-    half scale = ParticleScale(data.id, p.w + 0.5, v.w, _Scale);
+    half scale = ParticleScale(data.id, p.w, v.w, _Scale);
 
     data.vertex = RotateVector(data.vertex, r) * scale + p.xyz;
     data.normal = RotateVector(data.normal, r);
@@ -109,11 +109,11 @@ v2f ForwardLitVert(a2v IN)
 
     half intensity = saturate((data.speed - _CutoffSpeed) * _SpeedToIntensity);
 
-    o.worldPos = TransformObjectToWorld(data.vertex);
+    o.worldPos = data.vertex;
     o.pos = TransformWorldToHClip(o.worldPos);
     o.uv = IN.uv;
-    o.worldTangent = TransformObjectToWorldDir(data.tangent.xyz);
-    o.worldNormal = TransformObjectToWorldNormal(data.normal);
+    o.worldTangent = data.tangent.xyz;
+    o.worldNormal = data.normal;
     o.worldBinormal = cross(o.worldNormal, o.worldTangent) * data.tangent.w * GetOddNegativeScale();
     o.color = ColorAnimation(id, intensity);
     o.shadowCoord = TransformWorldToShadowCoord(o.worldPos);
@@ -217,8 +217,8 @@ v2f ShadowCasterVert(a2v IN)
     
     GetAttrData(data);
 
-    float3 positionWS = TransformObjectToWorld(data.vertex);
-    float3 normalWS = TransformObjectToWorldNormal(data.normal, true);
+    float3 positionWS = data.vertex;
+    float3 normalWS = data.normal;
     o.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
 
     return o;
@@ -272,7 +272,7 @@ v2f DepthOnlyVert(a2v IN)
     
     GetAttrData(data);
 
-    float3 positionWS = TransformObjectToWorld(data.vertex.xyz);
+    float3 positionWS = data.vertex.xyz;
     o.positionCS = TransformWorldToHClip(positionWS);
 
     return o;
@@ -310,7 +310,6 @@ TEXTURE2D(_ParticlePrevRotationTex);
 
 float4x4 _NonJitteredVP;
 float4x4 _PreviousVP;
-float4x4 _PreviousM;
 
 v2f MotionVectorsVert(a2v IN)
 {
@@ -333,10 +332,9 @@ v2f MotionVectorsVert(a2v IN)
     float4 vp1 = float4(RotateVector(IN.vertex.xyz, r1) * s1 + p1.xyz, 1);
 
     v2f o;
-    float3 worldPos = TransformObjectToWorld(vp1.xyz);
-    o.vertex = TransformWorldToHClip(worldPos);
-    o.transfer0 = mul(_PreviousVP, mul(_PreviousM, vp0));
-    o.transfer1 = mul(_NonJitteredVP, float4(worldPos, 1.0));
+    o.vertex = TransformWorldToHClip(vp1.xyz);
+    o.transfer0 = mul(_PreviousVP, vp0);
+    o.transfer1 = mul(_NonJitteredVP, vp1);
     return o;
 }
 

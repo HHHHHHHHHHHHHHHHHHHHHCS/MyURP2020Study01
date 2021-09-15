@@ -51,21 +51,29 @@ namespace MyGraphics.Scripts.Skinner
 
 					var data = trail.Data;
 
+
+					if (data.isFirst)
+					{
+						cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
+						cmd.SetGlobalFloat(RandomSeed_ID, trail.RandomSeed);
+					}
+					else
+					{
+						cmd.SetGlobalTexture(SourcePositionTex0_ID, vertData.PrevPosRTI);
+						cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
+						cmd.SetGlobalFloat(SpeedLimit_ID, trail.SpeedLimit);
+					}
+					
+
 					if (trail.useMRT)
 					{
 						if (data.isFirst)
 						{
-							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
-							cmd.SetGlobalFloat(RandomSeed_ID, trail.RandomSeed);
 							CoreUtils.DrawFullScreen(cmd, mat, data.CurrRTIs, data.CurrRTIs[0], null,
 								TrailKernels.InitializeMRT);
 						}
 						else
 						{
-							cmd.SetGlobalTexture(SourcePositionTex0_ID, vertData.PrevPosRTI);
-							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
-							cmd.SetGlobalFloat(SpeedLimit_ID, trail.SpeedLimit);
-
 							cmd.SetGlobalTexture(PositionTex_ID, data.PrevRTI(TrailRTIndex.Position));
 							cmd.SetGlobalTexture(VelocityTex_ID, data.PrevRTI(TrailRTIndex.Velocity));
 							cmd.SetGlobalTexture(OrthnormTex_ID, data.PrevRTI(TrailRTIndex.Orthnorm));
@@ -79,8 +87,6 @@ namespace MyGraphics.Scripts.Skinner
 					{
 						if (data.isFirst)
 						{
-							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
-							cmd.SetGlobalFloat(RandomSeed_ID, trail.RandomSeed);
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Position), mat,
 								TrailKernels.InitializePosition);
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Velocity), mat,
@@ -90,13 +96,8 @@ namespace MyGraphics.Scripts.Skinner
 						}
 						else
 						{
-							cmd.SetGlobalTexture(SourcePositionTex0_ID, vertData.PrevPosRTI);
-							cmd.SetGlobalTexture(SourcePositionTex1_ID, vertData.CurrPosRTI);
-
 							cmd.SetGlobalTexture(PositionTex_ID, data.PrevRTI(TrailRTIndex.Position));
 							cmd.SetGlobalTexture(VelocityTex_ID, data.PrevRTI(TrailRTIndex.Velocity));
-							cmd.SetGlobalFloat(SpeedLimit_ID, trail.SpeedLimit);
-
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Velocity), mat,
 								TrailKernels.UpdateVelocity);
 

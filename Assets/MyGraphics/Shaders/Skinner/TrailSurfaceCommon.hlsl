@@ -244,7 +244,6 @@ TEXTURE2D(_TrailPrevOrthnormTex);
 
 float4x4 _NonJitteredVP;
 float4x4 _PreviousVP;
-float4x4 _PreviousM;
 
 v2f MotionVectorsVert(a2v IN)
 {
@@ -275,9 +274,9 @@ v2f MotionVectorsVert(a2v IN)
     float4 vp1 = float4(p1 + binormal1 * width1, 1);
 
     v2f o;
-    o.vertex = TransformObjectToHClip(vp1.xyz);
-    o.transfer0 = mul(_PreviousVP, mul(_PreviousM, vp0));
-    o.transfer1 = mul(_NonJitteredVP, mul(UNITY_MATRIX_M, vp1));
+    o.vertex = TransformWorldToHClip(vp1.xyz);
+    o.transfer0 = mul(_PreviousVP, vp0);
+    o.transfer1 = mul(_NonJitteredVP, vp1);
     return o;
 }
 

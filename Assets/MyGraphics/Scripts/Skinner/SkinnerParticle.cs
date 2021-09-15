@@ -14,13 +14,14 @@ namespace MyGraphics.Scripts.Skinner
 		[SerializeField, Tooltip("Reference to a template object used for rendering particles.")]
 		private SkinnerParticleTemplate template;
 
+		[SerializeField] public bool useMRT;
+
 		//Basic dynamics settings
 		//----------------------------------
 		[SerializeField,
 		 Tooltip(
 			 "Limits speed of particles. This only affects changes in particle positions (doesn't modify velocity vectors).")]
 		private float speedLimit = 1.0f;
-
 
 		[SerializeField, Range(0, 15), Tooltip("The drag (damping) coefficient.")]
 		private float drag = 0.1f;
@@ -196,7 +197,7 @@ namespace MyGraphics.Scripts.Skinner
 
 		public SkinnerData Data => data;
 		public Material Mat => mat;
-		public bool UseMRT => false;
+		public bool UseMRT => useMRT;
 		public int Width => Template == null ? 0 : Template.InstanceCount;
 		public int Height => 1;
 		public bool CanRender =>

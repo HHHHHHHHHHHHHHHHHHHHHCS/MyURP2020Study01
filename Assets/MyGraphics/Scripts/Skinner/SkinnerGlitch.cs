@@ -17,6 +17,8 @@ namespace MyGraphics.Scripts.Skinner
 
 		[SerializeField] private SkinnerGlitchTemplate template;
 
+		[SerializeField] public bool useMRT;
+		
 		[SerializeField, Range(1, 1024), Tooltip("Length of the frame history buffer.")]
 		private int historyLength = 256;
 
@@ -115,7 +117,7 @@ namespace MyGraphics.Scripts.Skinner
 		/// Determines the random number sequence used for the effect.
 		public bool Reconfigured => reconfigured;
 		public Material Mat => mat;
-		public bool UseMRT => false;
+		public bool UseMRT => useMRT;
 		public int Width => source == null || source.Model == null ? 0 : source.Model.VertexCount;
 		public int Height => historyLength;
 		public SkinnerData Data => data;

@@ -16,6 +16,12 @@ Shader "MyRP/Skinner/GlitchKernels"
 		float2 uv:TEXCOORD0;
 	};
 
+	struct outMRT
+	{
+		float4 pos : SV_Target0;
+		float4 vel : SV_Target1;
+	};
+
 	TEXTURE2D(_SourcePositionTex0);
 	TEXTURE2D(_SourcePositionTex1);
 	TEXTURE2D(_PositionTex);
@@ -55,7 +61,7 @@ Shader "MyRP/Skinner/GlitchKernels"
 			{
 				int2 uv = int2(IN.pos.x, 0);
 				float3 pos = SampleTex(_SourcePositionTex1, uv).xyz;
-				
+
 				return float4(pos, 0);
 			}
 			ENDHLSL
@@ -137,6 +143,79 @@ Shader "MyRP/Skinner/GlitchKernels"
 				pos.y -= 1;
 				float4 v = SampleTex(_VelocityTex, pos);
 				return v;
+			}
+			ENDHLSL
+		}
+
+		//4
+		Pass
+		{
+			Name "InitializeMRT"
+
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment InitializeMRTFragment
+
+			outMRT InitializeMRTFragment(v2f IN)
+			{
+				outMRT o;
+				int2 uv = int2(IN.pos.x, 0);
+				float3 pos = SampleTex(_SourcePositionTex1, uv).xyz;
+				o.pos = float4(pos, 0.0);
+				o.vel = 0;
+				return o;
+			}
+			ENDHLSL
+		}
+
+		//5
+		Pass
+		{
+			Name "UpdateMRT"
+
+			HLSLPROGRAM
+			#pragma vertex vert
+			#pragma fragment UpdateMRTFragment
+
+			outMRT UpdateMRTFragment(v2f IN)
+			{
+				outMRT o;
+
+				float2 uv = IN.uv;
+				int2 pos = IN.pos.xy; //float2 x.5 也可以不-0.5 直接转换才int2
+
+				//pos
+				//----------------------
+				if (pos.y == 0)
+				{
+					//first row: just copy the source position
+
+					// The first row: calculate the vertex velocity.
+					// Get the average with the previous frame for low-pass filtering.
+					float3 p0 = SampleTex(_SourcePositionTex0, pos).xyz;
+					float3 p1 = SampleTex(_SourcePositionTex1, pos).xyz;
+					float3 v0 = (p1 - p0) * unity_DeltaTime.y * _VelocityScale;
+					//unity_DeltaTime.y 暂停的时候是无穷大
+					v0 = min(v0, FLT_MAX);
+					
+					o.pos = float4(p0, 0);
+					o.vel = float4(v0, 0);
+				}
+				else
+				{
+					//other row
+					int2 pos2 = int2(pos.x, pos.y - 1);
+
+					float3 p = SampleTex(_PositionTex, pos2).xyz;
+					float3 v = SampleTex(_VelocityTex, pos2).xyz;
+
+					p = p + v * unity_DeltaTime.x;
+
+					o.pos = float4(p, 0);
+					o.vel = float4(v, 0);
+				}
+		
+				return o;
 			}
 			ENDHLSL
 		}

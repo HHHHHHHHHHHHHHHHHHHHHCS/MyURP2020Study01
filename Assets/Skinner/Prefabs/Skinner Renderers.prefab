@@ -207,6 +207,7 @@ MonoBehaviour:
   mat: {fileID: 2100000, guid: cfb7d55573848254599c53578d6984ee, type: 2}
   source: {fileID: 0}
   template: {fileID: 11400000, guid: f1e2f8595ae9d6e4d9fb6a8d25365da1, type: 2}
+  useMRT: 0
   speedLimit: 0.4
   drag: 5
   cutoffSpeed: 0

@@ -288,8 +288,7 @@ Shader "MyRP/Skinner/TrailKernels"
 					float lv = length(o.vel);
 					if (lv > 0)
 					{
-						lv = o.vel * (min(lv, _SpeedLimit) / lv);
-						p += lv * unity_DeltaTime.x;
+						p += o.vel.xyz * (min(lv, _SpeedLimit) / lv) * unity_DeltaTime.x;
 					}
 					o.pos = float4(p, 0);
 				}

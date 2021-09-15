@@ -102,9 +102,9 @@ v2f ForwardLitVert(a2v IN)
 
 	half intensity = (1 - smoothstep(_ModDuration*0.5, _ModDuration, voffs)) * decay;
 
-	o.worldPos = TransformObjectToWorld(vpos.xyz);
+	o.worldPos = vpos.xyz;
 	o.pos = TransformWorldToHClip(o.worldPos);
-	o.worldNormal = TransformObjectToWorldNormal(nor);
+	o.worldNormal = nor;
 	o.color = ColorAnimation(id, intensity);
 	o.shadowCoord = TransformWorldToShadowCoord(o.worldPos);
 	OUTPUT_SH(o.worldNormal, o.sh);
@@ -185,8 +185,8 @@ v2f ShadowCasterVert(a2v IN)
 	float decay;
 	GetAttrData(IN.texcoord, vpos, nor, voffs, decay);
 
-	float3 positionWS = TransformObjectToWorld(vpos);
-	float3 normalWS = TransformObjectToWorldNormal(nor.xyz, true);
+	float3 positionWS = vpos;
+	float3 normalWS = nor.xyz;
 	o.positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
 
 	return o;
@@ -231,7 +231,7 @@ v2f DepthOnlyVert(a2v IN)
 	float decay;
 	GetAttrData(IN.texcoord, vpos, nor, voffs, decay);
 				
-	float3 positionWS = TransformObjectToWorld(vpos);
+	float3 positionWS = vpos;
 	o.positionCS = TransformWorldToHClip(positionWS);
 
 	return o;
@@ -265,7 +265,6 @@ TEXTURE2D(_GlitchPrevVelocityTex);
 
 float4x4 _NonJitteredVP;
 float4x4 _PreviousVP;
-float4x4 _PreviousM;
 
 float3 GetPrevAttrData(float4 texcoord)
 {
@@ -311,9 +310,9 @@ v2f MotionVectorsVert(a2v IN)
     GetAttrData(uv, currPos, nor, voff, dec);
 
     v2f o;
-    o.vertex = TransformObjectToHClip(currPos);
-    o.transfer0 = mul(_PreviousVP, mul(_PreviousM, float4(prevPos, 1.0)));
-    o.transfer1 = mul(_NonJitteredVP, mul(UNITY_MATRIX_M, float4(currPos, 1.0)));
+    o.vertex = TransformWorldToHClip(currPos);
+    o.transfer0 = mul(_PreviousVP, float4(prevPos, 1.0));
+    o.transfer1 = mul(_NonJitteredVP, float4(currPos, 1.0));
     return o;
 }
 

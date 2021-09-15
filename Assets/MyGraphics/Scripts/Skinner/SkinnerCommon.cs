@@ -201,7 +201,7 @@ namespace MyGraphics.Scripts.Skinner
 		public RenderTexture PrevTex(Enum index) => rts[PrevIndex + index.GetHashCode()];
 	}
 
-	public class VertexRTIndex
+	public static class VertexRTIndex
 	{
 		public const int Position0 = 0;
 		public const int Position1 = 1;
@@ -209,7 +209,7 @@ namespace MyGraphics.Scripts.Skinner
 		public const int Tangent = 3;
 	}
 
-	public class ParticlesKernels
+	public static class ParticlesKernels
 	{
 		public const int InitializePosition = 0;
 		public const int InitializeVelocity = 1;
@@ -217,6 +217,8 @@ namespace MyGraphics.Scripts.Skinner
 		public const int UpdatePosition = 3;
 		public const int UpdateVelocity = 4;
 		public const int UpdateRotation = 5;
+		public const int InitializeMRT = 6;
+		public const int UpdateMRT = 7;
 	}
 
 	public enum ParticlesRTIndex
@@ -245,12 +247,14 @@ namespace MyGraphics.Scripts.Skinner
 		Orthnorm = 2,
 	}
 
-	public class GlitchKernels
+	public static class GlitchKernels
 	{
 		public const int InitializePosition = 0;
 		public const int InitializeVelocity = 1;
 		public const int UpdatePosition = 2;
 		public const int UpdateVelocity = 3;
+		public const int InitializeMRT = 4;
+		public const int UpdateMRT = 5;
 	}
 
 	public enum GlitchRTIndex

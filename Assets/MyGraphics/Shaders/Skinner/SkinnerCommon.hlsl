@@ -105,5 +105,17 @@ float ParticleScale(float id, half life, half speed, half2 params)
     return s;
 }
 
+// Normalize that account for vectors with zero length
+float4 SafeNormalize(float4 inVec)
+{
+    real dp4 = max(FLT_MIN, dot(inVec, inVec));
+    return inVec * rsqrt(dp4);
+}
+
+float Sqr(float4 val)
+{
+    return dot(val, val);
+}
+
 
 #endif
