@@ -14,7 +14,13 @@ namespace MyGraphics.Scripts.Skinner
 
 		public Material Mat => null;
 		public SkinnerSource Source => source;
-		public bool UseMRT => false;
+
+		public bool UseMRT
+		{
+			get => false;
+			set { }
+		}
+
 		public bool Reconfigured => false;
 		public SkinnerData Data => data;
 		public bool CanRender => source != null && source.CanRender;

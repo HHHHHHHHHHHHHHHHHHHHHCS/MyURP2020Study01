@@ -197,7 +197,11 @@ namespace MyGraphics.Scripts.Skinner
 
 		public SkinnerData Data => data;
 		public Material Mat => mat;
-		public bool UseMRT => useMRT;
+		public bool UseMRT
+		{
+			get => useMRT;
+			set => useMRT = value;
+		}
 		public int Width => Template == null ? 0 : Template.InstanceCount;
 		public int Height => 1;
 		public bool CanRender =>

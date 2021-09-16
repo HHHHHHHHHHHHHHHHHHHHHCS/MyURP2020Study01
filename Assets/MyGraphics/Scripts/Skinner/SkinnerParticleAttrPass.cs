@@ -124,27 +124,16 @@ namespace MyGraphics.Scripts.Skinner
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Position), mat,
 								ParticlesKernels.UpdatePosition);
 
-							context.ExecuteCommandBuffer(cmd);
-							cmd.Clear();
-
-
 							// Invoke the velocity update kernel with the updated positions.
 							cmd.SetGlobalTexture(PositionTex_ID, data.CurrTex(ParticlesRTIndex.Position));
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Velocity), mat,
 								ParticlesKernels.UpdateVelocity);
-
-							context.ExecuteCommandBuffer(cmd);
-							cmd.Clear();
 
 							// Invoke the rotation update kernel with the updated velocity.
 							cmd.SetGlobalTexture(RotationTex_ID, data.PrevTex(ParticlesRTIndex.Rotation));
 							cmd.SetGlobalTexture(VelocityTex_ID, data.CurrTex(ParticlesRTIndex.Velocity));
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(ParticlesRTIndex.Rotation), mat,
 								ParticlesKernels.UpdateRotation);
-
-							context.ExecuteCommandBuffer(cmd);
-							cmd.Clear();
-
 						}
 					}
 				}

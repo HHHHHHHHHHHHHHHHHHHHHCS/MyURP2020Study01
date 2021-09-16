@@ -18,7 +18,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1216586045545680239
 Transform:
   m_ObjectHideFlags: 0
@@ -97,6 +97,7 @@ MonoBehaviour:
   mat: {fileID: 2100000, guid: 1fbc7653fc518634ca7bd0f10872ed94, type: 2}
   source: {fileID: 0}
   template: {fileID: 11400000, guid: c16d366de6bab53429d685ace1acee12, type: 2}
+  useMRT: 0
   speedLimit: 2
   drag: 4
   gravity: {x: 0, y: -0.4, z: 0}
@@ -267,7 +268,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1216586047481975174
 Transform:
   m_ObjectHideFlags: 0
@@ -346,6 +347,7 @@ MonoBehaviour:
   mat: {fileID: 2100000, guid: 14a0c8e34b0bd2f4ba6441c5329a8a1a, type: 2}
   source: {fileID: 0}
   template: {fileID: 11400000, guid: f3130d65f9bcca34abdd25dcf6634c28, type: 2}
+  useMRT: 0
   speedLimit: 10
   drag: 8.2
   gravity: {x: 0, y: -2, z: 0}
@@ -377,7 +379,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5945085158657555631
 Transform:
   m_ObjectHideFlags: 0
@@ -456,6 +458,7 @@ MonoBehaviour:
   mat: {fileID: 2100000, guid: ec3ee903718f06c4caf2bde114028631, type: 2}
   source: {fileID: 0}
   template: {fileID: 11400000, guid: 7633dc8f1103cb741ba4e0f65f1b99ae, type: 2}
+  useMRT: 0
   historyLength: 256
   velocityScale: 0.2
   edgeThreshold: 0.9

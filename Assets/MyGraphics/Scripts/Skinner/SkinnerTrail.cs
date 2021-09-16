@@ -132,7 +132,11 @@ namespace MyGraphics.Scripts.Skinner
 
 		public Material Mat => mat;
 		public SkinnerData Data => data;
-		public bool UseMRT => useMRT;
+		public bool UseMRT
+		{
+			get => useMRT;
+			set => useMRT = value;
+		}
 		public bool Reconfigured => reconfigured;
 		public int Width => Source == null || Source.Model == null ? 0 : Source.Model.VertexCount;
 		public int Height => Template == null ? 0 : Template.HistoryLength;

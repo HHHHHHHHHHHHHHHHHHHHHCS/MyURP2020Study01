@@ -198,7 +198,7 @@ PrefabInstance:
       objectReference: {fileID: 6549372773665462897}
     - target: {fileID: 1216586045545680243, guid: 2f730c10186ac7044897fee7baeca2ce, type: 3}
       propertyPath: useMRT
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1216586046253420438, guid: 2f730c10186ac7044897fee7baeca2ce, type: 3}
       propertyPath: m_IsActive
@@ -208,6 +208,10 @@ PrefabInstance:
       propertyPath: source
       value: 
       objectReference: {fileID: 6549372773665462897}
+    - target: {fileID: 1216586046253420442, guid: 2f730c10186ac7044897fee7baeca2ce, type: 3}
+      propertyPath: useMRT
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1216586046491889560, guid: 2f730c10186ac7044897fee7baeca2ce, type: 3}
       propertyPath: m_Name
       value: Skinner Renderers
@@ -264,6 +268,10 @@ PrefabInstance:
       propertyPath: source
       value: 
       objectReference: {fileID: 6549372773665462897}
+    - target: {fileID: 1216586047481975175, guid: 2f730c10186ac7044897fee7baeca2ce, type: 3}
+      propertyPath: useMRT
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4837310222501518559, guid: 2f730c10186ac7044897fee7baeca2ce, type: 3}
       propertyPath: m_IsActive
       value: 1

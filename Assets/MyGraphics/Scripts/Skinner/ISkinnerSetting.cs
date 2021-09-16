@@ -7,7 +7,7 @@ namespace MyGraphics.Scripts.Skinner
 	{
 		Material Mat { get; }
 		SkinnerSource Source { get; }
-		bool UseMRT { get; }
+		bool UseMRT { get; set; }
 		int Width { get; }
 		int Height { get; }
 		bool Reconfigured { get; }

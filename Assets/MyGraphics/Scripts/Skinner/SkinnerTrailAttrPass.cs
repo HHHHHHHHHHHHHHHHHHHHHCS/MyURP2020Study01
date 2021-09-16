@@ -101,25 +101,16 @@ namespace MyGraphics.Scripts.Skinner
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Velocity), mat,
 								TrailKernels.UpdateVelocity);
 
-							context.ExecuteCommandBuffer(cmd);
-							cmd.Clear();
-
 							cmd.SetGlobalTexture(VelocityTex_ID, data.CurrRTI(TrailRTIndex.Velocity));
 							cmd.SetGlobalFloat(Drag_ID, Mathf.Exp(-trail.Drag * Time.deltaTime));
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Position), mat,
 								TrailKernels.UpdatePosition);
-
-							context.ExecuteCommandBuffer(cmd);
-							cmd.Clear();
 
 							// Invoke the orthonormal update kernel with the updated velocity.
 							cmd.SetGlobalTexture(PositionTex_ID, data.CurrRTI(TrailRTIndex.Position));
 							cmd.SetGlobalTexture(OrthnormTex_ID, data.PrevRTI(TrailRTIndex.Orthnorm));
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrRTI(TrailRTIndex.Orthnorm), mat,
 								TrailKernels.UpdateOrthnorm);
-
-							context.ExecuteCommandBuffer(cmd);
-							cmd.Clear();
 						}
 					}
 				}

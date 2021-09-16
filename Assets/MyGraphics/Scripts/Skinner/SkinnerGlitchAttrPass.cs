@@ -94,9 +94,6 @@ namespace MyGraphics.Scripts.Skinner
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Position), mat,
 								GlitchKernels.UpdatePosition);
 
-							context.ExecuteCommandBuffer(cmd);
-							cmd.Clear();
-
 							SkinnerUtils.DrawFullScreen(cmd, data.CurrTex(GlitchRTIndex.Velocity), mat,
 								GlitchKernels.UpdateVelocity);
 						}
