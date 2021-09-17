@@ -119,7 +119,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			{
 				//a far point and random life
 				//RT是可以存负数的  但是我这里修改过了
-				return float4(1e+6, 1e+6, 1e+6, UVRandom(IN.uv, 16));
+				return float4(-1e+6, -1e+6, -1e+6, UVRandom(IN.uv, 16));
 			}
 			ENDHLSL
 		}
@@ -288,7 +288,7 @@ Shader "MyRP/Skinner/ParticleKernels"
 			outMRT InitializeMRTFragment(v2f IN)
 			{
 				outMRT o;
-				o.pos = float4(1e+6, 1e+6, 1e+6, UVRandom(IN.uv, 16));
+				o.pos = float4(-1e+6, -1e+6, -1e+6, UVRandom(IN.uv, 16));
 				o.vel = FLT_EPS;
 				o.rot = NewParticleRotation(IN.uv);
 				return o;
