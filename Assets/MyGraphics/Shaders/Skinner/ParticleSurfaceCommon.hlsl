@@ -146,7 +146,8 @@ half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
     worldNormal.x = dot(float3(IN.worldTangent.x, IN.worldBinormal.x, IN.worldNormal.x), normal);
     worldNormal.y = dot(float3(IN.worldTangent.y, IN.worldBinormal.y, IN.worldNormal.y), normal);
     worldNormal.z = dot(float3(IN.worldTangent.z, IN.worldBinormal.z, IN.worldNormal.z), normal);
-
+    worldNormal = normalize(worldNormal);
+    
     half3 viewDirectionWS = normalize(GetWorldSpaceViewDir(IN.worldPos));
 
     InputData inputData = (InputData)0;
@@ -157,7 +158,7 @@ half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
     inputData.shadowCoord = IN.shadowCoord;
     inputData.fogCoord = 0;
     inputData.vertexLighting = 1;
-    inputData.bakedGI = SAMPLE_GI(0, IN.sh, IN.worldNormal);
+    inputData.bakedGI = SAMPLE_GI(0, IN.sh, worldNormal);
     inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(IN.pos);
 
     SurfaceData surface = (SurfaceData)0;

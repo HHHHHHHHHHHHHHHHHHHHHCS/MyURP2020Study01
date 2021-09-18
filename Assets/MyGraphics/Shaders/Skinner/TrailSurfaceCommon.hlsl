@@ -100,7 +100,7 @@ half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
 	UNITY_SETUP_INSTANCE_ID(IN);
 
 	float3 normalWS = float3(0, 0, facing > 0 ? 1 : -1);// normalize(IN.worldNormal);
-	normalWS = TransformObjectToWorldNormal(normalWS);
+	
 	half3 viewDirectionWS = normalize(GetWorldSpaceViewDir(IN.worldPos));
 
 	InputData inputData = (InputData)0;
@@ -111,7 +111,7 @@ half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
 	inputData.shadowCoord = IN.shadowCoord;
 	inputData.fogCoord = 0;
 	inputData.vertexLighting = 1;
-	inputData.bakedGI = SAMPLE_GI(0, IN.sh, IN.worldNormal);
+	inputData.bakedGI = SAMPLE_GI(0, IN.sh, normalWS);
 	inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(IN.pos);
 
 	SurfaceData surface = (SurfaceData)0;
