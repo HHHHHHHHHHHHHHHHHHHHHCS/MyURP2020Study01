@@ -70,10 +70,10 @@ half _Metallic;
 struct a2v
 {
     float4 vertex:POSITION;
-	float3 normal:NORMAL;
-	float4 tangent:TANGENT;
-	float2 uv:TEXCOORD0;
-	float id:TEXCOORD1;
+    float3 normal:NORMAL;
+    float4 tangent:TANGENT;
+    float2 uv:TEXCOORD0;
+    float id:TEXCOORD1;
     UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
@@ -83,7 +83,7 @@ struct v2f
     float3 worldPos : TEXCOORD0;
     float2 uv : TEXCOORD1;
     float3 worldTangent : TEXCOORD2;
-    float3 worldBinormal : TEXCOORD3; 
+    float3 worldBinormal : TEXCOORD3;
     float3 worldNormal : TEXCOORD4;
     half3 color : TEXCOORD5;
     float4 shadowCoord : TEXCOORD6;
@@ -104,7 +104,7 @@ v2f ForwardLitVert(a2v IN)
     data.vertex = IN.vertex.xyz;
     data.normal = IN.normal;
     data.tangent = IN.tangent;
-    
+
     GetAttrData(data);
 
     half intensity = saturate((data.speed - _CutoffSpeed) * _SpeedToIntensity);
@@ -128,25 +128,25 @@ half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
 
     float3 normal = float3(0, 0, 1);
     half3 albedo = _Albedo;
-#ifdef SKINNER_TEXTURED
-    albedo *= SAMPLE_TEXTURE2D(_AlbedoMap, sampler_AlbedoMap,IN.uv).rgb;
+    #ifdef SKINNER_TEXTURED
+    albedo *= SAMPLE_TEXTURE2D(_AlbedoMap, sampler_AlbedoMap, IN.uv).rgb;
     half3 n = UnpackNormalScale(SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, IN.uv), _NormalScale);
-#ifdef SKINNER_TWO_SIDED
+    #ifdef SKINNER_TWO_SIDED
     normal = n * (facing > 0? 1: -1);
-#else
+    #else
     normal = n;
-#endif
-#else
-#ifdef SKINNER_TWO_SIDED
+    #endif
+    #else
+    #ifdef SKINNER_TWO_SIDED
     normal = half3(0, 0, facing>0?1:-1);
-#endif
-#endif
+    #endif
+    #endif
 
     float3 worldNormal;
     worldNormal.x = dot(float3(IN.worldTangent.x, IN.worldBinormal.x, IN.worldNormal.x), normal);
     worldNormal.y = dot(float3(IN.worldTangent.y, IN.worldBinormal.y, IN.worldNormal.y), normal);
     worldNormal.z = dot(float3(IN.worldTangent.z, IN.worldBinormal.z, IN.worldNormal.z), normal);
-    
+
     half3 viewDirectionWS = normalize(GetWorldSpaceViewDir(IN.worldPos));
 
     InputData inputData = (InputData)0;
@@ -346,10 +346,10 @@ half4 MotionVectorsFrag(v2f IN):SV_Target
     float2 vp0 = (hp0.xy + 1) / 2.0;
     float2 vp1 = (hp1.xy + 1) / 2.0;
 
-    #if UNITY_UV_STARTS_AT_TOP
+#if UNITY_UV_STARTS_AT_TOP
     vp0.y = 1 - vp0.y;
     vp1.y = 1 - vp1.y;
-    #endif
+#endif
 
     return half4(vp1 - vp0, 0, 1);
 }
