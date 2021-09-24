@@ -1,6 +1,8 @@
 #ifndef __SKINNER_COMMON_INCLUDE__
 #define __SKINNER_COMMON_INCLUDE__
 
+// #pragma enable_d3d11_debug_symbols
+
 #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 
