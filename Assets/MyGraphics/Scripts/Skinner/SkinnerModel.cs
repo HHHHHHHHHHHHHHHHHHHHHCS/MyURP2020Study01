@@ -28,6 +28,7 @@ namespace MyGraphics.Scripts.Skinner
 
 			for (var i = 0; i < inVertices.Length; i++)
 			{
+				//去除位置一样的点
 				if (outVertices.All(item => item != inVertices[i]))
 				{
 					outVertices.Add(inVertices[i]);
@@ -45,21 +46,23 @@ namespace MyGraphics.Scripts.Skinner
 			mesh = Instantiate(source);
 			//减去 (Copy)   加上_Skinner
 			mesh.name = mesh.name.Substring(0, mesh.name.Length - 7) + "_Skinner";
-
-
-			mesh.colors = null;
-			mesh.uv2 = null;
-			mesh.uv3 = null;
-			mesh.uv4 = null;
-
+			
+			//先设置为0 避免报错
 			mesh.subMeshCount = 0;
+			
 			mesh.SetVertices(outVertices);
 			mesh.SetNormals(outNormals);
 			mesh.SetTangents(outTangents);
 			mesh.SetUVs(0, outUVs);
 			mesh.bindposes = source.bindposes;
 			mesh.boneWeights = outBoneWeights.ToArray();
+			
+			mesh.colors = null;
+			mesh.uv2 = null;
+			mesh.uv3 = null;
+			mesh.uv4 = null;
 
+			//设置回来 保证结果正确
 			mesh.subMeshCount = 1;
 			mesh.SetIndices(indices, MeshTopology.Points, 0);
 			mesh.UploadMeshData(true);

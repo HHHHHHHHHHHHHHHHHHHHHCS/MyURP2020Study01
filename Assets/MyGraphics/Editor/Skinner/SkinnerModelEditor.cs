@@ -49,7 +49,7 @@ namespace MyGraphics.Editor.Skinner
 		[MenuItem("Assets/Skinner/Convert Mesh")]
 		private static void ConvertAssets()
 		{
-			var converted = new List<Object>();
+			// var converted = new List<Object>();
 
 			foreach (var item in SelectedMeshAssets)
 			{
@@ -67,8 +67,12 @@ namespace MyGraphics.Editor.Skinner
 				//把资源添加到现有的资源中  防止加载不到
 				AssetDatabase.AddObjectToAsset(asset.Mesh, asset);
 
-				converted.Add(asset);
+				// converted.Add(asset);
 			}
+
+			AssetDatabase.SaveAssets();
+			AssetDatabase.Refresh();
+			Resources.UnloadUnusedAssets();
 		}
 	}
 }
