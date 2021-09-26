@@ -11,9 +11,12 @@ namespace MyGraphics.Editor.Skinner
 	{
 		public override void OnInspectorGUI()
 		{
-			// There is nothing to show!
+			if (GUILayout.Button("Rebuild"))
+			{
+				(target as SkinnerGlitchTemplate)?.RebuildMesh();
+			}
 		}
-		
+
 		[MenuItem("Assets/Create/Skinner/Glitch Template")]
 		private static void CreateTemplateAsset()
 		{

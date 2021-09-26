@@ -42,7 +42,7 @@ namespace MyGraphics.Editor.Skinner
 
 				Mesh mesh = Instantiate(source);
 				go.hideFlags = HideFlags.DontSave;
-
+				
 				var indices = new int[source.vertexCount * 3];
 				for (int i = 0; i < source.vertexCount; i++)
 				{
@@ -54,8 +54,8 @@ namespace MyGraphics.Editor.Skinner
 				mesh.SetIndices(indices, MeshTopology.Triangles, 0);
 				mesh.UploadMeshData(true);
 
-				var mf = go.AddComponent<MeshFilter>();
-				mf.sharedMesh = mesh;
+				var smr = go.AddComponent<SkinnedMeshRenderer>();
+				smr.sharedMesh = mesh;
 
 				
 				// AssetDatabase.CreateAsset(mesh, meshPath);
