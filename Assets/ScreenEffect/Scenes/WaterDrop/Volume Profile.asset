@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Volume Profile
   m_EditorClassIdentifier: 
   components:
-  - {fileID: 8857150577824571300}
---- !u!114 &8857150577824571300
+  - {fileID: 1515020863384737740}
+--- !u!114 &1515020863384737740
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -45,4 +45,4 @@ MonoBehaviour:
     m_Value: 1
   effectMat:
     m_OverrideState: 1
-    m_Value: {fileID: 2100000, guid: 642c899f8f0d37e46977c05e0419431f, type: 2}
+    m_Value: {fileID: 2100000, guid: 9f9fdcc0c9c321d47ae4c4075a9d054e, type: 2}
