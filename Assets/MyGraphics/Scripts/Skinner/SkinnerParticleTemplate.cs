@@ -136,6 +136,7 @@ namespace MyGraphics.Scripts.Skinner
 			mesh.Clear();
 			mesh.SetVertices(vtx_out);
 			mesh.SetNormals(nrm_out);
+			mesh.SetTangents(tan_out);
 			mesh.SetUVs(0, uv0_out);
 			mesh.SetUVs(1, uv1_out);
 			mesh.SetIndices(idx_out.ToArray(), MeshTopology.Triangles, 0);
