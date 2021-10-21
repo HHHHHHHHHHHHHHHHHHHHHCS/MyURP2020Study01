@@ -2721,6 +2721,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 659690771308253123, guid: 9ae525660df434b4f8089944f777a3fa, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6549372772326946597, guid: 9ae525660df434b4f8089944f777a3fa, type: 3}
       propertyPath: m_Name
       value: Neo Source
@@ -2771,6 +2775,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6549372772327238405, guid: 9ae525660df434b4f8089944f777a3fa, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6549372773038136946, guid: 9ae525660df434b4f8089944f777a3fa, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6549372773873933450, guid: 9ae525660df434b4f8089944f777a3fa, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
