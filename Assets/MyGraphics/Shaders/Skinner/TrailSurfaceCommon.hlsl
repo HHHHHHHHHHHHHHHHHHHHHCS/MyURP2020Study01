@@ -99,7 +99,7 @@ half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
 {
     UNITY_SETUP_INSTANCE_ID(IN);
 
-    float3 normalWS = float3(0, 0, facing > 0 ? 1 : -1); // normalize(IN.worldNormal);
+    float3 normalWS = normalize(IN.worldNormal);//float3(0, 0, facing > 0 ? 1 : -1);
 
     half3 viewDirectionWS = normalize(GetWorldSpaceViewDir(IN.worldPos));
 
