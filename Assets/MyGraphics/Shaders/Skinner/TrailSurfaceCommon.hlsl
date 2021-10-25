@@ -24,7 +24,7 @@ void GetAttrData(float4 vertex, out float3 positionWS, out float3 normalWS, out 
     //fetch samples from the animation kernel
     // 为什么用linear 不用point   顶点数量不是 1:1的  所以  让位置有插值 效果更好
     // int2 uv = vertex.xy * _TrailPositionTex_TexelSize.zw;
-	float2 uv = vertex.xy;
+    float2 uv = vertex.xy;
     float3 p = SampleTex(_TrailPositionTex, uv).xyz;
     float3 v = SampleTex(_TrailVelocityTex, uv).xyz;
     float4 b = SampleTex(_TrailOrthnormTex, uv);
@@ -55,78 +55,78 @@ half _SpeedToIntensity;
 
 struct a2v
 {
-	float4 vertex:POSITION;
-	UNITY_VERTEX_INPUT_INSTANCE_ID
+    float4 vertex:POSITION;
+    UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
 struct v2f
 {
-	float4 pos : SV_POSITION;
-	half3 color : TEXCOORD0;
-	float3 worldNormal : TEXCOORD1;
-	float3 worldPos : TEXCOORD2;
-	float4 shadowCoord : TEXCOORD3;
-	float3 sh : TEXCOORD4;
-	UNITY_VERTEX_INPUT_INSTANCE_ID
+    float4 pos : SV_POSITION;
+    half3 color : TEXCOORD0;
+    float3 worldNormal : TEXCOORD1;
+    float3 worldPos : TEXCOORD2;
+    float4 shadowCoord : TEXCOORD3;
+    float3 sh : TEXCOORD4;
+    UNITY_VERTEX_INPUT_INSTANCE_ID
 };
 
 v2f ForwardLitVert(a2v IN)
 {
-	v2f o;
-	UNITY_SETUP_INSTANCE_ID(IN);
-	UNITY_TRANSFER_INSTANCE_ID(IN, o);
+    v2f o;
+    UNITY_SETUP_INSTANCE_ID(IN);
+    UNITY_TRANSFER_INSTANCE_ID(IN, o);
 
-	float id = IN.vertex.x;
+    float id = IN.vertex.x;
 
-	float3 positionWS;
-	float3 normalWS;
-	float speed;
-	GetAttrData(IN.vertex, positionWS, normalWS, speed);
+    float3 positionWS;
+    float3 normalWS;
+    float speed;
+    GetAttrData(IN.vertex, positionWS, normalWS, speed);
 
-	half intensity = saturate((speed - _CutoffSpeed) * _SpeedToIntensity);
+    half intensity = saturate((speed - _CutoffSpeed) * _SpeedToIntensity);
 
-	o.worldPos = positionWS;
-	o.pos = TransformWorldToHClip(o.worldPos);
-	o.worldNormal = normalWS;
-	o.color = ColorAnimation(id, intensity);
-	o.shadowCoord = TransformWorldToShadowCoord(o.worldPos);
-	OUTPUT_SH(o.worldNormal, o.sh);
-	return o;
+    o.worldPos = positionWS;
+    o.pos = TransformWorldToHClip(o.worldPos);
+    o.worldNormal = normalWS;
+    o.color = ColorAnimation(id, intensity);
+    o.shadowCoord = TransformWorldToShadowCoord(o.worldPos);
+    OUTPUT_SH(o.worldNormal, o.sh);
+    return o;
 }
 
 
 half4 ForwardLitFrag(v2f IN, half facing : VFACE):SV_Target
 {
-	UNITY_SETUP_INSTANCE_ID(IN);
+    UNITY_SETUP_INSTANCE_ID(IN);
 
-	float3 normalWS = float3(0, 0, facing > 0 ? 1 : -1);// normalize(IN.worldNormal);
-	
-	half3 viewDirectionWS = normalize(GetWorldSpaceViewDir(IN.worldPos));
+    float3 normalWS = float3(0, 0, facing > 0 ? 1 : -1); // normalize(IN.worldNormal);
 
-	InputData inputData = (InputData)0;
-	//PRDFForward.BuildInputData()
-	inputData.positionWS = IN.worldPos;
-	inputData.normalWS = normalWS; 
-	inputData.viewDirectionWS = viewDirectionWS;
-	inputData.shadowCoord = IN.shadowCoord;
-	inputData.fogCoord = 0;
-	inputData.vertexLighting = 1;
-	inputData.bakedGI = SAMPLE_GI(0, IN.sh, normalWS);
-	inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(IN.pos);
+    half3 viewDirectionWS = normalize(GetWorldSpaceViewDir(IN.worldPos));
 
-	SurfaceData surface = (SurfaceData)0;
-	surface.albedo = _Albedo;
-	surface.metallic = _Metallic;
-	surface.specular = 0;
-	surface.smoothness = _Smoothness;
-	surface.occlusion = 1.0;
-	surface.emission = IN.color;
-	surface.alpha = 1;
-	surface.clearCoatMask = 0;
-	surface.clearCoatSmoothness = 1;
+    InputData inputData = (InputData)0;
+    //PRDFForward.BuildInputData()
+    inputData.positionWS = IN.worldPos;
+    inputData.normalWS = normalWS;
+    inputData.viewDirectionWS = viewDirectionWS;
+    inputData.shadowCoord = IN.shadowCoord;
+    inputData.fogCoord = 0;
+    inputData.vertexLighting = 1;
+    inputData.bakedGI = SAMPLE_GI(0, IN.sh, normalWS);
+    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(IN.pos);
 
-	half4 color = UniversalFragmentPBR(inputData, surface);
-	return color;
+    SurfaceData surface = (SurfaceData)0;
+    surface.albedo = _Albedo;
+    surface.metallic = _Metallic;
+    surface.specular = 0;
+    surface.smoothness = _Smoothness;
+    surface.occlusion = 1.0;
+    surface.emission = IN.color;
+    surface.alpha = 1;
+    surface.clearCoatMask = 0;
+    surface.clearCoatSmoothness = 1;
+
+    half4 color = UniversalFragmentPBR(inputData, surface);
+    return color;
 }
 
 #endif
@@ -288,10 +288,10 @@ half4 MotionVectorsFrag(v2f IN):SV_Target
     float2 vp0 = (hp0.xy + 1) / 2.0;
     float2 vp1 = (hp1.xy + 1) / 2.0;
 
-    #if UNITY_UV_STARTS_AT_TOP
+#if UNITY_UV_STARTS_AT_TOP
     vp0.y = 1 - vp0.y;
     vp1.y = 1 - vp1.y;
-    #endif
+#endif
 
     return half4(vp1 - vp0, 0, 1);
 }
