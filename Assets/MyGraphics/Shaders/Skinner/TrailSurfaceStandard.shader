@@ -29,7 +29,7 @@ Shader "MyRP/Skinner/TrailSurfaceStandard"
 		}
 
 		Cull Off
-		ZTest Always
+		//ZTest Always
 
 		Pass
 		{
