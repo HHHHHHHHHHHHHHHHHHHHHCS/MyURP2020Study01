@@ -122,11 +122,8 @@ namespace MyGraphics.Editor.Other
 			}
 
 			newMesh.SetColors(colors);
-			
-			newMesh.SetUVs(0, oldMesh.uv2);
-
 			newMesh.bounds = oldMesh.bounds;
-
+			
 			AssetDatabase.CreateAsset(newMesh, "Assets/" + newMesh.name + ".asset");
 			AssetDatabase.Refresh();
 		}
