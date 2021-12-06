@@ -14,7 +14,7 @@ SAMPLER(s_linear_clamp_sampler);
 
 //s_linear_clamp_sampler 允许做位置插值
 // #define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
-#define SampleTex(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, s_linear_clamp_sampler, coord2, 0)
+#define SampleTex(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, s_point_clamp_sampler, coord2, 0)
 
 // Line width modifier
 half3 _LineWidth; // (max width, cutoff, speed-to-width / max width)
