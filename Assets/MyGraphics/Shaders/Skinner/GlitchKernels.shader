@@ -31,7 +31,7 @@ Shader "MyRP/Skinner/GlitchKernels"
 
 	//也可以用textureName.GetDimensions()
 	//uv*size理论要-0.5 但是被转换为int 自动忽略小数点
-	//是不会超过[0, w or h)的
+	//是会超过[0, w or h)的  超过部分 好像是0  所以要clamp
 	#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
 
 	v2f vert(a2v IN)
@@ -197,7 +197,7 @@ Shader "MyRP/Skinner/GlitchKernels"
 					float3 v0 = (p1 - p0) * unity_DeltaTime.y * _VelocityScale;
 					//unity_DeltaTime.y 暂停的时候是无穷大
 					v0 = min(v0, FLT_MAX);
-					
+
 					o.pos = float4(p0, 0);
 					o.vel = float4(v0, 0);
 				}
@@ -214,7 +214,7 @@ Shader "MyRP/Skinner/GlitchKernels"
 					o.pos = float4(p, 0);
 					o.vel = float4(v, 0);
 				}
-		
+
 				return o;
 			}
 			ENDHLSL

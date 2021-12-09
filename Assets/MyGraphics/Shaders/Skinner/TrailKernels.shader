@@ -37,7 +37,7 @@ Shader "MyRP/Skinner/TrailKernels"
 
 	//也可以用textureName.GetDimensions()
 	//uv*size理论要-0.5 但是被转换为int 自动忽略小数点
-	//是不会超过[0, w or h)的
+	//是会超过[0, w or h)的  超过部分 好像是0  所以要clamp
 	#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
 
 	v2f vert(a2v IN)
@@ -190,8 +190,11 @@ Shader "MyRP/Skinner/TrailKernels"
 				int2 pos = IN.pos.xy;
 
 				int2 uv0 = int2(pos.x, pos.y - 2);
+				uv0.y = max(0, uv0.y);
 				int2 uv1 = int2(pos.x, pos.y - 1);
+				uv1.y = max(0, uv1.y);
 				int2 uv2 = int2(pos.x, pos.y + 2);
+				uv2.y = min(_PositionTex_TexelSize.w - 1, uv2.y);
 
 				// Use the parent normal vector from the previous frame.
 				float4 b1 = SampleTex(_OrthnormTex, uv1);
@@ -237,7 +240,7 @@ Shader "MyRP/Skinner/TrailKernels"
 
 				//a far point and random life
 				//是可以存在负数的
-				o.pos = float4(pos, 0);
+				o.pos = PackF3ToF4(pos);
 				o.vel = 0;
 				o.orth = 0;
 				return o;
@@ -275,22 +278,22 @@ Shader "MyRP/Skinner/TrailKernels"
 					//unity_DeltaTime.y 暂停的时候是无穷大
 					float3 cv = min((v0 + v1) * 0.5, FLT_MAX);
 					o.vel = float4(cv, 0.0);
-					o.pos = float4(p1, 0);
+					o.pos = PackF3ToF4(p1); // float4(p1, 0);
 				}
 				else
 				{
 					int2 vpos = int2(pos.x, pos.y - 1);
-					
+
 					float3 v = SampleTex(_VelocityTex, vpos).xyz;
 					o.vel = float4(v * _Drag, 0);
 
-					float3 p = SampleTex(_PositionTex, vpos).xyz;
+					float3 p = UnpackF4ToF3(SampleTex(_PositionTex, vpos));
 					float lv = length(o.vel);
 					if (lv > 0)
 					{
 						p += o.vel.xyz * (min(lv, _SpeedLimit) / lv) * unity_DeltaTime.x;
 					}
-					o.pos = float4(p, 0);
+					o.pos = PackF3ToF4(p);
 				}
 
 
@@ -299,16 +302,19 @@ Shader "MyRP/Skinner/TrailKernels"
 				//orth
 				//-------------------------------
 				int2 uv0 = int2(pos.x, pos.y - 2);
+				uv0.y = max(0, uv0.y);
 				int2 uv1 = int2(pos.x, pos.y - 1);
+				uv1.y = max(0, uv1.y);
 				int2 uv2 = int2(pos.x, pos.y + 2);
+				uv2.y = min(_PositionTex_TexelSize.w - 1, uv2.y);
 
 				// Use the parent normal vector from the previous frame.
 				float4 b1 = SampleTex(_OrthnormTex, uv1);
 				float3 ax = StereoInverseProjection(b1.zw);
 
 				//tangent vector
-				float3 p0 = SampleTex(_PositionTex, uv0).xyz;
-				float3 p1 = SampleTex(_PositionTex, uv2).xyz;
+				float3 p0 = UnpackF4ToF3(SampleTex(_PositionTex, uv0));
+				float3 p1 = UnpackF4ToF3(SampleTex(_PositionTex, uv2));
 				float3 az = p1 - p0;
 				if (az.x == 0 && az.y == 0 && az.z == 0)
 				{

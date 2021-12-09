@@ -119,5 +119,39 @@ float Sqr(float4 val)
     return dot(val, val);
 }
 
+inline float4 PackF3ToF4(float3 val)
+{
+    return float4(val, 0);
+    /*
+    //2^7 = 128   2^5=32
+
+    float3 v0 = frac(val * 4);
+    float3 v1 = trunc(v0 * 32);
+
+    float w = (v1.x * (32 * 32)) + (v1.y * 32) + (v1.z);
+
+    return float4(trunc(val * 4), w);
+    */
+}
+
+inline float3 UnpackF4ToF3(float4 val)
+{
+    return val.xyz;
+    //2^7 = 128   2^5=32
+    /*
+    val.xyz /= 4;
+
+    float w = val.w;
+    float z = frac(w / 32.0);
+    float x = trunc(w / (32.0 * 32.0));
+    float y = w - z * 32 - x * (32 * 32);
+
+    val.x += x / 128.0;
+    val.y += y / (128.0 * 32);
+    val.z += z / 4.0;
+
+    return val.xyz;
+    */
+}
 
 #endif
