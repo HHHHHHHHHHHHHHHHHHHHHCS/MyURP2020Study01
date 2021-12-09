@@ -10,7 +10,7 @@ TEXTURE2D(_TrailPositionTex);
 TEXTURE2D(_TrailVelocityTex);
 TEXTURE2D(_TrailOrthnormTex);
 
-SAMPLER(s_linear_clamp_sampler);
+SAMPLER(s_point_clamp_sampler);
 
 //s_linear_clamp_sampler 允许做位置插值
 // #define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)

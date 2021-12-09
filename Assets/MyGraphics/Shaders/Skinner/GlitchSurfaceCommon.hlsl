@@ -9,7 +9,7 @@ TEXTURE2D(_GlitchPositionTex);
 float4 _GlitchPositionTex_TexelSize;
 TEXTURE2D(_GlitchVelocityTex);
 
-SAMPLER(s_linear_clamp_sampler);
+SAMPLER(s_point_clamp_sampler);
 
 // #define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
 #define SampleTex(textureName, coord2) SAMPLE_TEXTURE2D_LOD(textureName, s_point_clamp_sampler, coord2, 0)
