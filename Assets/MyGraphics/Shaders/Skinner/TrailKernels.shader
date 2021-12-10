@@ -37,7 +37,8 @@ Shader "MyRP/Skinner/TrailKernels"
 
 	//也可以用textureName.GetDimensions()
 	//uv*size理论要-0.5 但是被转换为int 自动忽略小数点
-	//是会超过[0, w or h)的  超过部分 好像是0  所以要clamp
+	//是会超过[0, w or h)的  超过部分 是0  所以要clamp
+	//https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-load
 	#define SampleTex(textureName, coord2) LOAD_TEXTURE2D(textureName, coord2)
 
 	v2f vert(a2v IN)
