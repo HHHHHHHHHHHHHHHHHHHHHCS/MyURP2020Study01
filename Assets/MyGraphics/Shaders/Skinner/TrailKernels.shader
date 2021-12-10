@@ -240,7 +240,7 @@ Shader "MyRP/Skinner/TrailKernels"
 
 				//a far point and random life
 				//是可以存在负数的
-				o.pos = PackF3ToF4(pos);
+				o.pos = float4(pos, 0);
 				o.vel = 0;
 				o.orth = 0;
 				return o;
@@ -278,7 +278,7 @@ Shader "MyRP/Skinner/TrailKernels"
 					//unity_DeltaTime.y 暂停的时候是无穷大
 					float3 cv = min((v0 + v1) * 0.5, FLT_MAX);
 					o.vel = float4(cv, 0.0);
-					o.pos = PackF3ToF4(p1); // float4(p1, 0);
+					o.pos = float4(p1, 0);
 				}
 				else
 				{
@@ -287,13 +287,13 @@ Shader "MyRP/Skinner/TrailKernels"
 					float3 v = SampleTex(_VelocityTex, vpos).xyz;
 					o.vel = float4(v * _Drag, 0);
 
-					float3 p = UnpackF4ToF3(SampleTex(_PositionTex, vpos));
+					float3 p = SampleTex(_PositionTex, vpos);
 					float lv = length(o.vel);
 					if (lv > 0)
 					{
 						p += o.vel.xyz * (min(lv, _SpeedLimit) / lv) * unity_DeltaTime.x;
 					}
-					o.pos = PackF3ToF4(p);
+					o.pos = float4(p, 0);
 				}
 
 
@@ -313,8 +313,8 @@ Shader "MyRP/Skinner/TrailKernels"
 				float3 ax = StereoInverseProjection(b1.zw);
 
 				//tangent vector
-				float3 p0 = UnpackF4ToF3(SampleTex(_PositionTex, uv0));
-				float3 p1 = UnpackF4ToF3(SampleTex(_PositionTex, uv2));
+				float3 p0 = SampleTex(_PositionTex, uv0);
+				float3 p1 = SampleTex(_PositionTex, uv2);
 				float3 az = p1 - p0;
 				if (az.x == 0 && az.y == 0 && az.z == 0)
 				{

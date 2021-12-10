@@ -25,7 +25,7 @@ void GetAttrData(float4 vertex, out float3 positionWS, out float3 normalWS, out 
     // 为什么用linear 不用point   顶点数量不是 1:1的  所以  让位置有插值 效果更好
     // int2 uv = vertex.xy * _TrailPositionTex_TexelSize.zw;
     float2 uv = vertex.xy;
-    float3 p = UnpackF4ToF3(SampleTex(_TrailPositionTex, uv));
+    float3 p = SampleTex(_TrailPositionTex, uv);
     float3 v = SampleTex(_TrailVelocityTex, uv).xyz;
     float4 b = SampleTex(_TrailOrthnormTex, uv);
 

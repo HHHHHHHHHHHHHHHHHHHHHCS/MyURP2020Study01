@@ -105,9 +105,21 @@ namespace MyGraphics.Scripts.Skinner
 			//为什么不用R11B11G10 因为不支持负数
 			//如果xyz 过大 比如>100  ARGBHalf 会出现效果问题  就要用ARGBFloat
 			RenderTextureDescriptor rtd =
-				new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBHalf, 0, 1);
+				new RenderTextureDescriptor(width, height, RenderTextureFormat.ARGBFloat, 0, 1);
+			rts[0] = new RenderTexture(rtd)
+			{
+				filterMode = FilterMode.Point,
+				name = names[0] + "0"
+			};
+			rts[len + 0] = new RenderTexture(rtd)
+			{
+				filterMode = FilterMode.Point,
+				name = names[0] + "1"
+			};
 
-			for (int i = 0; i < len; i++)
+			rtd.colorFormat = RenderTextureFormat.ARGBHalf;
+
+			for (int i = 1; i < len; i++)
 			{
 				rts[i] = new RenderTexture(rtd)
 				{
