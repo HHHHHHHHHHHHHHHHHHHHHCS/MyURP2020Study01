@@ -3,7 +3,7 @@
 Texture2D<float4> HeightTex;
 RWTexture2D<float4> NormalTex;
 
-float3 GetPosition(uint2 coord)
+float3 GetPosition(int2 coord)
 {
     uint w, h;
     HeightTex.GetDimensions(w, h);
@@ -19,12 +19,12 @@ float3 GetNormal(float3 v1, float3 v2)
 [numthreads(8,8,1)]
 void CSMain(uint3 id : SV_DispatchThreadID)
 {
-    uint2 coord = id.xy;
+    int2 coord = id.xy;
     float3 p0 = GetPosition(coord);
-    float3 v1 = GetPosition(coord + uint2(1, 0)) - p0;
-    float3 v2 = GetPosition(coord + uint2(0, 1)) - p0;
-    float3 v3 = GetPosition(coord + uint2(-1, 0)) - p0;
-    float3 v4 = GetPosition(coord + uint2(0, -1)) - p0;
+    float3 v1 = GetPosition(coord + int2(1, 0)) - p0;
+    float3 v2 = GetPosition(coord + int2(0, 1)) - p0;
+    float3 v3 = GetPosition(coord + int2(-1, 0)) - p0;
+    float3 v4 = GetPosition(coord + int2(0, -1)) - p0;
 
     float3 normal = GetNormal(v1, v2) + GetNormal(v2, v3) + GetNormal(v3, v4) + GetNormal(v4, v1);
     normal = normalize(normal);
